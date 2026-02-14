@@ -10,9 +10,12 @@ interface RequestsProps {
   t: any;
 }
 
-export const Requests: React.FC<RequestsProps> = ({ requests, employees, onResolve, onDelete, t }) => {
+export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [], onResolve, onDelete, t }) => {
   const getEmployee = (id: string) => employees.find(e => e.id === id);
   const isId = t.dashboard === 'Dasbor'; // Simple locale detection based on translation
+  
+  // Sort requests by date (newest first)
+  const sortedRequests = [...(requests || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="space-y-6">
@@ -22,7 +25,7 @@ export const Requests: React.FC<RequestsProps> = ({ requests, employees, onResol
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        {requests.length === 0 ? (
+        {sortedRequests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="rounded-full bg-slate-50 p-4 mb-3"><Inbox className="h-8 w-8 text-slate-300" /></div>
             <h3 className="text-sm font-bold text-slate-900">{t.noPendingRequests}</h3>
@@ -41,7 +44,7 @@ export const Requests: React.FC<RequestsProps> = ({ requests, employees, onResol
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {requests.map((request) => {
+                {sortedRequests.map((request) => {
                   const emp = getEmployee(request.employeeId);
                   return (
                     <tr key={request.id} className="hover:bg-slate-50/80 transition-colors">
@@ -110,7 +113,7 @@ export const Requests: React.FC<RequestsProps> = ({ requests, employees, onResol
         )}
       </div>
       
-      {requests.length > 0 && (
+      {sortedRequests.length > 0 && (
         <div className="flex items-center gap-2 text-xs text-slate-400 px-1">
           <AlertCircle className="h-3.5 w-3.5" />
           {t.adminNote}

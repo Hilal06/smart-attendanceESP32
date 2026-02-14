@@ -85,7 +85,6 @@ class AttendanceController extends Controller
         $db = $this->getDb();
         
         // Auto-seed: If no attendance records exist for TODAY, generate them.
-        // This ensures the dashboard always looks alive for demos.
         $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
         $hasToday = false;
         foreach ($db['attendance'] as $record) {
@@ -98,10 +97,8 @@ class AttendanceController extends Controller
         if (!$hasToday && !empty($db['employees'])) {
             $newRecords = [];
             foreach ($db['employees'] as $emp) {
-                // Skip if terminated
                 if (($emp['status'] ?? 'Active') === 'Terminated') continue;
                 
-                // 15% chance of being Absent/On Leave to show variety
                 if (rand(1, 100) <= 15) {
                     $status = rand(0, 1) ? 'Absent' : 'On Leave';
                     $newRecords[] = [
@@ -115,21 +112,12 @@ class AttendanceController extends Controller
                     continue;
                 }
 
-                // Generate Present/Late
-                $isLate = rand(1, 100) <= 20; // 20% late
+                $isLate = rand(1, 100) <= 20; 
                 $status = $isLate ? 'Late' : 'Present';
-                
-                // Check in time
                 $hour = $isLate ? 9 : 8;
                 $minute = $isLate ? rand(15, 45) : rand(45, 59);
                 $checkIn = sprintf("%02d:%02d", $hour, $minute);
-                
-                // Check out time (sometimes empty if currently working)
-                $checkOut = null;
-                // If it's already "evening" in simulation, add checkout
-                if (rand(0, 1)) {
-                    $checkOut = '17:' . rand(0, 30);
-                }
+                $checkOut = rand(0, 1) ? '17:' . rand(0, 30) : null;
 
                 $newRecords[] = [
                     'id' => $emp['id'] . '-' . $today,
@@ -140,7 +128,6 @@ class AttendanceController extends Controller
                     'status' => $status
                 ];
             }
-            // Add to DB
             $db['attendance'] = array_merge($db['attendance'], $newRecords);
             $this->saveDb($db);
         }
@@ -272,6 +259,35 @@ class AttendanceController extends Controller
     public function requests()
     {
         $db = $this->getDb();
+        
+        // Auto-seed requests if empty to ensure data appears in the view
+        if (empty($db['requests']) && !empty($db['employees'])) {
+            $db['requests'] = [
+                [
+                    "id" => "1001",
+                    "employeeId" => $db['employees'][2]['id'] ?? "3",
+                    "description" => "Hi, I moved recently. Please update my address to 404 Creative Studio Lane, Austin, TX.",
+                    "date" => now()->subDays(2)->toIso8601String(),
+                    "status" => "Pending"
+                ],
+                [
+                    "id" => "1002",
+                    "employeeId" => $db['employees'][0]['id'] ?? "1",
+                    "description" => "I have a new phone number: +1 (555) 777-6666. Thanks!",
+                    "date" => now()->subDays(1)->toIso8601String(),
+                    "status" => "Pending"
+                ],
+                [
+                    "id" => "1003",
+                    "employeeId" => $db['employees'][1]['id'] ?? "2",
+                    "description" => "Please update my role to Senior Product Manager.",
+                    "date" => now()->subHours(4)->toIso8601String(),
+                    "status" => "Resolved"
+                ]
+            ];
+            $this->saveDb($db);
+        }
+
         return Inertia::render('Requests', [
             'userRole' => session('userRole'),
             'settings' => $db['settings'],
@@ -322,7 +338,6 @@ class AttendanceController extends Controller
         $db = $this->getDb();
         $userId = session('userId');
         
-        // Find logged in employee
         $employee = null;
         if ($userId) {
             foreach ($db['employees'] as $emp) {
@@ -333,7 +348,6 @@ class AttendanceController extends Controller
             }
         }
         
-        // Fallback for admin or if not found
         if (!$employee && !empty($db['employees'])) {
             $employee = $db['employees'][0];
         }
