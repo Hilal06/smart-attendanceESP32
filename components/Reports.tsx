@@ -14,7 +14,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees }) => {
   const [aiInsights, setAiInsights] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 15;
+  const ITEMS_PER_PAGE = 5;
 
   const handleGenerateInsights = async () => {
     setLoadingAI(true);

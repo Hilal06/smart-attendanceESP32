@@ -86,13 +86,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
   }, [attendance, timeRange, employees.length]);
 
   const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
-    <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-      <div className={`rounded-full p-3 ${bg}`}>
-        <Icon className={`h-5 w-5 ${color}`} />
+    <div className="rounded-xl bg-white p-3 shadow-sm border border-slate-100 flex items-center gap-3">
+      <div className={`rounded-full p-2.5 ${bg} shrink-0`}>
+        <Icon className={`h-4 w-4 ${color}`} />
       </div>
-      <div>
-        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{title}</p>
-        <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">{title}</p>
+        <p className="text-xl font-bold text-slate-900 leading-none mt-1">{value}</p>
       </div>
     </div>
   );
@@ -138,37 +138,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
         {/* Main Section */}
         <div className="lg:col-span-3 space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard title="Team Size" value={employees.length} icon={Users} color="text-blue-600" bg="bg-blue-50" />
-            <StatCard title="Today Present" value={todaysStats.present} icon={CheckCircle} color="text-emerald-600" bg="bg-emerald-50" />
-            <StatCard title="Today Late" value={todaysStats.late} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
-            <StatCard title="Today Absent" value={todaysStats.absent} icon={AlertTriangle} color="text-rose-600" bg="bg-rose-50" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard title="Team" value={employees.length} icon={Users} color="text-blue-600" bg="bg-blue-50" />
+            <StatCard title="Present" value={todaysStats.present} icon={CheckCircle} color="text-emerald-600" bg="bg-emerald-50" />
+            <StatCard title="Late" value={todaysStats.late} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
+            <StatCard title="Absent" value={todaysStats.absent} icon={AlertTriangle} color="text-rose-600" bg="bg-rose-50" />
           </div>
 
-          {/* Chart Section */}
-          <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
-            <div className="mb-6 flex items-center justify-between">
+          {/* Chart Section - Made more compact */}
+          <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-100">
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-slate-900">{timeRange} Attendance Trend</h3>
-                <p className="text-xs text-slate-500">Aggregated records for the selected period</p>
+                <h3 className="font-semibold text-slate-900 text-sm">{timeRange} Attendance Trend</h3>
+                <p className="text-[10px] text-slate-500">Aggregated records for the selected period</p>
               </div>
-              <div className="flex gap-4 text-xs">
+              <div className="flex gap-4 text-[10px]">
                 <div className="flex items-center"><span className="mr-1.5 h-2 w-2 rounded-full bg-indigo-500"></span>Present</div>
                 <div className="flex items-center"><span className="mr-1.5 h-2 w-2 rounded-full bg-amber-400"></span>Late</div>
               </div>
             </div>
-            <div className="h-72 w-full">
+            <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
                   <Tooltip 
                     cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '11px' }}
                   />
-                  <Bar dataKey="Present" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={timeRange === 'Weekly' ? 40 : 20} />
-                  <Bar dataKey="Late" fill="#fbbf24" radius={[4, 4, 0, 0]} barSize={timeRange === 'Weekly' ? 40 : 20} />
+                  <Bar dataKey="Present" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={timeRange === 'Weekly' ? 32 : 16} />
+                  <Bar dataKey="Late" fill="#fbbf24" radius={[4, 4, 0, 0]} barSize={timeRange === 'Weekly' ? 32 : 16} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
