@@ -1,0 +1,5 @@
+{
+  "name": "SmartAttend",
+  "description": "A modern, AI-powered employee attendance tracking system featuring real-time dashboards, detailed reporting with Gemini-powered insights, and comprehensive employee management.",
+  "requestFramePermissions": []
+}
