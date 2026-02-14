@@ -24,6 +24,9 @@ const App: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>(MOCK_EMPLOYEES);
   const [announcements, setAnnouncements] = useState<Announcement[]>(MOCK_ANNOUNCEMENTS);
   const [requests, setRequests] = useState<ProfileRequest[]>([]);
+  
+  // Processing state for async simulation
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const t = TRANSLATIONS[settings.language];
 
@@ -39,16 +42,28 @@ const App: React.FC = () => {
     setCurrentPage(Page.DASHBOARD);
   };
 
-  const handleAddEmployee = (newEmployee: Employee) => {
+  const handleAddEmployee = async (newEmployee: Employee) => {
+    setIsProcessing(true);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 600));
     setEmployees((prev) => [...prev, newEmployee]);
+    setIsProcessing(false);
   };
 
-  const handleEditEmployee = (updatedEmployee: Employee) => {
+  const handleEditEmployee = async (updatedEmployee: Employee) => {
+    setIsProcessing(true);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 600));
     setEmployees((prev) => prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp));
+    setIsProcessing(false);
   };
 
-  const handleDeleteEmployee = (id: string) => {
+  const handleDeleteEmployee = async (id: string) => {
+    setIsProcessing(true);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 600));
     setEmployees((prev) => prev.filter(emp => emp.id !== id));
+    setIsProcessing(false);
   };
 
   const handleAddAnnouncement = (newAnnouncement: Announcement) => {
@@ -96,6 +111,7 @@ const App: React.FC = () => {
             onEditEmployee={handleEditEmployee}
             onDeleteEmployee={handleDeleteEmployee}
             t={t}
+            isProcessing={isProcessing}
           />
         );
       case Page.ANNOUNCEMENTS:
@@ -111,7 +127,8 @@ const App: React.FC = () => {
         );
       case Page.PROFILE:
         const currentUser = employees.find(e => e.id === currentUserId);
-        return <Profile employee={currentUser} onRequestUpdate={handleProfileUpdateRequest} t={t} />;
+        const userRequests = requests.filter(req => req.employeeId === currentUserId);
+        return <Profile employee={currentUser} requests={userRequests} onRequestUpdate={handleProfileUpdateRequest} t={t} />;
       case Page.REQUESTS:
         return <Requests requests={requests} employees={employees} onResolve={handleResolveRequest} onDelete={handleDeleteRequest} t={t} />;
       case Page.REPORTS:
@@ -137,7 +154,6 @@ const App: React.FC = () => {
         isMobileOpen={isMobileMenuOpen}
         setIsMobileOpen={setIsMobileMenuOpen}
         t={t}
-        // Fix: Added settings prop to Sidebar call
         settings={settings}
       />
 

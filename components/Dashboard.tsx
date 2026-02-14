@@ -19,7 +19,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
   const [announcementSort, setAnnouncementSort] = useState<AnnouncementSort>('Latest');
   const [attendancePage, setAttendancePage] = useState(1);
   const ATTENDANCE_ROWS_PER_PAGE = 5;
-  const today = new Date().toISOString().split('T')[0];
+  // Use Jakarta timezone for today's date
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
 
   const todaysStats = useMemo(() => {
     const todaysRecords = attendance.filter(r => r.date === today);
@@ -67,9 +68,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
     for (let i = limit - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
       days[dateStr] = { 
-        name: d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }), 
+        name: d.toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { weekday: 'short', day: 'numeric', timeZone: 'Asia/Jakarta' }), 
         Present: 0, Late: 0, Absent: 0 
       };
     }
@@ -81,7 +82,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
       }
     });
     return Object.values(days);
-  }, [attendance, timeRange, employees.length]);
+  }, [attendance, timeRange, employees.length, t.language]);
 
   const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
     <div className="rounded-xl bg-white p-3 shadow-sm border border-slate-100 flex items-center gap-3">
@@ -264,7 +265,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                         {item.priority === 'Urgent' ? t.priorityUrgent : item.priority === 'High' ? t.priorityHigh : t.priorityNormal}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
-                        {new Date(item.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric' })}
+                        {new Date(item.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Jakarta' })}
                       </span>
                     </div>
                     <h4 className="text-sm font-bold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">

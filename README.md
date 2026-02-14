@@ -43,6 +43,55 @@ The application leverages a curated stack of modern web technologies, imported v
 
 ---
 
+## 💾 Database Structure (`db.json`)
+
+The application acts as a Flat-File CMS, storing all data in `storage/app/db.json`. While there is no SQL database, the JSON structure mimics relational tables:
+
+#### **Employees Table** (`employees`)
+Stores workforce profiles.
+- `id`: Unique Identifier (String)
+- `name`: Full Name (String)
+- `email`: Contact Email (String)
+- `role`: Job Title (String)
+- `department`: Department Name (String)
+- `avatar`: URL to profile image (String)
+- `joinDate`: Date of joining (YYYY-MM-DD)
+- `status`: `Active` | `On Leave` | `Terminated`
+
+#### **Attendance Table** (`attendance`)
+Tracks daily presence.
+- `id`: Unique Record ID (String, e.g., "USERID-DATE")
+- `employeeId`: Foreign Key to Employees (String)
+- `date`: Record Date (YYYY-MM-DD)
+- `checkIn`: Time (HH:MM) or null
+- `checkOut`: Time (HH:MM) or null
+- `status`: `Present` | `Late` | `Absent` | `On Leave`
+
+#### **Announcements Table** (`announcements`)
+Company-wide news feed.
+- `id`: Unique ID (String)
+- `title`: Headline (String)
+- `content`: Body text (String)
+- `priority`: `Normal` | `High` | `Urgent`
+- `date`: Posted Date (YYYY-MM-DD)
+
+#### **Requests Table** (`requests`)
+Employee profile update requests.
+- `id`: Unique Request ID (String)
+- `employeeId`: Foreign Key to Employees (String)
+- `description`: Details of the requested change (String)
+- `status`: `Pending` | `Resolved`
+- `date`: Request Timestamp (ISO String)
+
+#### **Settings Object** (`settings`)
+Global application configuration.
+- `companyName`: Display name of the org.
+- `companyLogo`: Base64 string or URL.
+- `lateThresholdMinutes`: Grace period in minutes.
+- `weeklySchedule`: Array defining work days vs off days.
+
+---
+
 ## 🤖 Tools & Integrations
 
 ### Gemini AI Integration
@@ -51,9 +100,8 @@ The app utilizes the **Gemini 3 Flash Preview** model (`gemini-3-flash-preview`)
 - **Output**: Generates formatted HTML insights focusing on attendance trends and actionable HR advice.
 - **Security**: Requires an environment-variable based API key.
 
-### Data Persistence (`db.json`)
+### Data Persistence
 The application uses a server-side JSON database for persistence, managed by the `AttendanceController`.
-- **Structure**: Tracks `settings`, `employees`, `attendance`, `announcements`, and `requests`.
 - **Logic**: Implements atomic updates via Laravel's `Storage` facade to prevent data corruption during simultaneous writes.
 
 ---

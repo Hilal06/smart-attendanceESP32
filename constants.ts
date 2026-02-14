@@ -14,7 +14,7 @@ export const DEFAULT_SETTINGS: Settings = {
   companyLogo: '',
   lateThresholdMinutes: 15,
   weeklySchedule: DEFAULT_SCHEDULE,
-  language: 'en',
+  language: 'id',
 };
 
 export const TRANSLATIONS = {
@@ -340,7 +340,8 @@ const generateMockAttendance = (): AttendanceRecord[] => {
   for (let i = 0; i < 7; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
+    // Use Asia/Jakarta time zone for the date string to align with the rest of the app
+    const dateStr = date.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
 
     MOCK_EMPLOYEES.forEach((emp) => {
       const rand = Math.random();

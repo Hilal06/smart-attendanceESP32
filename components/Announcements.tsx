@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Announcement, UserRole } from '../types';
 import { Plus, Edit, Trash2, X, AlertTriangle, Megaphone, Calendar, AlertCircle } from 'lucide-react';
@@ -20,7 +19,8 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const initialFormState: Announcement = {
-    id: '', title: '', content: '', date: new Date().toISOString().split('T')[0], priority: 'Normal',
+    // Default to WIB date
+    id: '', title: '', content: '', date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }), priority: 'Normal',
   };
   
   const [formData, setFormData] = useState<Announcement>(initialFormState);
@@ -93,7 +93,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
               {announcement.priority === 'Urgent' && (<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-600"></div>)}
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-10">
-                  <div className="flex items-center gap-3 mb-2"><span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getPriorityColor(announcement.priority)}`}>{announcement.priority === 'Urgent' && <AlertTriangle className="mr-1 h-3 w-3" />}{getPriorityLabel(announcement.priority)}</span><div className="flex items-center text-xs text-slate-500"><Calendar className="mr-1 h-3 w-3" />{new Date(announcement.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div>
+                  <div className="flex items-center gap-3 mb-2"><span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getPriorityColor(announcement.priority)}`}>{announcement.priority === 'Urgent' && <AlertTriangle className="mr-1 h-3 w-3" />}{getPriorityLabel(announcement.priority)}</span><div className="flex items-center text-xs text-slate-500"><Calendar className="mr-1 h-3 w-3" />{new Date(announcement.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' })}</div></div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2">{announcement.title}</h3><p className="text-slate-600 whitespace-pre-wrap leading-relaxed">{announcement.content}</p>
                 </div>
                 {isAdmin && (<div className="flex space-x-2 ml-4"><button onClick={() => handleOpenEdit(announcement)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit className="h-4 w-4" /></button><button onClick={() => handleOpenDelete(announcement.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors"><Trash2 className="h-4 w-4" /></button></div>)}
