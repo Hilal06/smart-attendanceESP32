@@ -1,0 +1,134 @@
+{
+  "settings": {
+    "companyName": "SmartAttend Inc",
+    "companyLogo": "",
+    "lateThresholdMinutes": 15,
+    "weeklySchedule": [
+      { "day": "Monday", "status": "Work Day", "startTime": "09:00", "endTime": "17:00" },
+      { "day": "Tuesday", "status": "Work Day", "startTime": "09:00", "endTime": "17:00" },
+      { "day": "Wednesday", "status": "Work Day", "startTime": "09:00", "endTime": "17:00" },
+      { "day": "Thursday", "status": "Work Day", "startTime": "09:00", "endTime": "17:00" },
+      { "day": "Friday", "status": "Work Day", "startTime": "09:00", "endTime": "17:00" },
+      { "day": "Saturday", "status": "Off Day", "startTime": "09:00", "endTime": "17:00" },
+      { "day": "Sunday", "status": "Off Day", "startTime": "09:00", "endTime": "17:00" }
+    ],
+    "language": "en"
+  },
+  "employees": [
+    {
+      "id": "1",
+      "name": "Alice Johnson",
+      "role": "Software Engineer",
+      "department": "Engineering",
+      "avatar": "https://picsum.photos/200/200?random=1",
+      "email": "alice@example.com",
+      "joinDate": "2023-01-15",
+      "phoneNumber": "+1 (555) 123-4567",
+      "address": "123 Tech Lane, Silicon Valley, CA",
+      "status": "Active"
+    },
+    {
+      "id": "2",
+      "name": "Bob Smith",
+      "role": "Product Manager",
+      "department": "Product",
+      "avatar": "https://picsum.photos/200/200?random=2",
+      "email": "bob@example.com",
+      "joinDate": "2022-11-01",
+      "phoneNumber": "+1 (555) 987-6543",
+      "address": "456 Market St, San Francisco, CA",
+      "status": "Active"
+    },
+    {
+      "id": "3",
+      "name": "Charlie Davis",
+      "role": "UX Designer",
+      "department": "Design",
+      "avatar": "https://picsum.photos/200/200?random=3",
+      "email": "charlie@example.com",
+      "joinDate": "2023-05-10",
+      "phoneNumber": "+1 (555) 444-5555",
+      "address": "789 Artsy Way, Austin, TX",
+      "status": "Active"
+    },
+    {
+      "id": "4",
+      "name": "Diana Prince",
+      "role": "HR Manager",
+      "department": "Human Resources",
+      "avatar": "https://picsum.photos/200/200?random=4",
+      "email": "diana@example.com",
+      "joinDate": "2021-08-22",
+      "phoneNumber": "+1 (555) 000-1111",
+      "address": "101 Justice Ave, Metropolis",
+      "status": "Active"
+    },
+    {
+      "id": "5",
+      "name": "Ethan Hunt",
+      "role": "Security Specialist",
+      "department": "IT Operations",
+      "avatar": "https://picsum.photos/200/200?random=5",
+      "email": "ethan@example.com",
+      "joinDate": "2023-11-30",
+      "phoneNumber": "+1 (555) 999-8888",
+      "address": "Top Secret Bunker, Langley",
+      "status": "On Leave"
+    }
+  ],
+  "attendance": [
+    { "id": "1-2024-05-20", "employeeId": "1", "date": "2024-05-20", "checkIn": "08:50", "checkOut": "17:05", "status": "Present" },
+    { "id": "2-2024-05-20", "employeeId": "2", "date": "2024-05-20", "checkIn": "09:10", "checkOut": "17:30", "status": "Late" },
+    { "id": "3-2024-05-20", "employeeId": "3", "date": "2024-05-20", "checkIn": "08:55", "checkOut": "17:10", "status": "Present" },
+    { "id": "4-2024-05-20", "employeeId": "4", "date": "2024-05-20", "checkIn": "09:00", "checkOut": "17:00", "status": "Present" },
+    { "id": "1-2024-05-19", "employeeId": "1", "date": "2024-05-19", "checkIn": "08:45", "checkOut": "17:15", "status": "Present" },
+    { "id": "2-2024-05-19", "employeeId": "2", "date": "2024-05-19", "checkIn": null, "checkOut": null, "status": "Absent" },
+    { "id": "3-2024-05-19", "employeeId": "3", "date": "2024-05-19", "checkIn": "09:25", "checkOut": "17:45", "status": "Late" }
+  ],
+  "announcements": [
+    {
+      "id": "1",
+      "title": "Welcome to SmartAttend",
+      "content": "We are excited to launch our new attendance system! Please ensure your profile details are up to date.",
+      "date": "2024-01-01",
+      "priority": "Normal"
+    },
+    {
+      "id": "2",
+      "title": "Office Renovation - 3rd Floor",
+      "content": "The 3rd floor will be closed for renovation starting next week. Employees on that floor please move to the 2nd floor flex-spaces.",
+      "date": "2024-05-15",
+      "priority": "High"
+    },
+    {
+      "id": "3",
+      "title": "Urgent: System Maintenance",
+      "content": "The HR portal will be offline for maintenance tonight between 10 PM and 2 AM. Please complete all requests before then.",
+      "date": "2024-05-18",
+      "priority": "Urgent"
+    },
+    {
+      "id": "4",
+      "title": "Happy Holidays!",
+      "content": "The office will be closed on Monday for the bank holiday. Enjoy your long weekend!",
+      "date": "2024-05-19",
+      "priority": "Normal"
+    }
+  ],
+  "requests": [
+    {
+      "id": "1001",
+      "employeeId": "3",
+      "description": "Hi, I moved recently. Please update my address to 404 Creative Studio Lane, Austin, TX.",
+      "date": "2024-05-18T10:30:00Z",
+      "status": "Pending"
+    },
+    {
+      "id": "1002",
+      "employeeId": "1",
+      "description": "I have a new phone number: +1 (555) 777-6666. Thanks!",
+      "date": "2024-05-19T14:45:00Z",
+      "status": "Pending"
+    }
+  ]
+}

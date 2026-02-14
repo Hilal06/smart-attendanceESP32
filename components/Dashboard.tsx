@@ -100,7 +100,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">{t.dashboard}</h2>
-          <p className="text-slate-500 text-sm">Real-time attendance tracking and announcements.</p>
+          <p className="text-slate-500 text-sm">{t.realTimeTracking}</p>
         </div>
         
         <div className="inline-flex rounded-lg bg-slate-200 p-1">
@@ -117,7 +117,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               {range === 'Weekly' && <CalendarDays className="h-3.5 w-3.5" />}
               {range === 'Monthly' && <CalendarRange className="h-3.5 w-3.5" />}
               {range === 'Yearly' && <Calendar className="h-3.5 w-3.5" />}
-              {range}
+              {range === 'Weekly' ? t.weekly : range === 'Monthly' ? t.monthly : t.yearly}
             </button>
           ))}
         </div>
@@ -135,8 +135,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
           <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-100">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-slate-900 text-sm">{timeRange} Attendance Trend</h3>
-                <p className="text-[10px] text-slate-500">Aggregated records for the selected period</p>
+                <h3 className="font-semibold text-slate-900 text-sm">{(timeRange === 'Weekly' ? t.weekly : timeRange === 'Monthly' ? t.monthly : t.yearly) + " " + t.attendanceTrend}</h3>
+                <p className="text-[10px] text-slate-500">{t.aggregatedRecords}</p>
               </div>
               <div className="flex gap-4 text-[10px]">
                 <div className="flex items-center"><span className="mr-1.5 h-2 w-2 rounded-full bg-indigo-500"></span>{t.present}</div>
@@ -162,8 +162,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
 
           <div className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <h3 className="font-semibold text-slate-900 text-sm">Quick Attendance View</h3>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Today</span>
+              <h3 className="font-semibold text-slate-900 text-sm">{t.quickAttendance}</h3>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.activeToday}</span>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-100">
@@ -184,7 +184,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                               record.status === AttendanceStatus.PRESENT ? 'bg-emerald-100 text-emerald-800' : 
                               record.status === AttendanceStatus.LATE ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
                             }`}>
-                              {record.status}
+                              {record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : t.absent}
                             </span>
                           </td>
                         </tr>
@@ -193,7 +193,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                   ) : (
                     <tr>
                       <td colSpan={2} className="px-6 py-8 text-center text-sm text-slate-500">
-                        No records for today yet.
+                        {t.noRecordsToday}
                       </td>
                     </tr>
                   )}
@@ -203,7 +203,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             {totalAttendancePages > 1 && (
               <div className="px-6 py-3 bg-slate-50 flex items-center justify-between border-t border-slate-100">
                 <p className="text-xs text-slate-500">
-                  Page <span className="font-medium">{attendancePage}</span> of <span className="font-medium">{totalAttendancePages}</span>
+                  {t.page} <span className="font-medium">{attendancePage}</span> {t.of} <span className="font-medium">{totalAttendancePages}</span>
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -231,20 +231,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-indigo-500" />
-                <h3 className="font-bold text-slate-900">Notifications</h3>
+                <h3 className="font-bold text-slate-900">{t.notifications}</h3>
               </div>
               <div className="flex gap-1">
                 <button 
                   onClick={() => setAnnouncementSort('Latest')}
                   className={`p-1.5 rounded-md transition-colors ${announcementSort === 'Latest' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-100'}`}
-                  title="Sort by Latest"
+                  title={t.latest}
                 >
                   <Clock className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => setAnnouncementSort('Priority')}
                   className={`p-1.5 rounded-md transition-colors ${announcementSort === 'Priority' ? 'bg-rose-50 text-rose-600' : 'text-slate-400 hover:bg-slate-100'}`}
-                  title="Sort by Priority"
+                  title={t.priority}
                 >
                   <SortDesc className="h-4 w-4" />
                 </button>
@@ -261,10 +261,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border`}>
-                        {item.priority}
+                        {item.priority === 'Urgent' ? t.priorityUrgent : item.priority === 'High' ? t.priorityHigh : t.priorityNormal}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
-                        {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {new Date(item.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
                     <h4 className="text-sm font-bold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">
@@ -278,7 +278,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <Bell className="h-8 w-8 text-slate-200 mb-2" />
-                  <p className="text-xs text-slate-400">No announcements found</p>
+                  <p className="text-xs text-slate-400">{t.noAnnouncements}</p>
                 </div>
               )}
             </div>
@@ -288,7 +288,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                 onClick={() => onNavigate(Page.ANNOUNCEMENTS)}
                 className="w-full text-center text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
               >
-                View All Announcements
+                {t.viewAllAnnouncements}
               </button>
             </div>
           </div>
