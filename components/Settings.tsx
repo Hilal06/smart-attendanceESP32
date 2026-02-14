@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Settings as SettingsType, DayStatus } from '../types';
-import { Save, Clock, Calendar, AlertCircle, Globe } from 'lucide-react';
+import { Save, Clock, Calendar, AlertCircle, Globe, Image as ImageIcon, Trash2, Upload } from 'lucide-react';
 
 interface SettingsProps {
   settings: SettingsType;
@@ -12,6 +12,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, t }) => {
   const [formData, setFormData] = useState<SettingsType>(settings);
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateField = (name: string, value: any) => {
     let error = '';
@@ -41,6 +42,26 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, t }) => {
       [name]: name === 'lateThresholdMinutes' ? value : value
     }));
     validateField(name, value);
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("File is too large. Max size 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, companyLogo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = () => {
+    setFormData(prev => ({ ...prev, companyLogo: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleScheduleChange = (index: number, field: string, value: string) => {
@@ -100,6 +121,63 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, t }) => {
             </div>
 
             <div className="sm:col-span-1">
+               <label htmlFor="language" className="block text-sm font-medium text-slate-700 flex items-center">
+                 <Globe className="h-3.5 w-3.5 mr-1" /> {t.language}
+               </label>
+               <select
+                 name="language"
+                 id="language"
+                 value={formData.language}
+                 onChange={handleGeneralChange}
+                 className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+               >
+                 <option value="en">English</option>
+                 <option value="id">Bahasa Indonesia</option>
+               </select>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.companyLogo}</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="h-20 w-40 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+                  {formData.companyLogo ? (
+                    <img src={formData.companyLogo} alt="Logo Preview" className="h-full w-full object-contain" />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-slate-300" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleLogoChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {t.uploadLogo}
+                  </button>
+                  {formData.companyLogo && (
+                    <button
+                      type="button"
+                      onClick={removeLogo}
+                      className="flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-100 transition-colors"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t.removeLogo}
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="mt-1.5 text-xs text-slate-500">Recommended size: 200x50px. Max 2MB.</p>
+            </div>
+
+            <div className="sm:col-span-1">
                <label htmlFor="lateThresholdMinutes" className="block text-sm font-medium text-slate-700">{t.lateThreshold}</label>
                <input
                 type="number"
@@ -116,22 +194,6 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave, t }) => {
               ) : (
                 <p className="text-xs text-slate-500 mt-1">Grace period before marking as late.</p>
               )}
-            </div>
-
-            <div className="sm:col-span-1">
-               <label htmlFor="language" className="block text-sm font-medium text-slate-700 flex items-center">
-                 <Globe className="h-3.5 w-3.5 mr-1" /> {t.language}
-               </label>
-               <select
-                 name="language"
-                 id="language"
-                 value={formData.language}
-                 onChange={handleGeneralChange}
-                 className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
-               >
-                 <option value="en">English</option>
-                 <option value="id">Bahasa Indonesia</option>
-               </select>
             </div>
           </div>
         </div>

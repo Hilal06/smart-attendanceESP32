@@ -11,6 +11,7 @@ const DEFAULT_SCHEDULE: DaySchedule[] = DAYS.map(day => ({
 
 export const DEFAULT_SETTINGS: Settings = {
   companyName: 'Acme Corp',
+  companyLogo: '',
   lateThresholdMinutes: 15,
   weeklySchedule: DEFAULT_SCHEDULE,
   language: 'en',
@@ -35,6 +36,9 @@ export const TRANSLATIONS = {
     terminated: 'Terminated',
     language: 'Language',
     companyName: 'Company Name',
+    companyLogo: 'Company Logo',
+    uploadLogo: 'Upload Logo',
+    removeLogo: 'Remove',
     lateThreshold: 'Late Threshold (Minutes)',
     weeklySchedule: 'Weekly Schedule',
     saveConfiguration: 'Save Configuration',
@@ -74,6 +78,9 @@ export const TRANSLATIONS = {
     terminated: 'Diberhentikan',
     language: 'Bahasa',
     companyName: 'Nama Perusahaan',
+    companyLogo: 'Logo Perusahaan',
+    uploadLogo: 'Unggah Logo',
+    removeLogo: 'Hapus',
     lateThreshold: 'Ambang Batas Terlambat (Menit)',
     weeklySchedule: 'Jadwal Mingguan',
     saveConfiguration: 'Simpan Konfigurasi',

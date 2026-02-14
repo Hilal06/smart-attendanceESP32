@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Page, UserRole, Settings } from '../types';
 import { LayoutDashboard, Users, BarChart3, Settings as SettingsIcon, LogOut, UserCircle, Inbox, Megaphone } from 'lucide-react';
@@ -66,8 +65,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }`}
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-center border-b border-slate-800">
-            <h1 className="text-xl font-bold tracking-wider text-indigo-400">SmartAttend</h1>
+          <div className="flex h-16 items-center justify-center border-b border-slate-800 px-4">
+            {settings.companyLogo ? (
+              <img src={settings.companyLogo} alt={settings.companyName} className="max-h-10 w-auto object-contain" />
+            ) : (
+              <h1 className="text-xl font-bold tracking-wider text-indigo-400 truncate">{settings.companyName || 'SmartAttend'}</h1>
+            )}
           </div>
 
           <div className="px-4 py-4">

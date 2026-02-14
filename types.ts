@@ -56,6 +56,7 @@ export interface DaySchedule {
 
 export interface Settings {
   companyName: string;
+  companyLogo?: string;
   lateThresholdMinutes: number;
   weeklySchedule: DaySchedule[];
   language: 'en' | 'id';

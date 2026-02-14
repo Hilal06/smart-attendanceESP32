@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Page, Settings as SettingsType, Employee, UserRole, Announcement, ProfileRequest } from './types';
 import { Sidebar } from './components/Sidebar';
@@ -150,7 +149,13 @@ const App: React.FC = () => {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <span className="text-lg font-bold text-slate-900">{settings.companyName || 'SmartAttend'}</span>
+          <div className="flex flex-1 justify-center px-4">
+            {settings.companyLogo ? (
+              <img src={settings.companyLogo} alt={settings.companyName} className="h-8 w-auto object-contain" />
+            ) : (
+              <span className="text-lg font-bold text-slate-900 truncate">{settings.companyName || 'SmartAttend'}</span>
+            )}
+          </div>
           <div className="w-6" />
         </header>
 
