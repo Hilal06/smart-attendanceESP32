@@ -1,15 +1,17 @@
 import React from 'react';
 import { ProfileRequest, Employee } from '../types';
-import { Inbox, CheckCircle, Trash2, User, Calendar, MessageSquare, AlertCircle } from 'lucide-react';
+import { Inbox, CheckCircle, Trash2, User, Calendar, MessageSquare, AlertCircle, Briefcase } from 'lucide-react';
 
 interface RequestsProps {
   requests: ProfileRequest[];
   employees: Employee[];
   onResolve: (id: string) => void;
   onDelete: (id: string) => void;
+  // Fix: added 't' to props interface for localization support
+  t: any;
 }
 
-export const Requests: React.FC<RequestsProps> = ({ requests, employees, onResolve, onDelete }) => {
+export const Requests: React.FC<RequestsProps> = ({ requests, employees, onResolve, onDelete, t }) => {
   const getEmployee = (id: string) => employees.find(e => e.id === id);
 
   return (
@@ -59,6 +61,12 @@ export const Requests: React.FC<RequestsProps> = ({ requests, employees, onResol
                              {emp?.name || 'Unknown Employee'}
                              <span className="text-xs font-normal text-slate-400">({request.employeeId})</span>
                           </h3>
+                          {emp && (
+                            <p className="text-sm font-medium text-indigo-600 flex items-center gap-1.5 mt-0.5">
+                              <Briefcase className="h-3.5 w-3.5" />
+                              {emp.role} • {emp.department}
+                            </p>
+                          )}
                           <div className="flex items-center text-xs text-slate-500 mt-1">
                              <Calendar className="h-3 w-3 mr-1" />
                              Submitted on {new Date(request.date).toLocaleDateString()}

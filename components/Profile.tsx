@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Employee, ProfileRequest } from '../types';
 import { Mail, Phone, MapPin, Briefcase, Calendar, Shield, Send, X, AlertCircle } from 'lucide-react';
@@ -5,9 +6,11 @@ import { Mail, Phone, MapPin, Briefcase, Calendar, Shield, Send, X, AlertCircle 
 interface ProfileProps {
   employee: Employee | undefined;
   onRequestUpdate: (description: string) => void;
+  // Fix: added 't' to props interface for localization support
+  t: any;
 }
 
-export const Profile: React.FC<ProfileProps> = ({ employee, onRequestUpdate }) => {
+export const Profile: React.FC<ProfileProps> = ({ employee, onRequestUpdate, t }) => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [requestDescription, setRequestDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);

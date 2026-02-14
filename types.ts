@@ -58,6 +58,7 @@ export interface Settings {
   companyName: string;
   lateThresholdMinutes: number;
   weeklySchedule: DaySchedule[];
+  language: 'en' | 'id';
 }
 
 export interface Announcement {

@@ -4,9 +4,10 @@ import { UserCheck, ShieldCheck, ArrowRight, Fingerprint } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (role: UserRole, id?: string) => void;
+  t: any;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, t }) => {
   const [activeTab, setActiveTab] = useState<UserRole>('attendance');
   const [empId, setEmpId] = useState('');
   const [username, setUsername] = useState('');
@@ -24,7 +25,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         setError('Please enter a valid Employee ID');
       }
     } else {
-      // Simple mock validation for admin
       if (username === 'admin' && password === 'admin') {
         onLogin('admin', 'ADMIN-01');
       } else {
@@ -36,7 +36,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
-        {/* Header */}
         <div className="bg-slate-900 p-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-500/20">
             <Fingerprint className="h-8 w-8 text-indigo-400" />
@@ -45,7 +44,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <p className="mt-2 text-slate-400">Secure Attendance Management</p>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-slate-100">
           <button
             onClick={() => { setActiveTab('attendance'); setError(''); }}
@@ -57,7 +55,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           >
             <div className="flex items-center justify-center gap-2">
               <UserCheck className="h-4 w-4" />
-              Attendance Mode
+              {t.attendanceMode}
             </div>
           </button>
           <button
@@ -70,12 +68,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           >
             <div className="flex items-center justify-center gap-2">
               <ShieldCheck className="h-4 w-4" />
-              Admin Portal
+              {t.adminPortal}
             </div>
           </button>
         </div>
 
-        {/* Form */}
         <div className="p-8">
           <form onSubmit={handleLogin} className="space-y-6">
             {activeTab === 'attendance' ? (
@@ -133,7 +130,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
               type="submit"
               className="flex w-full items-center justify-center rounded-lg bg-indigo-600 py-3 font-medium text-white transition-colors hover:bg-indigo-700"
             >
-              {activeTab === 'attendance' ? 'Enter Dashboard' : 'Login as Admin'}
+              {activeTab === 'attendance' ? t.enterDashboard : t.loginAsAdmin}
               <ArrowRight className="ml-2 h-4 w-4" />
             </button>
           </form>

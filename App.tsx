@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Page, Settings as SettingsType, Employee, UserRole, Announcement, ProfileRequest } from './types';
 import { Sidebar } from './components/Sidebar';
@@ -9,7 +10,7 @@ import { Login } from './components/Login';
 import { Announcements } from './components/Announcements';
 import { Profile } from './components/Profile';
 import { Requests } from './components/Requests';
-import { MOCK_EMPLOYEES, MOCK_ATTENDANCE, DEFAULT_SETTINGS, MOCK_ANNOUNCEMENTS } from './constants';
+import { MOCK_EMPLOYEES, MOCK_ATTENDANCE, DEFAULT_SETTINGS, MOCK_ANNOUNCEMENTS, TRANSLATIONS } from './constants';
 import { Menu } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -24,6 +25,8 @@ const App: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>(MOCK_EMPLOYEES);
   const [announcements, setAnnouncements] = useState<Announcement[]>(MOCK_ANNOUNCEMENTS);
   const [requests, setRequests] = useState<ProfileRequest[]>([]);
+
+  const t = TRANSLATIONS[settings.language];
 
   const handleLogin = (role: UserRole, id?: string) => {
     setUserRole(role);
@@ -49,7 +52,6 @@ const App: React.FC = () => {
     setEmployees((prev) => prev.filter(emp => emp.id !== id));
   };
 
-  // Announcement Handlers
   const handleAddAnnouncement = (newAnnouncement: Announcement) => {
     setAnnouncements(prev => [newAnnouncement, ...prev]);
   };
@@ -62,7 +64,6 @@ const App: React.FC = () => {
     setAnnouncements(prev => prev.filter(a => a.id !== id));
   };
 
-  // Request Handlers
   const handleProfileUpdateRequest = (description: string) => {
     if (currentUserId) {
       const newRequest: ProfileRequest = {
@@ -87,7 +88,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentPage) {
       case Page.DASHBOARD:
-        return <Dashboard employees={employees} attendance={MOCK_ATTENDANCE} announcements={announcements} onNavigate={setCurrentPage} />;
+        return <Dashboard employees={employees} attendance={MOCK_ATTENDANCE} announcements={announcements} onNavigate={setCurrentPage} t={t} />;
       case Page.EMPLOYEES:
         return (
           <EmployeeList 
@@ -95,6 +96,7 @@ const App: React.FC = () => {
             onAddEmployee={handleAddEmployee}
             onEditEmployee={handleEditEmployee}
             onDeleteEmployee={handleDeleteEmployee}
+            t={t}
           />
         );
       case Page.ANNOUNCEMENTS:
@@ -105,24 +107,25 @@ const App: React.FC = () => {
             onAdd={handleAddAnnouncement}
             onEdit={handleEditAnnouncement}
             onDelete={handleDeleteAnnouncement}
+            t={t}
           />
         );
       case Page.PROFILE:
         const currentUser = employees.find(e => e.id === currentUserId);
-        return <Profile employee={currentUser} onRequestUpdate={handleProfileUpdateRequest} />;
+        return <Profile employee={currentUser} onRequestUpdate={handleProfileUpdateRequest} t={t} />;
       case Page.REQUESTS:
-        return <Requests requests={requests} employees={employees} onResolve={handleResolveRequest} onDelete={handleDeleteRequest} />;
+        return <Requests requests={requests} employees={employees} onResolve={handleResolveRequest} onDelete={handleDeleteRequest} t={t} />;
       case Page.REPORTS:
-        return <Reports attendance={MOCK_ATTENDANCE} employees={employees} />;
+        return <Reports attendance={MOCK_ATTENDANCE} employees={employees} t={t} />;
       case Page.SETTINGS:
-        return <Settings settings={settings} onSave={setSettings} />;
+        return <Settings settings={settings} onSave={setSettings} t={t} />;
       default:
-        return <Dashboard employees={employees} attendance={MOCK_ATTENDANCE} announcements={announcements} onNavigate={setCurrentPage} />;
+        return <Dashboard employees={employees} attendance={MOCK_ATTENDANCE} announcements={announcements} onNavigate={setCurrentPage} t={t} />;
     }
   };
 
   if (!userRole) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} t={t} />;
   }
 
   return (
@@ -134,10 +137,12 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         isMobileOpen={isMobileMenuOpen}
         setIsMobileOpen={setIsMobileMenuOpen}
+        t={t}
+        // Fix: Added settings prop to Sidebar call
+        settings={settings}
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Mobile Header */}
         <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
@@ -145,11 +150,10 @@ const App: React.FC = () => {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <span className="text-lg font-bold text-slate-900">SmartAttend</span>
-          <div className="w-6" /> {/* Spacer for centering */}
+          <span className="text-lg font-bold text-slate-900">{settings.companyName || 'SmartAttend'}</span>
+          <div className="w-6" />
         </header>
 
-        {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="mx-auto max-w-7xl">
             {renderContent()}

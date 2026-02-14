@@ -13,6 +13,88 @@ export const DEFAULT_SETTINGS: Settings = {
   companyName: 'Acme Corp',
   lateThresholdMinutes: 15,
   weeklySchedule: DEFAULT_SCHEDULE,
+  language: 'en',
+};
+
+export const TRANSLATIONS = {
+  en: {
+    dashboard: 'Dashboard',
+    employees: 'Employees',
+    reports: 'Reports',
+    settings: 'Settings',
+    announcements: 'Announcements',
+    profile: 'My Profile',
+    requests: 'Requests',
+    signOut: 'Sign Out',
+    team: 'Team',
+    present: 'Present',
+    late: 'Late',
+    absent: 'Absent',
+    onLeave: 'On Leave',
+    active: 'Active',
+    terminated: 'Terminated',
+    language: 'Language',
+    companyName: 'Company Name',
+    lateThreshold: 'Late Threshold (Minutes)',
+    weeklySchedule: 'Weekly Schedule',
+    saveConfiguration: 'Save Configuration',
+    addEmployee: 'Add Employee',
+    searchEmployees: 'Search employees...',
+    allStatus: 'All Status',
+    viewProfile: 'View Profile',
+    askAI: 'Ask AI Insights',
+    exportCSV: 'Export CSV',
+    weeklyAttendanceTrend: 'Weekly Attendance Trends',
+    statusDistribution: 'Status Distribution',
+    detailedLogs: 'Detailed Attendance Logs',
+    requestUpdate: 'Request Info Update',
+    pending: 'Pending',
+    resolved: 'Resolved',
+    adminPortal: 'Admin Portal',
+    attendanceMode: 'Attendance Mode',
+    enterDashboard: 'Enter Dashboard',
+    loginAsAdmin: 'Login as Admin',
+    errorRequired: 'is required',
+  },
+  id: {
+    dashboard: 'Dasbor',
+    employees: 'Karyawan',
+    reports: 'Laporan',
+    settings: 'Pengaturan',
+    announcements: 'Pengumuman',
+    profile: 'Profil Saya',
+    requests: 'Permintaan',
+    signOut: 'Keluar',
+    team: 'Tim',
+    present: 'Hadir',
+    late: 'Terlambat',
+    absent: 'Absen',
+    onLeave: 'Cuti',
+    active: 'Aktif',
+    terminated: 'Diberhentikan',
+    language: 'Bahasa',
+    companyName: 'Nama Perusahaan',
+    lateThreshold: 'Ambang Batas Terlambat (Menit)',
+    weeklySchedule: 'Jadwal Mingguan',
+    saveConfiguration: 'Simpan Konfigurasi',
+    addEmployee: 'Tambah Karyawan',
+    searchEmployees: 'Cari karyawan...',
+    allStatus: 'Semua Status',
+    viewProfile: 'Lihat Profil',
+    askAI: 'Tanya Wawasan AI',
+    exportCSV: 'Ekspor CSV',
+    weeklyAttendanceTrend: 'Tren Kehadiran Mingguan',
+    statusDistribution: 'Distribusi Status',
+    detailedLogs: 'Log Kehadiran Rinci',
+    requestUpdate: 'Minta Pembaruan Info',
+    pending: 'Menunggu',
+    resolved: 'Selesai',
+    adminPortal: 'Portal Admin',
+    attendanceMode: 'Mode Kehadiran',
+    enterDashboard: 'Masuk Dasbor',
+    loginAsAdmin: 'Login sebagai Admin',
+    errorRequired: 'harus diisi',
+  }
 };
 
 export const MOCK_ANNOUNCEMENTS: Announcement[] = [
@@ -102,7 +184,6 @@ export const MOCK_EMPLOYEES: Employee[] = [
   },
 ];
 
-// Generate some mock attendance for the last 7 days
 const generateMockAttendance = (): AttendanceRecord[] => {
   const records: AttendanceRecord[] = [];
   const today = new Date();
@@ -113,7 +194,6 @@ const generateMockAttendance = (): AttendanceRecord[] => {
     const dateStr = date.toISOString().split('T')[0];
 
     MOCK_EMPLOYEES.forEach((emp) => {
-      // Randomize status
       const rand = Math.random();
       let status = AttendanceStatus.PRESENT;
       let checkIn = '08:55';

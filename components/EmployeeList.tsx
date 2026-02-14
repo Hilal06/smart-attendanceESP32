@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Employee, EmployeeStatus } from '../types';
 import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter } from 'lucide-react';
@@ -7,9 +8,11 @@ interface EmployeeListProps {
   onAddEmployee: (employee: Employee) => void;
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (id: string) => void;
+  // Fix: added 't' to props interface for localization support
+  t: any;
 }
 
-export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmployee, onEditEmployee, onDeleteEmployee }) => {
+export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmployee, onEditEmployee, onDeleteEmployee, t }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   
@@ -23,6 +26,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
   const [isEditMode, setIsEditMode] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [statusWarning, setStatusWarning] = useState<string | null>(null);
   
   const initialFormState: Employee = {
     id: '',
@@ -45,6 +50,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
     if (activeMenuId) {
       window.addEventListener('click', handleClickOutside);
     }
+    // Fix: Removed the incorrect window.removeOpacity assignment and corrected the cleanup logic to properly remove the event listener
     return () => window.removeEventListener('click', handleClickOutside);
   }, [activeMenuId]);
 
@@ -58,32 +64,83 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
     return matchesSearch && matchesStatus;
   });
 
+  const validateField = (name: string, value: string) => {
+    let error = '';
+    if (name === 'id') {
+      if (!value.trim()) error = 'Employee ID is required';
+      else if (!isEditMode && employees.some(e => e.id === value.trim())) error = 'This ID already exists';
+    } else if (name === 'name') {
+      if (!value.trim()) error = 'Full name is required';
+      else if (value.trim().length < 3) error = 'Name must be at least 3 characters';
+    } else if (name === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!value.trim()) error = 'Email is required';
+      else if (!emailRegex.test(value)) error = 'Invalid email format';
+    } else if (name === 'role' && !value.trim()) {
+      error = 'Position is required';
+    } else if (name === 'department' && !value.trim()) {
+      error = 'Department is required';
+    }
+    
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      if (error) newErrors[name] = error;
+      else delete newErrors[name];
+      return newErrors;
+    });
+
+    // Specific logic for status feedback
+    if (name === 'status') {
+      if (value === EmployeeStatus.TERMINATED) {
+        setStatusWarning("Caution: Mark as Terminated will restrict system access. Please verify if final records or join date info needs archival updates.");
+      } else if (value === EmployeeStatus.ON_LEAVE) {
+        setStatusWarning("Note: Ensure the Join Date reflects the start of current contract and leave documentation is attached in HR archives.");
+      } else {
+        setStatusWarning(null);
+      }
+    }
+
+    return !error;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    validateField(name, value);
   };
 
   // Form Actions
   const openAddModal = () => {
     setFormData(initialFormState);
+    setErrors({});
+    setStatusWarning(null);
     setIsEditMode(false);
     setIsFormModalOpen(true);
   };
 
   const openEditModal = (employee: Employee) => {
     setFormData({ ...employee });
+    setErrors({});
+    setStatusWarning(null);
     setIsEditMode(true);
     setIsFormModalOpen(true);
     setActiveMenuId(null); // Close menu
   };
 
+  const validateForm = () => {
+    const idValid = validateField('id', formData.id);
+    const nameValid = validateField('name', formData.name);
+    const emailValid = validateField('email', formData.email);
+    const roleValid = validateField('role', formData.role);
+    const deptValid = validateField('department', formData.department);
+    return idValid && nameValid && emailValid && roleValid && deptValid;
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.id || !formData.email) {
-      alert('Please fill in at least Name, ID, and Email.');
-      return;
+    if (validateForm()) {
+      setIsSaveConfirmOpen(true);
     }
-    setIsSaveConfirmOpen(true);
   };
 
   const handleConfirmSave = () => {
@@ -131,7 +188,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Employees</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{t.employees}</h2>
           <p className="text-slate-500">Manage your team members and their details.</p>
         </div>
         <button 
@@ -139,7 +196,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
           className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Employee
+          {t.addEmployee}
         </button>
       </div>
 
@@ -151,7 +208,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
           </div>
           <input
             type="text"
-            placeholder="Search employees..."
+            placeholder={t.searchEmployees}
             className="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -166,13 +223,13 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
             onChange={(e) => setStatusFilter(e.target.value)}
             className="block w-full appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-8 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="All">All Status</option>
-            <option value={EmployeeStatus.ACTIVE}>Active</option>
-            <option value={EmployeeStatus.ON_LEAVE}>On Leave</option>
-            <option value={EmployeeStatus.TERMINATED}>Terminated</option>
+            <option value="All">{t.allStatus}</option>
+            <option value={EmployeeStatus.ACTIVE}>{t.active}</option>
+            <option value={EmployeeStatus.ON_LEAVE}>{t.onLeave}</option>
+            <option value={EmployeeStatus.TERMINATED}>{t.terminated}</option>
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-500">
-            <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+            <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
           </div>
         </div>
       </div>
@@ -260,7 +317,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                   onClick={() => setViewEmployee(employee)}
                   className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center"
                 >
-                    View Profile <span className="ml-1">&rarr;</span>
+                    {t.viewProfile} <span className="ml-1">&rarr;</span>
                 </button>
             </div>
           </div>
@@ -296,9 +353,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                     value={formData.id}
                     onChange={handleInputChange}
                     disabled={isEditMode}
-                    className={`mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${isEditMode ? 'bg-slate-100 cursor-not-allowed' : ''}`}
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none transition-all ${
+                        errors.id ? 'border-rose-500 focus:ring-rose-500 ring-1 ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                    } ${isEditMode ? 'bg-slate-100 cursor-not-allowed' : ''}`}
                     placeholder="e.g. EMP-001"
                   />
+                  {errors.id && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.id}</p>}
                 </div>
 
                 {/* Status */}
@@ -310,10 +370,16 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                     onChange={handleInputChange}
                     className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   >
-                    <option value={EmployeeStatus.ACTIVE}>Active</option>
-                    <option value={EmployeeStatus.ON_LEAVE}>On Leave</option>
-                    <option value={EmployeeStatus.TERMINATED}>Terminated</option>
+                    <option value={EmployeeStatus.ACTIVE}>{t.active}</option>
+                    <option value={EmployeeStatus.ON_LEAVE}>{t.onLeave}</option>
+                    <option value={EmployeeStatus.TERMINATED}>{t.terminated}</option>
                   </select>
+                  {statusWarning && (
+                    <div className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 p-2 border border-amber-100 animate-pulse">
+                      <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] font-medium text-amber-800 leading-tight">{statusWarning}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Name */}
@@ -325,9 +391,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none transition-all ${
+                        errors.name ? 'border-rose-500 focus:ring-rose-500 ring-1 ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                    }`}
                     placeholder="John Doe"
                   />
+                  {errors.name && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.name}</p>}
                 </div>
 
                 {/* Role */}
@@ -339,9 +408,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                     name="role"
                     value={formData.role}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none transition-all ${
+                        errors.role ? 'border-rose-500 focus:ring-rose-500 ring-1 ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                    }`}
                     placeholder="e.g. Software Engineer"
                   />
+                  {errors.role && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.role}</p>}
                 </div>
 
                 {/* Department */}
@@ -353,9 +425,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                     name="department"
                     value={formData.department}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none transition-all ${
+                        errors.department ? 'border-rose-500 focus:ring-rose-500 ring-1 ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                    }`}
                     placeholder="e.g. Engineering"
                   />
+                  {errors.department && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.department}</p>}
                 </div>
 
                 {/* Email */}
@@ -367,9 +442,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none transition-all ${
+                        errors.email ? 'border-rose-500 focus:ring-rose-500 ring-1 ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                    }`}
                     placeholder="john@example.com"
                   />
+                  {errors.email && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.email}</p>}
                 </div>
 
                 {/* Phone */}
@@ -386,6 +464,24 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                       onChange={handleInputChange}
                       className="block w-full rounded-lg border border-slate-300 pl-10 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                       placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
+                </div>
+
+                {/* Join Date */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Join Date <span className="text-red-500">*</span></label>
+                  <div className="relative mt-1">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <Calendar className="h-4 w-4 text-slate-400" />
+                    </div>
+                    <input
+                      required
+                      type="date"
+                      name="joinDate"
+                      value={formData.joinDate}
+                      onChange={handleInputChange}
+                      className="block w-full rounded-lg border border-slate-300 pl-10 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                 </div>
@@ -408,7 +504,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ employees, onAddEmpl
                   <label className="block text-sm font-medium text-slate-700">Address</label>
                   <div className="relative mt-1">
                      <div className="pointer-events-none absolute top-3 left-0 flex items-center pl-3">
-                      <MapPin className="h-4 w-4 text-slate-400" />
+                      <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
                     </div>
                     <textarea
                       name="address"

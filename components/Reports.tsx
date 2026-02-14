@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Employee, AttendanceRecord, AttendanceStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -7,9 +8,11 @@ import { generateAttendanceInsights } from '../services/geminiService';
 interface ReportsProps {
   attendance: AttendanceRecord[];
   employees: Employee[];
+  // Fix: added 't' to props interface for localization support
+  t: any;
 }
 
-export const Reports: React.FC<ReportsProps> = ({ attendance, employees }) => {
+export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) => {
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiInsights, setAiInsights] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('All');

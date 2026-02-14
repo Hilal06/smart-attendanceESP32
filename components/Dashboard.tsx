@@ -8,19 +8,19 @@ interface DashboardProps {
   attendance: AttendanceRecord[];
   announcements: Announcement[];
   onNavigate: (page: Page) => void;
+  t: any;
 }
 
 type TimeRange = 'Weekly' | 'Monthly' | 'Yearly';
 type AnnouncementSort = 'Latest' | 'Priority';
 
-export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, announcements, onNavigate }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, announcements, onNavigate, t }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('Weekly');
   const [announcementSort, setAnnouncementSort] = useState<AnnouncementSort>('Latest');
   const [attendancePage, setAttendancePage] = useState(1);
   const ATTENDANCE_ROWS_PER_PAGE = 5;
   const today = new Date().toISOString().split('T')[0];
 
-  // Today's specific stats for the cards
   const todaysStats = useMemo(() => {
     const todaysRecords = attendance.filter(r => r.date === today);
     return {
@@ -31,7 +31,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
     };
   }, [attendance, today]);
 
-  // Attendance Pagination Logic
   const totalAttendancePages = Math.ceil(todaysStats.records.length / ATTENDANCE_ROWS_PER_PAGE);
   const paginatedTodaysRecords = useMemo(() => {
     const start = (attendancePage - 1) * ATTENDANCE_ROWS_PER_PAGE;
@@ -47,7 +46,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
       const priorityMap: Record<string, number> = { 'Urgent': 3, 'High': 2, 'Normal': 1 };
       sortedList = list.sort((a, b) => (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0));
     }
-    // Limit to 5 max as per request
     return sortedList.slice(0, 5);
   }, [announcements, announcementSort]);
 
@@ -97,20 +95,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
     </div>
   );
 
-  const getPriorityStyle = (priority: string) => {
-    switch (priority) {
-      case 'Urgent': return 'bg-rose-50 text-rose-700 border-rose-100';
-      case 'High': return 'bg-amber-50 text-amber-700 border-amber-100';
-      default: return 'bg-slate-50 text-slate-600 border-slate-100';
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header with Filters */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Dashboard</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{t.dashboard}</h2>
           <p className="text-slate-500 text-sm">Real-time attendance tracking and announcements.</p>
         </div>
         
@@ -135,17 +124,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {/* Main Section */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard title="Team" value={employees.length} icon={Users} color="text-blue-600" bg="bg-blue-50" />
-            <StatCard title="Present" value={todaysStats.present} icon={CheckCircle} color="text-emerald-600" bg="bg-emerald-50" />
-            <StatCard title="Late" value={todaysStats.late} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
-            <StatCard title="Absent" value={todaysStats.absent} icon={AlertTriangle} color="text-rose-600" bg="bg-rose-50" />
+            <StatCard title={t.team} value={employees.length} icon={Users} color="text-blue-600" bg="bg-blue-50" />
+            <StatCard title={t.present} value={todaysStats.present} icon={CheckCircle} color="text-emerald-600" bg="bg-emerald-50" />
+            <StatCard title={t.late} value={todaysStats.late} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
+            <StatCard title={t.absent} value={todaysStats.absent} icon={AlertTriangle} color="text-rose-600" bg="bg-rose-50" />
           </div>
 
-          {/* Chart Section - Made more compact */}
           <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-100">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -153,8 +139,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                 <p className="text-[10px] text-slate-500">Aggregated records for the selected period</p>
               </div>
               <div className="flex gap-4 text-[10px]">
-                <div className="flex items-center"><span className="mr-1.5 h-2 w-2 rounded-full bg-indigo-500"></span>Present</div>
-                <div className="flex items-center"><span className="mr-1.5 h-2 w-2 rounded-full bg-amber-400"></span>Late</div>
+                <div className="flex items-center"><span className="mr-1.5 h-2 w-2 rounded-full bg-indigo-500"></span>{t.present}</div>
+                <div className="flex items-center"><span className="mr-1.5 h-2 w-2 rounded-full bg-amber-400"></span>{t.late}</div>
               </div>
             </div>
             <div className="h-56 w-full">
@@ -174,7 +160,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             </div>
           </div>
 
-          {/* Today Table (Condensed with Pagination) */}
           <div className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <h3 className="font-semibold text-slate-900 text-sm">Quick Attendance View</h3>
@@ -241,7 +226,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
           </div>
         </div>
 
-        {/* Sidebar Panel - Announcements (Limited to 5) */}
         <div className="space-y-6">
           <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100 h-full flex flex-col">
             <div className="flex items-center justify-between mb-5">
@@ -276,7 +260,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                     className="w-full text-left group rounded-xl border border-slate-100 p-4 transition-all hover:bg-slate-50 hover:border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${getPriorityStyle(item.priority)}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border`}>
                         {item.priority}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">

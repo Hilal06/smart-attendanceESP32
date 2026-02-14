@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Announcement, UserRole } from '../types';
 import { Plus, Edit, Trash2, X, AlertTriangle, Megaphone, Calendar, AlertCircle } from 'lucide-react';
@@ -8,6 +9,8 @@ interface AnnouncementsProps {
   onAdd: (announcement: Announcement) => void;
   onEdit: (announcement: Announcement) => void;
   onDelete: (id: string) => void;
+  // Fix: added 't' to props interface for localization support
+  t: any;
 }
 
 export const Announcements: React.FC<AnnouncementsProps> = ({ 
@@ -15,12 +18,15 @@ export const Announcements: React.FC<AnnouncementsProps> = ({
   userRole, 
   onAdd, 
   onEdit, 
-  onDelete 
+  onDelete,
+  // Fix: destructured 't' from props
+  t
 }) => {
   const isAdmin = userRole === 'admin';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const initialFormState: Announcement = {
     id: '',
@@ -33,14 +39,35 @@ export const Announcements: React.FC<AnnouncementsProps> = ({
   const [formData, setFormData] = useState<Announcement>(initialFormState);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  const validateField = (name: string, value: string) => {
+    let error = '';
+    if (name === 'title') {
+      if (!value.trim()) error = 'Title is required';
+      else if (value.trim().length < 5) error = 'Title must be at least 5 characters';
+    } else if (name === 'content') {
+      if (!value.trim()) error = 'Content is required';
+      else if (value.trim().length < 10) error = 'Content must be at least 10 characters';
+    }
+    
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      if (error) newErrors[name] = error;
+      else delete newErrors[name];
+      return newErrors;
+    });
+    return !error;
+  };
+
   const handleOpenAdd = () => {
     setFormData({ ...initialFormState, id: Date.now().toString() });
+    setErrors({});
     setIsEditMode(false);
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (announcement: Announcement) => {
     setFormData(announcement);
+    setErrors({});
     setIsEditMode(true);
     setIsModalOpen(true);
   };
@@ -52,12 +79,17 @@ export const Announcements: React.FC<AnnouncementsProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode) {
-      onEdit(formData);
-    } else {
-      onAdd(formData);
+    const isTitleValid = validateField('title', formData.title);
+    const isContentValid = validateField('content', formData.content);
+
+    if (isTitleValid && isContentValid) {
+      if (isEditMode) {
+        onEdit(formData);
+      } else {
+        onAdd(formData);
+      }
+      setIsModalOpen(false);
     }
-    setIsModalOpen(false);
   };
 
   const confirmDelete = () => {
@@ -171,10 +203,16 @@ export const Announcements: React.FC<AnnouncementsProps> = ({
                   required
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  onChange={(e) => {
+                    setFormData({ ...formData, title: e.target.value });
+                    validateField('title', e.target.value);
+                  }}
+                  className={`block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none transition-all ${
+                    errors.title ? 'border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                  }`}
                   placeholder="e.g., Office Closure"
                 />
+                {errors.title && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.title}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Priority</label>
@@ -203,10 +241,16 @@ export const Announcements: React.FC<AnnouncementsProps> = ({
                   required
                   rows={4}
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  onChange={(e) => {
+                    setFormData({ ...formData, content: e.target.value });
+                    validateField('content', e.target.value);
+                  }}
+                  className={`block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none transition-all ${
+                    errors.content ? 'border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                  }`}
                   placeholder="Enter details..."
                 />
+                {errors.content && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.content}</p>}
               </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button

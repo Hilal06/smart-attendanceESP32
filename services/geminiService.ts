@@ -1,18 +1,14 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { AttendanceRecord, Employee } from "../types";
-
-const API_KEY = process.env.API_KEY || '';
 
 export const generateAttendanceInsights = async (
   attendance: AttendanceRecord[],
   employees: Employee[]
 ): Promise<string> => {
-  if (!API_KEY) {
-    return "API Key is missing. Please configure your API key in the environment or settings.";
-  }
-
   try {
-    const ai = new GoogleGenAI({ apiKey: API_KEY });
+    // Initializing the AI client with the API key from environment variables as per requirements.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     // Prepare data summary for the AI to consume less tokens but get better context
     const dataSummary = {
@@ -40,11 +36,13 @@ export const generateAttendanceInsights = async (
       Keep it concise and professional.
     `;
 
+    // Calling the model with the correct configuration and model name for text tasks.
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
     });
 
+    // Directly accessing the .text property to get the generated output.
     return response.text || "No insights could be generated.";
   } catch (error) {
     console.error("Gemini API Error:", error);

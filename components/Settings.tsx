@@ -1,22 +1,46 @@
 import React, { useState } from 'react';
 import { Settings as SettingsType, DayStatus } from '../types';
-import { Save, Clock, Calendar } from 'lucide-react';
+import { Save, Clock, Calendar, AlertCircle, Globe } from 'lucide-react';
 
 interface SettingsProps {
   settings: SettingsType;
   onSave: (newSettings: SettingsType) => void;
+  t: any;
 }
 
-export const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
+export const Settings: React.FC<SettingsProps> = ({ settings, onSave, t }) => {
   const [formData, setFormData] = useState<SettingsType>(settings);
   const [saved, setSaved] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleGeneralChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validateField = (name: string, value: any) => {
+    let error = '';
+    if (name === 'companyName') {
+      if (!value.trim()) error = `${t.companyName} ${t.errorRequired}`;
+      else if (value.trim().length < 2) error = 'Name too short';
+    } else if (name === 'lateThresholdMinutes') {
+      const val = parseInt(value);
+      if (isNaN(val)) error = 'Must be a number';
+      else if (val < 0) error = 'Cannot be negative';
+      else if (val > 120) error = 'Max threshold is 120 mins';
+    }
+    
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      if (error) newErrors[name] = error;
+      else delete newErrors[name];
+      return newErrors;
+    });
+    return !error;
+  };
+
+  const handleGeneralChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'lateThresholdMinutes' ? parseInt(value) || 0 : value
+      [name]: name === 'lateThresholdMinutes' ? value : value
     }));
+    validateField(name, value);
   };
 
   const handleScheduleChange = (index: number, field: string, value: string) => {
@@ -32,20 +56,28 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    const isNameValid = validateField('companyName', formData.companyName);
+    const isThresholdValid = validateField('lateThresholdMinutes', formData.lateThresholdMinutes);
+
+    if (isNameValid && isThresholdValid) {
+      const finalData = {
+        ...formData,
+        lateThresholdMinutes: parseInt(formData.lateThresholdMinutes as any) || 0
+      };
+      onSave(finalData);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
   };
 
   return (
     <div className="max-w-4xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Settings</h2>
+        <h2 className="text-2xl font-bold text-slate-900">{t.settings}</h2>
         <p className="text-slate-500">Configure company details and weekly work schedules.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* General Settings */}
         <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
              <Calendar className="mr-2 h-5 w-5 text-indigo-500" />
@@ -53,37 +85,61 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
           </h3>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="sm:col-span-1">
-              <label htmlFor="companyName" className="block text-sm font-medium text-slate-700">Company Name</label>
+              <label htmlFor="companyName" className="block text-sm font-medium text-slate-700">{t.companyName}</label>
               <input
                 type="text"
                 name="companyName"
                 id="companyName"
                 value={formData.companyName}
                 onChange={handleGeneralChange}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-lg border px-3 py-2 shadow-sm focus:outline-none sm:text-sm transition-all ${
+                  errors.companyName ? 'border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                }`}
               />
+              {errors.companyName && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.companyName}</p>}
             </div>
 
             <div className="sm:col-span-1">
-               <label htmlFor="lateThresholdMinutes" className="block text-sm font-medium text-slate-700">Late Threshold (Minutes)</label>
+               <label htmlFor="lateThresholdMinutes" className="block text-sm font-medium text-slate-700">{t.lateThreshold}</label>
                <input
                 type="number"
                 name="lateThresholdMinutes"
                 id="lateThresholdMinutes"
                 value={formData.lateThresholdMinutes}
                 onChange={handleGeneralChange}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-lg border px-3 py-2 shadow-sm focus:outline-none sm:text-sm transition-all ${
+                  errors.lateThresholdMinutes ? 'border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                }`}
               />
-              <p className="text-xs text-slate-500 mt-1">Grace period before marking as late.</p>
+              {errors.lateThresholdMinutes ? (
+                <p className="mt-1 text-xs text-rose-500 font-medium">{errors.lateThresholdMinutes}</p>
+              ) : (
+                <p className="text-xs text-slate-500 mt-1">Grace period before marking as late.</p>
+              )}
+            </div>
+
+            <div className="sm:col-span-1">
+               <label htmlFor="language" className="block text-sm font-medium text-slate-700 flex items-center">
+                 <Globe className="h-3.5 w-3.5 mr-1" /> {t.language}
+               </label>
+               <select
+                 name="language"
+                 id="language"
+                 value={formData.language}
+                 onChange={handleGeneralChange}
+                 className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+               >
+                 <option value="en">English</option>
+                 <option value="id">Bahasa Indonesia</option>
+               </select>
             </div>
           </div>
         </div>
 
-        {/* Weekly Schedule */}
         <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
             <Clock className="mr-2 h-5 w-5 text-indigo-500" />
-            Weekly Schedule
+            {t.weeklySchedule}
           </h3>
           
           <div className="overflow-hidden rounded-lg border border-slate-200">
@@ -143,13 +199,13 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
         </div>
 
         <div className="flex items-center justify-end pt-4 border-t border-slate-100">
-          {saved && <span className="mr-4 text-sm text-emerald-600 font-medium animate-pulse">Settings Saved!</span>}
+          {saved && <span className="mr-4 text-sm text-emerald-600 font-medium animate-pulse">{settings.language === 'id' ? 'Pengaturan Disimpan!' : 'Settings Saved!'}</span>}
           <button
             type="submit"
             className="flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
           >
             <Save className="mr-2 h-4 w-4" />
-            Save Configuration
+            {t.saveConfiguration}
           </button>
         </div>
       </form>
