@@ -1,142 +1,147 @@
-# SmartAttend - AI-Powered Attendance Management System
+# SmartAttend - Enterprise Attendance System
 
-SmartAttend is a sophisticated, enterprise-ready attendance management platform designed for modern organizations. It combines a robust **Laravel** backend with a dynamic **React (Inertia.js)** frontend and **AI-driven analytics** to streamline HR operations and employee engagement.
+SmartAttend is a sophisticated, enterprise-ready attendance management platform designed for modern organizations. It combines a robust **Laravel 12** backend with a dynamic **React (Inertia.js)** frontend, **Dockerized deployment**, and **AI-driven analytics** to streamline HR operations.
 
-Designed effectively for **ESP32-CAM** integration, allowing for future expansion into facial recognition-based attendance.
+Designed for seamless integration with **ESP32-CAM** devices for facial recognition-based attendance.
 
 ---
 
 ## 🌟 Key Features
 
-### 1. Workforce Lifecycle Management
-- **Employee Directory**: Complete CRUD operations for employee records.
-- **Smart IDs**: Automatically generates **random 6-digit Employee IDs** for new hires.
-- **Default Avatars**: Automatically assigns **Initials Avatars** (via ui-avatars.com) if no profile picture is uploaded.
-- **Status Tracking**: Monitor `Active`, `On Leave`, and `Terminated` statuses.
+### 1. Security & Authentication
+- **Role-Based Access**: Secure Admin and Employee login portals.
+- **API Key Protection**: Dedicated `X-API-KEY` middleware for securing ESP32-CAM endpoints.
+- **Session Management**: Robust session handling via standard Laravel Auth.
 
-### 2. Intelligent Reporting & Analytics
-- **Gemini AI Insights**: Automated analysis of attendance data to identify trends, lateness patterns, and provide actionable HR advice.
-- **Visual Dashboards**: Interactive charts for weekly/monthly attendance trends and status distribution.
-- **Exportable Reports**: Generate attendance reports for payroll and compliance.
+### 2. DevOps & Deployment
+- **Dockerized**: Fully containerized application with `docker-compose`.
+- **Nginx Reverse Proxy**: Production-ready Nginx config with Gzip compression over SSL.
+- **Scalable Architecture**: Database and App services isolated in a custom Docker network.
 
-### 3. Real-Time Operations
-- **Live Dashboard**: Instant view of who is Present, Late, Absent, or On Leave today.
-- **Announcements**: Priority-based (`Urgent`, `High`, `Normal`) communication channel.
-- **Requests Portal**: Employees can submit requests (e.g., profile updates), which admins can review and resolve.
+### 3. Workforce Management
+- **Smart Employee Directory**: CRUD operations with automatic **Random ID Generation**.
+- **Default Avatars**: Intelligent fallback to initials (ui-avatars.com) for users without photos.
+- **Attendance Tracking**: Real-time status monitoring (`Present`, `Late`, `Absent`, `On Leave`).
 
-### 4. Customization & Localization
-- **Settings Management**: Configure company name, logo, late thresholds, and weekly schedules.
-- **Bilingual Interface**: Full support for **English** and **Indonesian (Bahasa Indonesia)**.
+### 4. Intelligent Analytics
+- **Performance Dashboards**: Interactive charts for weekly/monthly trends.
+- **Optimized Queries**: Dashboard efficiently processes data using optimized eloquent queries and date filtering.
+
+### 5. Customization
+- **Bilingual Support**: Toggle between **English** and **Indonesian (Bahasa Indonesia)**.
+- **Company Settings**: Configure late thresholds, work schedules, and branding.
 
 ---
 
 ## 🛠️ Technology Stack
 
-This project leverages a modern, performance-oriented stack:
-
 | Component | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Backend** | **Laravel** | `^10.x` | Core application logic, routing, and eloquent ORM. |
-| **Database** | **MySQL** | `8.0` | Relational data storage for employees, attendance, etc. |
-| **Frontend** | **React** | `^19.x` | Component-based UI architecture. |
-| **Bridge** | **Inertia.js** | `^2.x` | Seamless server-side routing for React. |
-| **Styling** | **Tailwind CSS** | `v4.0` | Utility-first CSS framework (configured with `@import`). |
-| **AI** | **Google Gemini** | `1.5` | AI analysis via `@google/genai` SDK. |
+| **Backend** | **Laravel** | `12.x` | Core framework, Auth, API, ORM. |
+| **Frontend** | **React** | `19.x` | Component-based UI. |
+| **Bridge** | **Inertia.js** | `2.x` | Modern monolith architecture. |
+| **Database** | **MySQL** | `8.0` | Relational data persistence. |
+| **Container** | **Docker** | `27.x` | Containerization and orchestration. |
+| **Server** | **Nginx** | `1.25` | Web server & Reverse Proxy. |
+| **AI** | **Google Gemini** | `1.5` | Usage for future analytical insights. |
 
 ---
 
 ## 🚀 Installation & Setup
 
-### Prerequisites
-- PHP >= 8.1
-- Composer
-- Node.js & NPM
-- MySQL Server
+### Option 1: Docker (Recommended)
 
-### Step-by-Step Guide
-
-1.  **Clone the Repository**
+1.  **Clone & Setup Environment**
     ```bash
-    git clone https://github.com/yourusername/smart-attendanceESP32.git
-    cd smart-attendanceESP32
+    git clone https://github.com/yourusername/smart-attendance.git
+    cd smart-attendance
+    cp .env.example .env
     ```
 
-2.  **Install Backend Dependencies**
+2.  **Configure .env**
+    Set `DB_HOST=db` and a strong `API_KEY`.
+
+3.  **Run Containers**
+    ```bash
+    docker compose up -d --build
+    ```
+
+4.  **Initialize App**
+    ```bash
+    docker compose exec app php artisan key:generate
+    docker compose exec app php artisan migrate:fresh --seed
+    ```
+
+    Visit `http://localhost`.
+
+### Option 2: Manual Setup
+
+1.  **Install Dependencies**
     ```bash
     composer install
-    ```
-
-3.  **Install Frontend Dependencies**
-    ```bash
     npm install
     ```
 
-4.  **Environment Configuration**
-    Copy the example environment file and configure your database and API keys.
-    ```bash
-    cp .env.example .env
-    ```
-    Update `.env` with your DB credentials and Gemini API key:
-    ```env
-    DB_CONNECTION=mysql
-    DB_HOST=127.0.0.1
-    DB_PORT=3306
-    DB_DATABASE=smart_attendance
-    DB_USERNAME=root
-    DB_PASSWORD=
+2.  **Configure Database**
+    Update `.env` with your local MySQL credentials.
 
-    GEMINI_API_KEY=your_api_key_here
-    APP_URL=http://localhost:8000
-    ```
-
-5.  **Generate Application Key**
-    ```bash
-    php artisan key:generate
-    ```
-
-6.  **Database Migration & Seeding**
-    Create the tables and seed initial data (including migrating from legacy `db.json` if available).
+3.  **Run Migrations & Seed**
     ```bash
     php artisan migrate --seed
     ```
 
-7.  **Run Development Servers**
-    Open two terminal windows:
-    
-    *Terminal 1 (Backend):*
+4.  **Start Servers**
     ```bash
     php artisan serve
-    ```
-    
-    *Terminal 2 (Frontend):*
-    ```bash
     npm run dev
     ```
 
-8.  **Access the Application**
-    Visit [http://localhost:8000](http://localhost:8000)
+---
+
+## 📡 API Documentation
+
+### ESP32 Attendance Endpoint
+
+**Endpoint**: `POST /api/attendance`
+**Headers**:
+- `Content-Type: application/json`
+- `X-API-KEY: <your_secret_key>`
+
+**Body**:
+```json
+{
+  "employee_id": "123456"
+}
+```
+
+**Response**:
+```json
+{
+  "status": "success",
+  "type": "check_in",
+  "message": "Welcome! Checked in at 08:30",
+  "data": { ... }
+}
+```
 
 ---
 
 ## 📂 Project Structure
 
-- `app/Http/Controllers/AttendanceController.php`: Main logic for handling data and views.
-- `app/Models/`: Eloquent models (`Employee`, `Attendance`, `Setting`, etc.).
-- `resources/js/`: React frontend application.
-  - `Pages/`: Inertia page components.
-  - `Components/`: Reusable UI components.
-  - `types.ts`: TypeScript interfaces for data consistency.
-- `routes/web.php`: Application routes.
-- `database/migrations/`: Database schema definitions.
+```
+smart-attendance/
+├── app/                  # Laravel Core Code (Controllers, Models, Middleware)
+├── docker/               # Docker Configs (Nginx, Entrypoint, Dockerfile)
+├── resources/js/         # React Frontend
+│   ├── Pages/            # Application Screens
+│   ├── Components/       # Reusable UI Elements
+│   └── constants.ts      # Global Constants & Translations
+├── routes/               # Web & API Routes
+└── docker-compose.yml    # Service Orchestration
+```
 
 ---
 
-## 🔮 Future Roadmap (ESP32 Integration)
+## 📝 License
 
-- **API Endpoint**: Create `POST /api/attendance` to receive face recognition data from ESP32-CAM.
-- **Hardware Integration**: Connect ESP32-CAM module to trigger attendance logs via WiFi.
-- **Real-Time Websockets**: Use Laravel Reverb or Pusher to update the dashboard instantly when an employee scans in.
-
----
-
-*SmartAttend: Engineering organizational efficiency through intelligent design.*
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
