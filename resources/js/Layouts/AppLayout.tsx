@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sidebar } from '../Components/Sidebar';
+import { Sidebar } from '../Components/components/Sidebar';
 import { Menu } from 'lucide-react';
 import { Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
@@ -16,7 +16,7 @@ export default function AppLayout({ children, userRole, settings }: Props) {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar 
+      <Sidebar
         userRole={userRole}
         isMobileOpen={isMobileMenuOpen}
         setIsMobileOpen={setIsMobileMenuOpen}
@@ -26,7 +26,7 @@ export default function AppLayout({ children, userRole, settings }: Props) {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
-          <button 
+          <button
             onClick={() => setIsMobileMenuOpen(true)}
             className="text-slate-500 hover:text-slate-700"
           >

@@ -4,51 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Setting;
+use App\Models\Employee;
+use App\Models\Attendance;
+use App\Models\Announcement;
+use App\Models\EmployeeRequest;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class AttendanceController extends Controller
 {
-    private $dbPath = 'db.json';
-
-    /**
-     * Helper to read the JSON database.
-     */
-    private function getDb()
-    {
-        if (!Storage::exists($this->dbPath)) {
-            return [
-                'settings' => [
-                    "companyName" => "SmartAttend Inc",
-                    "companyLogo" => "",
-                    "lateThresholdMinutes" => 15,
-                    "weeklySchedule" => [
-                        [ "day" => "Monday", "status" => "Work Day", "startTime" => "09:00", "endTime" => "17:00" ],
-                        [ "day" => "Tuesday", "status" => "Work Day", "startTime" => "09:00", "endTime" => "17:00" ],
-                        [ "day" => "Wednesday", "status" => "Work Day", "startTime" => "09:00", "endTime" => "17:00" ],
-                        [ "day" => "Thursday", "status" => "Work Day", "startTime" => "09:00", "endTime" => "17:00" ],
-                        [ "day" => "Friday", "status" => "Work Day", "startTime" => "09:00", "endTime" => "17:00" ],
-                        [ "day" => "Saturday", "status" => "Off Day", "startTime" => "09:00", "endTime" => "17:00" ],
-                        [ "day" => "Sunday", "status" => "Off Day", "startTime" => "09:00", "endTime" => "17:00" ]
-                    ],
-                    "language" => "en"
-                ],
-                'employees' => [],
-                'attendance' => [],
-                'announcements' => [],
-                'requests' => []
-            ];
-        }
-        return json_decode(Storage::get($this->dbPath), true);
-    }
-
-    /**
-     * Helper to write to the JSON database.
-     */
-    private function saveDb($data)
-    {
-        Storage::put($this->dbPath, json_encode($data, JSON_PRETTY_PRINT));
-    }
-
     // --- Auth Methods ---
 
     public function loginPage()
@@ -56,9 +21,9 @@ class AttendanceController extends Controller
         if (session('userRole')) {
             return redirect()->route('dashboard');
         }
-        $db = $this->getDb();
+        $settings = Setting::first();
         return Inertia::render('Login', [
-            'settings' => $db['settings']
+            'settings' => $settings
         ]);
     }
 
@@ -67,7 +32,6 @@ class AttendanceController extends Controller
         $role = $request->input('role');
         $id = $request->input('id');
 
-        // Simple mock authentication
         session(['userRole' => $role, 'userId' => $id]);
         return redirect()->route('dashboard');
     }
@@ -82,33 +46,25 @@ class AttendanceController extends Controller
 
     public function dashboard()
     {
-        $db = $this->getDb();
+        $settings = Setting::first();
         
         // Auto-seed: If no attendance records exist for TODAY, generate them.
         $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
-        $hasToday = false;
-        foreach ($db['attendance'] as $record) {
-            if ($record['date'] === $today) {
-                $hasToday = true;
-                break;
-            }
-        }
+        $hasToday = Attendance::where('date', $today)->exists();
 
-        if (!$hasToday && !empty($db['employees'])) {
-            $newRecords = [];
-            foreach ($db['employees'] as $emp) {
-                if (($emp['status'] ?? 'Active') === 'Terminated') continue;
-                
+        if (!$hasToday) {
+            $employees = Employee::where('status', '!=', 'Terminated')->get();
+            foreach ($employees as $emp) {
                 if (rand(1, 100) <= 15) {
                     $status = rand(0, 1) ? 'Absent' : 'On Leave';
-                    $newRecords[] = [
-                        'id' => $emp['id'] . '-' . $today,
-                        'employeeId' => $emp['id'],
+                    Attendance::create([
+                        'id' => $emp->id . '-' . $today,
+                        'employee_id' => $emp->id,
                         'date' => $today,
-                        'checkIn' => null,
-                        'checkOut' => null,
+                        'check_in' => null,
+                        'check_out' => null,
                         'status' => $status
-                    ];
+                    ]);
                     continue;
                 }
 
@@ -119,244 +75,343 @@ class AttendanceController extends Controller
                 $checkIn = sprintf("%02d:%02d", $hour, $minute);
                 $checkOut = rand(0, 1) ? '17:' . rand(0, 30) : null;
 
-                $newRecords[] = [
-                    'id' => $emp['id'] . '-' . $today,
-                    'employeeId' => $emp['id'],
+                Attendance::create([
+                    'id' => $emp->id . '-' . $today,
+                    'employee_id' => $emp->id,
                     'date' => $today,
-                    'checkIn' => $checkIn,
-                    'checkOut' => $checkOut,
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut,
                     'status' => $status
-                ];
+                ]);
             }
-            $db['attendance'] = array_merge($db['attendance'], $newRecords);
-            $this->saveDb($db);
         }
 
         return Inertia::render('Dashboard', [
             'userRole' => session('userRole'),
-            'settings' => $db['settings'],
-            'employees' => $db['employees'],
-            'attendance' => $db['attendance'],
-            'announcements' => $db['announcements']
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule, // Cast in model handles array
+                'language' => $settings->language,
+            ] : null,
+            'employees' => Employee::all()->map(function($emp) {
+                return [
+                    'id' => $emp->id,
+                    'name' => $emp->name,
+                    'role' => $emp->role,
+                    'department' => $emp->department,
+                    'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
+                    'email' => $emp->email,
+                    'joinDate' => $emp->join_date,
+                    'phoneNumber' => $emp->phone_number,
+                    'address' => $emp->address,
+                    'status' => $emp->status,
+                ];
+            }),
+            'attendance' => Attendance::all()->map(function($att) {
+                return [
+                    'id' => $att->id,
+                    'employeeId' => $att->employee_id,
+                    'date' => $att->date,
+                    'checkIn' => $att->check_in,
+                    'checkOut' => $att->check_out,
+                    'status' => $att->status,
+                ];
+            }),
+            'announcements' => Announcement::orderBy('date', 'desc')->get()
         ]);
     }
 
     public function employees()
     {
-        $db = $this->getDb();
+        $settings = Setting::first();
         return Inertia::render('Employees', [
             'userRole' => session('userRole'),
-            'settings' => $db['settings'],
-            'employees' => $db['employees']
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null,
+            'employees' => Employee::all()->map(function($emp) {
+                return [
+                    'id' => $emp->id,
+                    'name' => $emp->name,
+                    'role' => $emp->role,
+                    'department' => $emp->department,
+                    'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
+                    'email' => $emp->email,
+                    'joinDate' => $emp->join_date,
+                    'phoneNumber' => $emp->phone_number,
+                    'address' => $emp->address,
+                    'status' => $emp->status,
+                ];
+            })
         ]);
     }
 
     public function updateSettings(Request $request)
     {
-        $db = $this->getDb();
-        $db['settings'] = $request->all();
-        $this->saveDb($db);
+        $data = $request->all();
+        // Map camelCase to snake_case
+        $updateData = [];
+        if (isset($data['companyName'])) $updateData['company_name'] = $data['companyName'];
+        if (isset($data['companyLogo'])) $updateData['company_logo'] = $data['companyLogo'];
+        if (isset($data['lateThresholdMinutes'])) $updateData['late_threshold_minutes'] = $data['lateThresholdMinutes'];
+        if (isset($data['weeklySchedule'])) $updateData['weekly_schedule'] = $data['weeklySchedule'];
+        if (isset($data['language'])) $updateData['language'] = $data['language'];
+
+        $settings = Setting::first();
+        if ($settings) {
+            $settings->update($updateData);
+        } else {
+            Setting::create($updateData);
+        }
         return back()->with('message', 'Settings updated successfully');
     }
 
     public function storeEmployee(Request $request)
     {
-        $db = $this->getDb();
-        $newEmployee = $request->all();
-        $db['employees'][] = $newEmployee;
-        $this->saveDb($db);
+        $data = $request->all();
+        if (isset($data['joinDate'])) $data['join_date'] = $data['joinDate'];
+        if (isset($data['phoneNumber'])) $data['phone_number'] = $data['phoneNumber'];
+        
+        if (empty($data['id'])) {
+            $data['id'] = (string) rand(100000, 999999);
+        }
+        
+        Employee::create($data);
         return back();
     }
 
     public function updateEmployee(Request $request, $id)
     {
-        $db = $this->getDb();
-        foreach ($db['employees'] as &$emp) {
-            if ($emp['id'] == $id) {
-                $emp = array_merge($emp, $request->all());
-                break;
-            }
+        $employee = Employee::find($id);
+        if ($employee) {
+            $data = $request->all();
+            if (isset($data['joinDate'])) $data['join_date'] = $data['joinDate'];
+            if (isset($data['phoneNumber'])) $data['phone_number'] = $data['phoneNumber'];
+            $employee->update($data);
         }
-        $this->saveDb($db);
         return back();
     }
 
     public function deleteEmployee($id)
     {
-        $db = $this->getDb();
-        $db['employees'] = array_values(array_filter($db['employees'], function($e) use ($id) {
-            return $e['id'] != $id;
-        }));
-        $this->saveDb($db);
+        Employee::destroy($id);
         return back();
     }
 
     public function reports()
     {
-        $db = $this->getDb();
+        $settings = Setting::first();
         return Inertia::render('Reports', [
             'userRole' => session('userRole'),
-            'settings' => $db['settings'],
-            'attendance' => $db['attendance'],
-            'employees' => $db['employees']
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null,
+            'attendance' => Attendance::all()->map(function($att) {
+                return [
+                    'id' => $att->id,
+                    'employeeId' => $att->employee_id,
+                    'date' => $att->date,
+                    'checkIn' => $att->check_in,
+                    'checkOut' => $att->check_out,
+                    'status' => $att->status,
+                ];
+            }),
+            'employees' => Employee::all()->map(function($emp) {
+                return [
+                    'id' => $emp->id,
+                    'name' => $emp->name,
+                    'role' => $emp->role,
+                    'department' => $emp->department,
+                    'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
+                    'email' => $emp->email,
+                    'joinDate' => $emp->join_date,
+                    'phoneNumber' => $emp->phone_number,
+                    'address' => $emp->address,
+                    'status' => $emp->status,
+                ];
+            })
         ]);
     }
 
     public function settings()
     {
-        $db = $this->getDb();
+        $settings = Setting::first();
         return Inertia::render('Settings', [
             'userRole' => session('userRole'),
-            'settings' => $db['settings']
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null
         ]);
     }
 
     public function announcements()
     {
-        $db = $this->getDb();
+        $settings = Setting::first();
         return Inertia::render('Announcements', [
             'userRole' => session('userRole'),
-            'settings' => $db['settings'],
-            'announcements' => $db['announcements']
+            'settings' => $settings,
+            'announcements' => Announcement::orderBy('date', 'desc')->get()
         ]);
     }
 
     public function storeAnnouncement(Request $request)
     {
-        $db = $this->getDb();
-        $newAnnouncement = $request->all();
-        if (!isset($newAnnouncement['id'])) {
-            $newAnnouncement['id'] = (string)time();
+        $data = $request->all();
+        if (!isset($data['id'])) {
+            $data['id'] = (string)time();
         }
-        array_unshift($db['announcements'], $newAnnouncement);
-        $this->saveDb($db);
+        Announcement::create($data);
         return back();
     }
 
     public function updateAnnouncement(Request $request, $id)
     {
-        $db = $this->getDb();
-        foreach ($db['announcements'] as &$ann) {
-            if ($ann['id'] == $id) {
-                $ann = array_merge($ann, $request->all());
-                break;
-            }
+        $announcement = Announcement::find($id);
+        if ($announcement) {
+            $announcement->update($request->all());
         }
-        $this->saveDb($db);
         return back();
     }
 
     public function deleteAnnouncement($id)
     {
-        $db = $this->getDb();
-        $db['announcements'] = array_values(array_filter($db['announcements'], function($a) use ($id) {
-            return $a['id'] != $id;
-        }));
-        $this->saveDb($db);
+        Announcement::destroy($id);
         return back();
     }
 
     public function requests()
     {
-        $db = $this->getDb();
+        $settings = Setting::first();
         
-        // Auto-seed requests if empty to ensure data appears in the view
-        if (empty($db['requests']) && !empty($db['employees'])) {
-            $db['requests'] = [
-                [
-                    "id" => "1001",
-                    "employeeId" => $db['employees'][2]['id'] ?? "3",
-                    "description" => "Hi, I moved recently. Please update my address to 404 Creative Studio Lane, Austin, TX.",
-                    "date" => now()->subDays(2)->toIso8601String(),
-                    "status" => "Pending"
-                ],
-                [
-                    "id" => "1002",
-                    "employeeId" => $db['employees'][0]['id'] ?? "1",
-                    "description" => "I have a new phone number: +1 (555) 777-6666. Thanks!",
-                    "date" => now()->subDays(1)->toIso8601String(),
-                    "status" => "Pending"
-                ],
-                [
-                    "id" => "1003",
-                    "employeeId" => $db['employees'][1]['id'] ?? "2",
-                    "description" => "Please update my role to Senior Product Manager.",
-                    "date" => now()->subHours(4)->toIso8601String(),
-                    "status" => "Resolved"
-                ]
-            ];
-            $this->saveDb($db);
-        }
+        $requests = EmployeeRequest::with('employee')->orderBy('date', 'desc')->get()->map(function($req) {
+             // Map snake_case to camelCase for frontend
+             $req->employeeId = $req->employee_id;
+             return $req;
+        });
+
+        // Ensure array if null? get() returns Collection. map() returns Collection.
+        // Frontend expects array, Inertia converts Collection to array.
 
         return Inertia::render('Requests', [
             'userRole' => session('userRole'),
-            'settings' => $db['settings'],
-            'requests' => $db['requests'],
-            'employees' => $db['employees']
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null,
+            'requests' => $requests,
+            'employees' => Employee::all()->map(function($emp) {
+                 return [
+                    'id' => $emp->id,
+                    'name' => $emp->name,
+                    'role' => $emp->role, // Used in requests view to show role?
+                    'department' => $emp->department,
+                    // Minimal fields needed for requests might be enough, but consistency is safer
+                    'joinDate' => $emp->join_date,
+                    'phoneNumber' => $emp->phone_number,
+                    'status' => $emp->status,
+                    'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
+                    'email' => $emp->email,
+                 ];
+            })
         ]);
     }
 
     public function storeRequest(Request $request)
     {
-        $db = $this->getDb();
-        $newRequest = $request->all();
-        if (!isset($newRequest['id'])) {
-            $newRequest['id'] = (string)time();
+        $data = $request->all();
+        if (!isset($data['id'])) {
+            $data['id'] = (string)time();
         }
-        array_unshift($db['requests'], $newRequest);
-        $this->saveDb($db);
+        
+        // Handle frontend camelCase to backend snake_case
+        if (isset($data['employeeId'])) {
+            $data['employee_id'] = $data['employeeId'];
+        }
+
+        EmployeeRequest::create($data);
         return back();
     }
 
     public function updateRequest(Request $request, $id)
     {
-        $db = $this->getDb();
-        foreach ($db['requests'] as &$req) {
-            if ($req['id'] == $id) {
-                if ($request->has('status')) {
-                    $req['status'] = $request->input('status');
-                }
-                break;
-            }
+        $req = EmployeeRequest::find($id);
+        if ($req) {
+            // Frontend sends status updates
+            $req->update($request->only('status'));
         }
-        $this->saveDb($db);
         return back();
     }
 
     public function deleteRequest($id)
     {
-        $db = $this->getDb();
-        $db['requests'] = array_values(array_filter($db['requests'], function($r) use ($id) {
-            return $r['id'] != $id;
-        }));
-        $this->saveDb($db);
+        EmployeeRequest::destroy($id);
         return back();
     }
 
     public function profile()
     {
-        $db = $this->getDb();
+        $settings = Setting::first();
         $userId = session('userId');
         
         $employee = null;
         if ($userId) {
-            foreach ($db['employees'] as $emp) {
-                if ($emp['id'] == $userId) {
-                    $employee = $emp;
-                    break;
-                }
-            }
+            $employee = Employee::find($userId);
         }
         
-        if (!$employee && !empty($db['employees'])) {
-            $employee = $db['employees'][0];
+        if (!$employee) {
+            $employee = Employee::first();
         }
+        
+        $requests = [];
+        if ($employee) {
+             $requests = EmployeeRequest::where('employee_id', $employee->id)->get()->map(function($req) {
+                $req->employeeId = $req->employee_id;
+                return $req;
+            });
+        }
+
+        // Transform Employee for Profile
+        $transformedEmployee = $employee ? [
+            'id' => $employee->id,
+            'name' => $employee->name,
+            'role' => $employee->role,
+            'department' => $employee->department,
+            'avatar' => $employee->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($employee->name) . '&background=random',
+            'email' => $employee->email,
+            'joinDate' => $employee->join_date,
+            'phoneNumber' => $employee->phone_number,
+            'address' => $employee->address,
+            'status' => $employee->status,
+        ] : null;
 
         return Inertia::render('Profile', [
             'userRole' => session('userRole'),
-            'settings' => $db['settings'],
-            'employee' => $employee,
-            'requests' => $db['requests']
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null,
+            'employee' => $transformedEmployee,
+            'requests' => $requests
         ]);
     }
 }

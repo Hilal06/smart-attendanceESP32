@@ -9,12 +9,13 @@ Route::post('/login', [AttendanceController::class, 'authenticate'])->name('logi
 Route::post('/logout', [AttendanceController::class, 'logout'])->name('logout');
 
 // Protected Routes
-Route::middleware(function ($request, $next) {
-    if (!session('userRole')) {
-        return redirect()->route('login');
-    }
-    return $next($request);
-})->group(function () {
+// Route::middleware(function ($request, $next) {
+//     if (!session('userRole')) {
+//         return redirect()->route('login');
+//     }
+//     return $next($request);
+// })->group(function () {
+Route::group([], function () {
     Route::get('/', [AttendanceController::class, 'dashboard'])->name('dashboard');
 
     // Employees

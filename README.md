@@ -1,121 +1,141 @@
 # SmartAttend - AI-Powered Attendance Management System
 
-SmartAttend is a sophisticated, enterprise-ready attendance management platform. It combines a robust React-based frontend with an Inertia.js bridge and an AI-driven analytics core to streamline HR operations and employee engagement.
+SmartAttend is a sophisticated, enterprise-ready attendance management platform designed for modern organizations. It combines a robust **Laravel** backend with a dynamic **React (Inertia.js)** frontend and **AI-driven analytics** to streamline HR operations and employee engagement.
 
-## 🌟 Project Summary
-SmartAttend serves two primary user archetypes: **Admins**, who manage the organization's workforce and settings, and **Employees**, who track their own status and communicate with HR. The system is designed for high performance, utilizing a modern ESM-based frontend architecture and a lightweight JSON data layer for rapid prototyping and deployment.
-
----
-
-## 📦 Dependency List
-The application leverages a curated stack of modern web technologies, imported via ESM for optimal performance:
-
-| Dependency | Version | Purpose |
-| :--- | :--- | :--- |
-| **React** | `^19.2.4` | Core UI library for component-based architecture. |
-| **Lucide React** | `^0.563.0` | Accessible, consistent iconography. |
-| **Recharts** | `^3.7.0` | Data visualization for attendance trends and distributions. |
-| **@google/genai** | `^1.41.0` | Integration with Google Gemini for AI-powered insights. |
-| **@inertiajs/react**| `^2.3.15` | Seamless routing and state synchronization between server and client. |
-| **Tailwind CSS** | CDN / JIT | Utility-first styling with dark mode support. |
-| **Inter Font** | Google Fonts | Primary typeface for high readability. |
+Designed effectively for **ESP32-CAM** integration, allowing for future expansion into facial recognition-based attendance.
 
 ---
 
-## 🛠️ Core Functions
+## 🌟 Key Features
 
-### 1. Workforce Lifecycle Management (CRUD)
-- **Employee Directory**: Full management of employee records including profile photos, contact info, and department assignment.
-- **Status Lifecycle**: Track employees as `Active`, `On Leave`, or `Terminated` with specific UI feedback.
+### 1. Workforce Lifecycle Management
+- **Employee Directory**: Complete CRUD operations for employee records.
+- **Smart IDs**: Automatically generates **random 6-digit Employee IDs** for new hires.
+- **Default Avatars**: Automatically assigns **Initials Avatars** (via ui-avatars.com) if no profile picture is uploaded.
+- **Status Tracking**: Monitor `Active`, `On Leave`, and `Terminated` statuses.
 
 ### 2. Intelligent Reporting & Analytics
-- **Gemini AI Insights**: Automated analysis of raw attendance data to identify lateness patterns and provide operational recommendations.
-- **Visual Trends**: Multi-timeframe bar charts (Weekly/Monthly/Yearly) and status pie charts for instant organizational health checks.
-- **CSV Export**: Standardized data portability for external payroll or compliance auditing.
+- **Gemini AI Insights**: Automated analysis of attendance data to identify trends, lateness patterns, and provide actionable HR advice.
+- **Visual Dashboards**: Interactive charts for weekly/monthly attendance trends and status distribution.
+- **Exportable Reports**: Generate attendance reports for payroll and compliance.
 
-### 3. Communication & Requests
-- **Priority Announcements**: Tiered notification system (`Urgent`, `High`, `Normal`) with unique visual styling for critical updates.
-- **Self-Service Requests**: Employees can submit profile update requests, which admins can review and resolve in a dedicated portal.
+### 3. Real-Time Operations
+- **Live Dashboard**: Instant view of who is Present, Late, Absent, or On Leave today.
+- **Announcements**: Priority-based (`Urgent`, `High`, `Normal`) communication channel.
+- **Requests Portal**: Employees can submit requests (e.g., profile updates), which admins can review and resolve.
 
-### 4. Localization & Configuration
-- **Bilingual Support**: Full application translation between English and Bahasa Indonesia.
-- **Shift Logic**: Configurable grace periods (late thresholds) and custom weekly schedules for different organizational needs.
-
----
-
-## 💾 Database Structure (`db.json`)
-
-The application acts as a Flat-File CMS, storing all data in `storage/app/db.json`. While there is no SQL database, the JSON structure mimics relational tables:
-
-#### **Employees Table** (`employees`)
-Stores workforce profiles.
-- `id`: Unique Identifier (String)
-- `name`: Full Name (String)
-- `email`: Contact Email (String)
-- `role`: Job Title (String)
-- `department`: Department Name (String)
-- `avatar`: URL to profile image (String)
-- `joinDate`: Date of joining (YYYY-MM-DD)
-- `status`: `Active` | `On Leave` | `Terminated`
-
-#### **Attendance Table** (`attendance`)
-Tracks daily presence.
-- `id`: Unique Record ID (String, e.g., "USERID-DATE")
-- `employeeId`: Foreign Key to Employees (String)
-- `date`: Record Date (YYYY-MM-DD)
-- `checkIn`: Time (HH:MM) or null
-- `checkOut`: Time (HH:MM) or null
-- `status`: `Present` | `Late` | `Absent` | `On Leave`
-
-#### **Announcements Table** (`announcements`)
-Company-wide news feed.
-- `id`: Unique ID (String)
-- `title`: Headline (String)
-- `content`: Body text (String)
-- `priority`: `Normal` | `High` | `Urgent`
-- `date`: Posted Date (YYYY-MM-DD)
-
-#### **Requests Table** (`requests`)
-Employee profile update requests.
-- `id`: Unique Request ID (String)
-- `employeeId`: Foreign Key to Employees (String)
-- `description`: Details of the requested change (String)
-- `status`: `Pending` | `Resolved`
-- `date`: Request Timestamp (ISO String)
-
-#### **Settings Object** (`settings`)
-Global application configuration.
-- `companyName`: Display name of the org.
-- `companyLogo`: Base64 string or URL.
-- `lateThresholdMinutes`: Grace period in minutes.
-- `weeklySchedule`: Array defining work days vs off days.
+### 4. Customization & Localization
+- **Settings Management**: Configure company name, logo, late thresholds, and weekly schedules.
+- **Bilingual Interface**: Full support for **English** and **Indonesian (Bahasa Indonesia)**.
 
 ---
 
-## 🤖 Tools & Integrations
+## 🛠️ Technology Stack
 
-### Gemini AI Integration
-The app utilizes the **Gemini 3 Flash Preview** model (`gemini-3-flash-preview`) via the `@google/genai` SDK.
-- **Function**: Processes `AttendanceRecord[]` and `Employee[]` data summaries.
-- **Output**: Generates formatted HTML insights focusing on attendance trends and actionable HR advice.
-- **Security**: Requires an environment-variable based API key.
+This project leverages a modern, performance-oriented stack:
 
-### Data Persistence
-The application uses a server-side JSON database for persistence, managed by the `AttendanceController`.
-- **Logic**: Implements atomic updates via Laravel's `Storage` facade to prevent data corruption during simultaneous writes.
+| Component | Technology | Version | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Backend** | **Laravel** | `^10.x` | Core application logic, routing, and eloquent ORM. |
+| **Database** | **MySQL** | `8.0` | Relational data storage for employees, attendance, etc. |
+| **Frontend** | **React** | `^19.x` | Component-based UI architecture. |
+| **Bridge** | **Inertia.js** | `^2.x` | Seamless server-side routing for React. |
+| **Styling** | **Tailwind CSS** | `v4.0` | Utility-first CSS framework (configured with `@import`). |
+| **AI** | **Google Gemini** | `1.5` | AI analysis via `@google/genai` SDK. |
 
 ---
 
-## ⚙️ Setup & Requirements
+## 🚀 Installation & Setup
 
-### 🔑 Environment Variables
-The application requires the following key to enable AI features:
-- `process.env.API_KEY`: A valid Google AI Studio API Key.
+### Prerequisites
+- PHP >= 8.1
+- Composer
+- Node.js & NPM
+- MySQL Server
 
-### 🌐 Browser Requirements
-- **JavaScript**: Must be enabled for ESM module loading and React rendering.
-- **Local Storage**: Used for session persistence and UI state.
-- **Connectivity**: Required for initial asset loading and Gemini API calls.
+### Step-by-Step Guide
+
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/yourusername/smart-attendanceESP32.git
+    cd smart-attendanceESP32
+    ```
+
+2.  **Install Backend Dependencies**
+    ```bash
+    composer install
+    ```
+
+3.  **Install Frontend Dependencies**
+    ```bash
+    npm install
+    ```
+
+4.  **Environment Configuration**
+    Copy the example environment file and configure your database and API keys.
+    ```bash
+    cp .env.example .env
+    ```
+    Update `.env` with your DB credentials and Gemini API key:
+    ```env
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=smart_attendance
+    DB_USERNAME=root
+    DB_PASSWORD=
+
+    GEMINI_API_KEY=your_api_key_here
+    APP_URL=http://localhost:8000
+    ```
+
+5.  **Generate Application Key**
+    ```bash
+    php artisan key:generate
+    ```
+
+6.  **Database Migration & Seeding**
+    Create the tables and seed initial data (including migrating from legacy `db.json` if available).
+    ```bash
+    php artisan migrate --seed
+    ```
+
+7.  **Run Development Servers**
+    Open two terminal windows:
+    
+    *Terminal 1 (Backend):*
+    ```bash
+    php artisan serve
+    ```
+    
+    *Terminal 2 (Frontend):*
+    ```bash
+    npm run dev
+    ```
+
+8.  **Access the Application**
+    Visit [http://localhost:8000](http://localhost:8000)
+
+---
+
+## 📂 Project Structure
+
+- `app/Http/Controllers/AttendanceController.php`: Main logic for handling data and views.
+- `app/Models/`: Eloquent models (`Employee`, `Attendance`, `Setting`, etc.).
+- `resources/js/`: React frontend application.
+  - `Pages/`: Inertia page components.
+  - `Components/`: Reusable UI components.
+  - `types.ts`: TypeScript interfaces for data consistency.
+- `routes/web.php`: Application routes.
+- `database/migrations/`: Database schema definitions.
+
+---
+
+## 🔮 Future Roadmap (ESP32 Integration)
+
+- **API Endpoint**: Create `POST /api/attendance` to receive face recognition data from ESP32-CAM.
+- **Hardware Integration**: Connect ESP32-CAM module to trigger attendance logs via WiFi.
+- **Real-Time Websockets**: Use Laravel Reverb or Pusher to update the dashboard instantly when an employee scans in.
 
 ---
 
