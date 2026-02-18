@@ -17,10 +17,13 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        if (!\App\Models\User::where('email', 'admin@smartattend.com')->exists()) {
+            \App\Models\User::create([
+               'name' => 'Admin User',
+               'email' => 'admin@smartattend.com',
+               'password' => bcrypt('password'),
+            ]);
+        }
 
         $path = storage_path('app/db.json');
         if (!file_exists($path)) {

@@ -1,4 +1,4 @@
-import { AttendanceRecord, AttendanceStatus, Employee, EmployeeStatus, Settings, Announcement, DaySchedule } from './types';
+import { Settings, DaySchedule } from './types';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -124,7 +124,7 @@ export const TRANSLATIONS = {
     changeDescription: 'Change Description',
     sendRequest: 'Send Request',
     updateRequests: 'Update Requests',
-    manageRequests: 'Manage employee profile change requests from the portal.',
+    manageRequests: 'Kelola permintaan perubahan profil karyawan dari portal.',
     noPendingRequests: 'No Pending Requests',
     markResolved: 'Mark Resolved',
     dismiss: 'Dismiss',
@@ -249,135 +249,3 @@ export const TRANSLATIONS = {
     id: 'ID',
   },
 };
-
-export const MOCK_ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: '1',
-    title: 'Office Renovation Notice',
-    content: 'The 3rd-floor meeting rooms will be under renovation starting next Monday. Please book conference rooms on the 2nd floor.',
-    date: '2023-10-25',
-    priority: 'Normal',
-  },
-  {
-    id: '2',
-    title: 'New Health Insurance Policy',
-    content: 'We have updated our health insurance provider. Please check your email for the new enrollment forms and benefits guide.',
-    date: '2023-10-20',
-    priority: 'High',
-  },
-  {
-    id: '3',
-    title: 'Holiday Schedule',
-    content: 'The office will be closed on November 24th and 25th for the Thanksgiving holiday. Enjoy your break!',
-    date: '2023-10-15',
-    priority: 'Normal',
-  }
-];
-
-export const MOCK_EMPLOYEES: Employee[] = [
-  {
-    id: '1',
-    name: 'Alice Johnson',
-    role: 'Software Engineer',
-    department: 'Engineering',
-    avatar: 'https://picsum.photos/200/200?random=1',
-    email: 'alice@example.com',
-    joinDate: '2023-01-15',
-    phoneNumber: '+1 (555) 123-4567',
-    address: '123 Tech Lane, Silicon Valley, CA',
-    status: EmployeeStatus.ACTIVE
-  },
-  {
-    id: '2',
-    name: 'Bob Smith',
-    role: 'Product Manager',
-    department: 'Product',
-    avatar: 'https://picsum.photos/200/200?random=2',
-    email: 'bob@example.com',
-    joinDate: '2022-11-01',
-    phoneNumber: '+1 (555) 987-6543',
-    address: '456 Market St, San Francisco, CA',
-    status: EmployeeStatus.ACTIVE
-  },
-  {
-    id: '3',
-    name: 'Charlie Davis',
-    role: 'Designer',
-    department: 'Design',
-    avatar: 'https://picsum.photos/200/200?random=3',
-    email: 'charlie@example.com',
-    joinDate: '2023-03-10',
-    phoneNumber: '+1 (555) 456-7890',
-    address: '789 Creative Blvd, Austin, TX',
-    status: EmployeeStatus.ACTIVE
-  },
-  {
-    id: '4',
-    name: 'Diana Evans',
-    role: 'HR Specialist',
-    department: 'HR',
-    avatar: 'https://picsum.photos/200/200?random=4',
-    email: 'diana@example.com',
-    joinDate: '2021-06-20',
-    phoneNumber: '+1 (555) 222-3333',
-    address: '321 People Way, New York, NY',
-    status: EmployeeStatus.ON_LEAVE
-  },
-  {
-    id: '5',
-    name: 'Ethan Hunt',
-    role: 'Security Analyst',
-    department: 'IT',
-    avatar: 'https://picsum.photos/200/200?random=5',
-    email: 'ethan@example.com',
-    joinDate: '2023-08-01',
-    phoneNumber: '+1 (555) 999-0000',
-    address: '555 Secure Dr, Washington, DC',
-    status: EmployeeStatus.ACTIVE
-  },
-];
-
-const generateMockAttendance = (): AttendanceRecord[] => {
-  const records: AttendanceRecord[] = [];
-  const today = new Date();
-
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    // Use Asia/Jakarta time zone for the date string to align with the rest of the app
-    const dateStr = date.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
-
-    MOCK_EMPLOYEES.forEach((emp) => {
-      const rand = Math.random();
-      let status = AttendanceStatus.PRESENT;
-      let checkIn = '08:55';
-      let checkOut = '17:05';
-
-      if (rand > 0.9) {
-        status = AttendanceStatus.ABSENT;
-        checkIn = null;
-        checkOut = null;
-      } else if (rand > 0.8) {
-        status = AttendanceStatus.ON_LEAVE;
-        checkIn = null;
-        checkOut = null;
-      } else if (rand > 0.6) {
-        status = AttendanceStatus.LATE;
-        checkIn = '09:30';
-        checkOut = '17:30';
-      }
-
-      records.push({
-        id: `${emp.id}-${dateStr}`,
-        employeeId: emp.id,
-        date: dateStr,
-        checkIn,
-        checkOut,
-        status,
-      });
-    });
-  }
-  return records;
-};
-
-export const MOCK_ATTENDANCE = generateMockAttendance();

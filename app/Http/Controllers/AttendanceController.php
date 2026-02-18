@@ -30,14 +30,43 @@ class AttendanceController extends Controller
     public function authenticate(Request $request)
     {
         $role = $request->input('role');
-        $id = $request->input('id');
 
-        session(['userRole' => $role, 'userId' => $id]);
-        return redirect()->route('dashboard');
+        if ($role === 'admin') {
+            $credentials = $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
+
+            if (\Illuminate\Support\Facades\Auth::attempt($credentials)) {
+                $request->session()->regenerate();
+                session(['userRole' => 'admin', 'userId' => 'admin']); // Keep session consistent for now
+                return to_route('dashboard');
+            }
+
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ])->onlyInput('email');
+        }
+
+        // Employee Login
+        $id = $request->input('id');
+        $employee = Employee::find($id);
+
+        if ($employee) {
+            session(['userRole' => 'attendance', 'userId' => $id]);
+            return redirect()->route('dashboard');
+        }
+
+        return back()->withErrors([
+            'id' => 'Employee ID not found.',
+        ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
+        \Illuminate\Support\Facades\Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         session()->forget(['userRole', 'userId']);
         return redirect()->route('login');
     }
@@ -54,17 +83,20 @@ class AttendanceController extends Controller
 
         if (!$hasToday) {
             $employees = Employee::where('status', '!=', 'Terminated')->get();
+            $insertData = [];
             foreach ($employees as $emp) {
                 if (rand(1, 100) <= 15) {
                     $status = rand(0, 1) ? 'Absent' : 'On Leave';
-                    Attendance::create([
+                    $insertData[] = [
                         'id' => $emp->id . '-' . $today,
                         'employee_id' => $emp->id,
                         'date' => $today,
                         'check_in' => null,
                         'check_out' => null,
-                        'status' => $status
-                    ]);
+                        'status' => $status,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
                     continue;
                 }
 
@@ -75,16 +107,33 @@ class AttendanceController extends Controller
                 $checkIn = sprintf("%02d:%02d", $hour, $minute);
                 $checkOut = rand(0, 1) ? '17:' . rand(0, 30) : null;
 
-                Attendance::create([
+                $insertData[] = [
                     'id' => $emp->id . '-' . $today,
                     'employee_id' => $emp->id,
                     'date' => $today,
                     'check_in' => $checkIn,
                     'check_out' => $checkOut,
-                    'status' => $status
-                ]);
+                    'status' => $status,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            if (!empty($insertData)) {
+                Attendance::insert($insertData);
             }
         }
+
+        // Performance Optimization: 
+        // 1. Only fetch active employees with necessary fields
+        // 2. Only fetch attendance for the last 40 days (enough for Month view + buffer)
+        $msgDateLimit = now()->setTimezone('Asia/Jakarta')->subDays(40)->format('Y-m-d');
+        
+        $employees = Employee::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
+                     ->get(); // Could be paginated if list is huge, but dashboard chart needs filtering by employee
+
+        $attendances = Attendance::where('date', '>=', $msgDateLimit)
+                       ->select('id', 'employee_id', 'date', 'check_in', 'check_out', 'status')
+                       ->get();
 
         return Inertia::render('Dashboard', [
             'userRole' => session('userRole'),
@@ -95,7 +144,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule, // Cast in model handles array
                 'language' => $settings->language,
             ] : null,
-            'employees' => Employee::all()->map(function($emp) {
+            'employees' => $employees->map(function($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -109,7 +158,7 @@ class AttendanceController extends Controller
                     'status' => $emp->status,
                 ];
             }),
-            'attendance' => Attendance::all()->map(function($att) {
+            'attendance' => $attendances->map(function($att) {
                 return [
                     'id' => $att->id,
                     'employeeId' => $att->employee_id,
@@ -119,7 +168,7 @@ class AttendanceController extends Controller
                     'status' => $att->status,
                 ];
             }),
-            'announcements' => Announcement::orderBy('date', 'desc')->get()
+            'announcements' => Announcement::orderBy('date', 'desc')->limit(10)->get()
         ]);
     }
 
@@ -413,5 +462,60 @@ class AttendanceController extends Controller
             'employee' => $transformedEmployee,
             'requests' => $requests
         ]);
+    }
+
+    // --- API Methods for ESP32 ---
+
+    public function storeAttendanceApi(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+        ]);
+
+        $employeeId = $request->input('employee_id');
+        $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
+        $now = now()->setTimezone('Asia/Jakarta');
+        $timeString = $now->format('H:i');
+
+        $attendanceId = $employeeId . '-' . $today;
+        $attendance = Attendance::find($attendanceId);
+
+        if ($attendance) {
+            // Already checked in? Check out.
+            $attendance->update([
+                'check_out' => $timeString,
+                'status' => 'Present', // Or keep existing status? safe to say Present if they checked out
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'type' => 'check_out',
+                'message' => 'Goodbye! Checked out at ' . $timeString,
+                'data' => $attendance
+            ]);
+        } else {
+            // Check In
+            $status = 'Present';
+            // Simple logic: Late if after 9:00 AM
+            if ($now->hour >= 9 && $now->minute > 0) {
+                $status = 'Late';
+            }
+
+            $attendance = Attendance::create([
+                'id' => $attendanceId,
+                'employee_id' => $employeeId,
+                'date' => $today,
+                'check_in' => $timeString,
+                'check_out' => null,
+                'status' => $status
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'type' => 'check_in',
+                'message' => 'Welcome! Checked in at ' . $timeString,
+                'data' => $attendance
+            ]);
+        }
     }
 }

@@ -19,7 +19,7 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
   const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
     role: 'attendance',
     id: '',         // For attendance login
-    username: '',   // For admin login
+    email: '',      // For admin login
     password: '',   // For admin login
     remember: false,
   });
@@ -91,11 +91,11 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
                   type="text"
                   value={data.id}
                   onChange={(e) => setData('id', e.target.value)}
-                  placeholder="Enter your ID (e.g., 1)"
+                  placeholder="Enter your ID (e.g., 123456)"
                   className="block w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
                 <p className="mt-2 text-xs text-slate-500">
-                  Try ID "1" for Alice Johnson's profile.
+                  Use your 6-digit Employee ID.
                 </p>
                 {errors.id && <div className="mt-2 text-sm text-rose-600">{errors.id}</div>}
               </div>
@@ -103,16 +103,16 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Username
+                    Email Address
                   </label>
                   <input
-                    type="text"
-                    value={data.username}
-                    onChange={(e) => setData('username', e.target.value)}
-                    placeholder="admin"
+                    type="email"
+                    value={data.email}
+                    onChange={(e) => setData('email', e.target.value)}
+                    placeholder="admin@smartattend.com"
                     className="block w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
-                  {errors.username && <div className="mt-2 text-sm text-rose-600">{errors.username}</div>}
+                  {errors.email && <div className="mt-2 text-sm text-rose-600">{errors.email}</div>}
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">
