@@ -57,6 +57,10 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
     docker compose -f docker-compose.prod.yml up -d --build
     ```
 
+    > **Note: Which Docker Compose file to use?**
+    > *   **`docker-compose.prod.yml` (Production - Use this on Server)**: Optimized for stability and performance. It builds self-contained images and has automatic restart policies. Use this for deployment.
+    > *   **`docker-compose.yml` (Development)**: Designed for local coding. It mounts your code folders so changes happen instantly. Do not use this on the production server.
+
 ## 3. Post-Deployment Setup
 
 Run these commands *once* after the containers are up:
