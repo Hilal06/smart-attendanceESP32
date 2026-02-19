@@ -49,7 +49,7 @@ Designed for seamless integration with **ESP32-CAM** devices for facial recognit
 
 ## 🚀 Installation & Setup
 
-### Option 1: Docker (Recommended)
+### Option 1: Docker (Production)
 
 1.  **Clone & Setup Environment**
     ```bash
@@ -59,17 +59,18 @@ Designed for seamless integration with **ESP32-CAM** devices for facial recognit
     ```
 
 2.  **Configure .env**
-    Set `DB_HOST=db` and a strong `API_KEY`.
+    Open `.env` and set `APP_ENV=production`, `DB_HOST=db`, and your passwords.
 
 3.  **Run Containers**
     ```bash
-    docker compose up -d --build
+    docker compose -f docker-compose.prod.yml up -d --build
     ```
+    *For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).*
 
 4.  **Initialize App**
     ```bash
-    docker compose exec app php artisan key:generate
-    docker compose exec app php artisan migrate:fresh --seed
+    docker compose -f docker-compose.prod.yml exec app php artisan key:generate
+    docker compose -f docker-compose.prod.yml exec app php artisan migrate:fresh --seed
     ```
 
     Visit `http://localhost`.
