@@ -38,13 +38,18 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
     cp .env.example .env
     nano .env
     ```
-    **Critical Settings**:
+    > **Why copy `.env.example`?**
+    > The `.env` file contains sensitive secrets (passwords, API keys) and is **never** committed to Git for security. `.env.example` is a safe template committed to the repository. You copy it to create your actual configuration file (`.env`), which you then customize for this server.
+
+    **Critical Settings to Change in `.env`**:
     - `APP_ENV=production`
     - `APP_DEBUG=false`
-    - `DB_HOST=db`
+    - `APP_URL=https://your-domain.com`
+    - `DB_CONNECTION=mysql` (Already set in updated example)
+    - `DB_HOST=db` (Points to the database container service name)
     - `DB_DATABASE=smart_attendance`
     - `DB_USERNAME=smart_attendance`
-    - `DB_PASSWORD=secret_password` (Change this!)
+    - `DB_PASSWORD=secret_password` (**Change this to a strong password!**)
 
 3.  **Start Services**:
     This will build the images (installing all dependencies and building assets inside the container) and start them.
