@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from datetime import datetime
 import numpy as np
+import requests
 
 # Optional: Face Recognition
 try:
@@ -18,6 +19,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KNOWN_FACES_DIR = os.path.join(BASE_DIR, "known_faces")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
+
+# Laravel API Config
+# In Docker, this will be "http://webserver/api/attendance"
+# In Local, it defaults to "http://127.0.0.1:8000/api/attendance"
+LARAVEL_API_URL = os.environ.get("LARAVEL_API_URL", "http://127.0.0.1:8000/api/attendance")
+API_KEY = os.environ.get("API_KEY", "1234567890")
 
 app = Flask(__name__)
 
@@ -99,6 +106,20 @@ def recognize_face():
 
         
         print(f"[{timestamp}] Result: {matched_name}")
+
+        # 3. Forward to Laravel
+        if matched_name != "Unknown" and matched_name != "Recognition Disabled (Missing Lib)":
+            try:
+                print(f"Logging attendance for {matched_name}...")
+                response = requests.post(
+                    LARAVEL_API_URL, 
+                    json={"employee_id": matched_name},
+                    headers={"X-API-KEY": API_KEY}
+                )
+                print(f"Laravel Response: {response.status_code} - {response.text}")
+            except Exception as e:
+                print(f"Failed to contact Laravel: {e}")
+
         
         # 3. (Optional) Forward to Laravel
         # if matched_name != "Unknown":

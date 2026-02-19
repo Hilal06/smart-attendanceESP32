@@ -67,7 +67,24 @@ It will start listening on Port 5000.
     [20260219_140000] Result: Unknown
     ```
 
-## 5. Connecting to Backend (Future)
-Currently, `app.py` just prints the result. To automatically log attendance to Laravel:
-1.  Uncomment the "Forward to Laravel" section in `app.py`.
-2.  Update the URL to point to your `php artisan serve` address.
+## 5. Connecting to Backend
+
+The `app.py` is now configured to send attendance to your Laravel backend!
+
+1.  **Check your API Key**:
+    Open your `.env` file in the main project folder and find `API_KEY`.
+    Example: `API_KEY=1234567890`
+
+2.  **Configure Python Service**:
+    Open `python_service/app.py`.
+    Edit these lines at the top:
+    ```python
+    LARAVEL_API_URL = "http://127.0.0.1:8000/api/attendance" 
+    API_KEY = "YOUR_API_KEY_HERE" # Paste your key from .env
+    ```
+
+3.  **Test the Full Loop**:
+    *   Show a known face to the ESP32.
+    *   Python logs: `[Result: 12345] Logging attendance...`
+    *   Python logs: `Laravel Response: 200 - ...`
+    *   Check your Dashboard: The attendance should appear!

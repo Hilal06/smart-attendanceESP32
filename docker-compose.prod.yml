@@ -50,6 +50,23 @@ services:
     networks:
       - smart-attendance-network
 
+  face-recognition:
+    build:
+      context: ./python_service
+      dockerfile: Dockerfile
+    container_name: smart-attendance-recognition
+    restart: unless-stopped
+    environment:
+      - API_KEY=${API_KEY}
+      - LARAVEL_API_URL=http://webserver/api/attendance
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./python_service/known_faces:/app/known_faces
+      - ./python_service/uploads:/app/uploads
+    networks:
+      - smart-attendance-network
+
 networks:
   smart-attendance-network:
     driver: bridge
