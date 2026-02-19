@@ -45,6 +45,8 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - dbdata:/var/lib/mysql
+    ports:
+      - "127.0.0.1:3306:3306"
     networks:
       - smart-attendance-network
 

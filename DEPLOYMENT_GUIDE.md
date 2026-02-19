@@ -87,7 +87,24 @@ Run these commands *once* after the containers are up:
     docker compose -f docker-compose.prod.yml exec app chown -R www-data:www-data storage
     ```
 
-## 4. Updates
+## 5. Database Management (Secure SSH Tunnel)
+
+For security, we recommend using a desktop client like **DBeaver**, **TablePlus**, or **HeidiSQL** over a secure SSH tunnel.
+
+1.  **Open your Database Client**.
+2.  **Create a New Connection (MySQL)**.
+3.  **SSH Tab / Settings**:
+    -   **Host**: `your-server-ip`
+    -   **User**: `root` (your Ubuntu user)
+    -   **Port**: `22` (or your custom SSH port)
+    -   **Key/Password**: Your SSH credentials.
+4.  **General Tab / Database Settings**:
+    -   **Host**: `127.0.0.1` (relative to the server)
+    -   **Port**: `3306` (We exposed this locally in `docker-compose.prod.yml`)
+    -   **User/Password**: Your `.env` database credentials.
+5.  **Connect!** You now have full access without exposing ports to the internet.
+
+## 6. Updates
 
 To update the application code later:
 
