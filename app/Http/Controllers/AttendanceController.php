@@ -132,6 +132,8 @@ class AttendanceController extends Controller
                      ->get(); // Could be paginated if list is huge, but dashboard chart needs filtering by employee
 
         $attendances = Attendance::where('date', '>=', $msgDateLimit)
+                       ->orderBy('date', 'desc')
+                       ->orderBy('check_in', 'desc')
                        ->select('id', 'employee_id', 'date', 'check_in', 'check_out', 'status')
                        ->get();
 
