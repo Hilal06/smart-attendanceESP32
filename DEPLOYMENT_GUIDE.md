@@ -4,6 +4,13 @@ This guide assumes you have a server with **Ubuntu** and **Docker** installed.
 
 ## 1. Prerequisites
 
+### Hardware Requirements
+- **RAM**: Minimum 2GB (Active PHP-FPM, MySQL, and builds consume memory).
+- **Storage**: 
+    - **Minimum**: 10GB SSD (OS + Docker Images + App Code).
+    - **Recommended**: 20GB+ SSD (To accommodate logs, database backups, and future growth).
+- **CPU**: 1 vCPU (2 vCPU recommended for faster builds).
+
 ### Install Docker & Docker Compose
 If you haven't already:
 ```bash
