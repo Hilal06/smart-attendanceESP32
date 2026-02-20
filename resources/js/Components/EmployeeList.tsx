@@ -9,7 +9,7 @@ interface EmployeeListProps {
   onDeleteEmployee: (id: string) => void;
   t: any;
   isProcessing?: boolean;
-  externalErrors?: Record<string, string>;
+  externalErrors?: Record<string, string> & { message?: string; delete?: string };
 }
 
 type ToastType = 'success' | 'error';
@@ -77,8 +77,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       setErrors(prev => ({ ...prev, ...externalErrors }));
 
       // If there's a specific general error or delete error, show it in a toast
-      if (externalErrors.message || externalErrors.delete) {
-        showToast(externalErrors.message || externalErrors.delete, 'error');
+      if (externalErrors['message'] || externalErrors['delete']) {
+        showToast(externalErrors['message'] || externalErrors['delete'] || 'An error occurred', 'error');
       }
 
       // Trigger shake on form errors
@@ -716,7 +716,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   <div>
                     <div className="text-sm text-rose-800 dark:text-rose-400 font-bold">{t.language === 'id' ? 'Terjadi Kesalahan' : 'Action Failed'}</div>
                     <div className="text-xs text-rose-700 dark:text-rose-300 mt-0.5">
-                      {externalErrors.message || (t.language === 'id' ? 'Harap periksa kembali detail yang dimasukkan.' : 'Please review the entered details.')}
+                      {externalErrors['message'] || (t.language === 'id' ? 'Harap periksa kembali detail yang dimasukkan.' : 'Please review the entered details.')}
                     </div>
                   </div>
                 </div>
@@ -912,10 +912,10 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl animate-in zoom-in duration-200 transition-colors duration-200">
-            {externalErrors.delete && (
+            {externalErrors['delete'] && (
               <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-3 border border-rose-200 dark:border-rose-800/50 text-xs text-rose-800 dark:text-rose-400 font-bold flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
-                {externalErrors.delete}
+                {externalErrors['delete']}
               </div>
             )}
             <div className="text-center">
