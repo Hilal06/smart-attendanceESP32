@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sidebar } from '../Components/components/Sidebar';
+import { Sidebar } from '../Components/Sidebar';
 import { Menu } from 'lucide-react';
 import { Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';

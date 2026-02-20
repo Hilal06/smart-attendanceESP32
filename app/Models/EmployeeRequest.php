@@ -17,6 +17,10 @@ class EmployeeRequest extends Model
         'status',
     ];
 
+    protected $casts = [
+        'date' => 'datetime',
+    ];
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);

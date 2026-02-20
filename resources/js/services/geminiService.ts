@@ -8,8 +8,13 @@ export const generateAttendanceInsights = async (
 ): Promise<string> => {
   try {
     // Initializing the AI client with the API key from environment variables as per requirements.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      console.warn("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your .env file.");
+      return "AI insights unavailable. Administrative configuration required.";
+    }
+    const ai = new GoogleGenAI({ apiKey });
+
     // Prepare data summary for the AI to consume less tokens but get better context
     const dataSummary = {
       totalRecords: attendance.length,

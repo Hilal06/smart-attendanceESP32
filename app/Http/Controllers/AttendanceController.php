@@ -421,6 +421,10 @@ class AttendanceController extends Controller
             $data['employee_id'] = $data['employeeId'];
         }
 
+        if (isset($data['date'])) {
+            $data['date'] = Carbon::parse($data['date'])->setTimezone('Asia/Jakarta');
+        }
+
         EmployeeRequest::create($data);
         return back();
     }
