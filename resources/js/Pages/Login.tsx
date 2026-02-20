@@ -42,23 +42,32 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 transition-colors duration-200 p-4">
       <Head title="Login" />
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="bg-slate-900 p-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-500/20">
-            <Fingerprint className="h-8 w-8 text-indigo-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-white">SmartAttend</h1>
-          <p className="mt-2 text-slate-400">Secure Attendance Management</p>
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-transparent dark:border-slate-700 transition-colors duration-200">
+        <div className="bg-slate-900 dark:bg-slate-950 p-8 text-center rounded-t-2xl transition-colors duration-200">
+          {settings?.companyLogo ? (
+            <div className="mx-auto mb-6 flex h-24 w-auto max-w-[200px] items-center justify-center p-2 bg-white rounded-xl shadow-lg">
+              <img src={settings.companyLogo} alt={settings.companyName || 'Company Logo'} className="h-full w-full object-contain" />
+            </div>
+          ) : (
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-white shadow-lg p-2">
+              <Fingerprint className="h-10 w-10 text-indigo-600" />
+            </div>
+          )}
+
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+            {settings?.companyName || 'SmartAttend'}
+          </h1>
+          <p className="text-sm text-slate-400 font-medium tracking-wide uppercase">Secure Attendance Portal</p>
         </div>
 
         <div className="flex border-b border-slate-100">
           <button
             onClick={() => { setActiveTab('attendance'); clearErrors(); setData('role', 'attendance'); }}
             className={`flex-1 py-4 text-sm font-medium transition-colors ${activeTab === 'attendance'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'border-b-2 border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
               }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -69,8 +78,8 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
           <button
             onClick={() => { setActiveTab('admin'); clearErrors(); setData('role', 'admin'); }}
             className={`flex-1 py-4 text-sm font-medium transition-colors ${activeTab === 'admin'
-              ? 'border-b-2 border-indigo-600 text-indigo-600'
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'border-b-2 border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
               }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -84,7 +93,7 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
           <form onSubmit={handleLogin} className="space-y-6">
             {activeTab === 'attendance' ? (
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Employee ID
                 </label>
                 <input
@@ -92,17 +101,17 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
                   value={data.id}
                   onChange={(e) => setData('id', e.target.value)}
                   placeholder="Enter your ID (e.g., 123456)"
-                  className="block w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                   Use your 6-digit Employee ID.
                 </p>
-                {errors.id && <div className="mt-2 text-sm text-rose-600">{errors.id}</div>}
+                {errors.id && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.id}</div>}
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                     Email Address
                   </label>
                   <input
@@ -110,12 +119,12 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
                     value={data.email}
                     onChange={(e) => setData('email', e.target.value)}
                     placeholder="admin@smartattend.com"
-                    className="block w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
-                  {errors.email && <div className="mt-2 text-sm text-rose-600">{errors.email}</div>}
+                  {errors.email && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.email}</div>}
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                     Password
                   </label>
                   <input
@@ -123,15 +132,15 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
                     value={data.password}
                     onChange={(e) => setData('password', e.target.value)}
                     placeholder="•••••"
-                    className="block w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
-                  {errors.password && <div className="mt-2 text-sm text-rose-600">{errors.password}</div>}
+                  {errors.password && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.password}</div>}
                 </div>
               </div>
             )}
 
             {errors.role && (
-              <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">
+              <div className="rounded-lg bg-rose-50 dark:bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">
                 {errors.role}
               </div>
             )}

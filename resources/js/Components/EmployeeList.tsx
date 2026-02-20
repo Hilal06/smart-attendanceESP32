@@ -361,8 +361,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">{t.employees}</h2>
-          <p className="text-slate-500">{t.manageTeam}</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t.employees}</h2>
+          <p className="text-slate-500 dark:text-slate-400">{t.manageTeam}</p>
         </div>
         <button
           onClick={openAddModal}
@@ -377,12 +377,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search className="h-5 w-5 text-slate-400" />
+            <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
           </div>
           <input
             type="text"
             placeholder={t.searchEmployees}
-            className="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 py-2 pl-10 pr-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -390,12 +390,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
         <div className="flex gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-48">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Filter className="h-4 w-4 text-slate-400" />
+              <Filter className="h-4 w-4 text-slate-400 dark:text-slate-500" />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="block w-full appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="block w-full appearance-none rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 py-2 pl-10 pr-8 text-sm text-slate-700 dark:text-slate-200 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="All">{t.allStatus}</option>
               <option value={EmployeeStatus.ACTIVE}>{t.active}</option>
@@ -403,18 +403,17 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               <option value={EmployeeStatus.TERMINATED}>{t.terminated}</option>
             </select>
           </div>
-
-          <div className="flex rounded-lg border border-slate-300 bg-white p-1">
+          <div className="flex rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-1 shadow-sm transition-colors duration-200">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`rounded-md p-1.5 transition-all ${viewMode === 'grid' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300'}`}
               title="Grid View"
             >
               <LayoutGrid className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`rounded-md p-1.5 transition-all ${viewMode === 'list' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300'}`}
               title="List View"
             >
               <List className="h-4 w-4" />
@@ -427,9 +426,9 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
         <div className="flex justify-end">
           <div className="relative inline-block text-left">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Sort by:</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Sort by:</span>
               <select
-                className="text-xs font-semibold text-slate-700 bg-transparent border-none focus:ring-0 cursor-pointer pr-8"
+                className="text-xs font-semibold text-slate-700 dark:text-slate-300 bg-transparent border-none focus:ring-0 cursor-pointer pr-8"
                 onChange={(e) => handleSort(e.target.value as keyof Employee)}
                 value={(sortConfig?.key as string) || ''}
               >
@@ -447,13 +446,13 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredEmployees.map((employee) => (
-            <div key={employee.id} className="group relative rounded-xl bg-white p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div key={employee.id} className="group relative rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:border-indigo-100 dark:hover:border-indigo-900/50 transition-all duration-200">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-4">
                   <img src={employee.avatar} alt={employee.name} className="h-12 w-12 rounded-full object-cover" />
                   <div>
-                    <h3 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{employee.name}</h3>
-                    <p className="text-sm text-slate-500">{employee.role}</p>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{employee.name}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{employee.role}</p>
                   </div>
                 </div>
 
@@ -461,30 +460,30 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   <Tooltip text={t.language === 'id' ? 'Aksi' : 'Actions'}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === employee.id ? null : employee.id); }}
-                      className="rounded-full p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600 focus:outline-none"
+                      className="rounded-full p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none transition-colors"
                       aria-label="Toggle Menu"
                     >
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </Tooltip>
                   {activeMenuId === employee.id && (
-                    <div className="absolute right-0 mt-2 w-36 origin-top-right rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 z-20 animate-in slide-in-from-top-1 duration-150">
+                    <div className="absolute right-0 mt-2 w-36 origin-top-right rounded-lg bg-white dark:bg-slate-800 shadow-xl border border-slate-100 dark:border-slate-700 z-20 animate-in slide-in-from-top-1 duration-150">
                       <div className="py-1">
                         <button
                           onClick={() => openEditModal(employee)}
-                          className="flex w-full items-center px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors group"
+                          className="flex w-full items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
                         >
-                          <Edit className="mr-2 h-4 w-4 text-slate-400 group-hover:text-indigo-500" />
+                          <Edit className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400" />
                           {t.language === 'id' ? 'Ubah' : 'Edit'}
-                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-indigo-400">Ctrl+E</div>
+                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-indigo-400 dark:text-indigo-500">Ctrl+E</div>
                         </button>
                         <button
                           onClick={() => confirmDelete(employee.id)}
-                          className="flex w-full items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors group"
+                          className="flex w-full items-center px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/40 transition-colors group"
                         >
-                          <Trash2 className="mr-2 h-4 w-4 text-rose-400 group-hover:text-rose-500" />
+                          <Trash2 className="mr-2 h-4 w-4 text-rose-400 dark:text-rose-500 group-hover:text-rose-500 dark:group-hover:text-rose-400" />
                           {t.language === 'id' ? 'Hapus' : 'Delete'}
-                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-rose-300">Del</div>
+                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-rose-300 dark:text-rose-600">Del</div>
                         </button>
                       </div>
                     </div>
@@ -496,23 +495,23 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                 <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(employee.status)}`}>
                   {getStatusLabel(employee.status)}
                 </span>
-                <span className="text-xs text-slate-400 font-mono">ID: {employee.id}</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">ID: {employee.id}</span>
               </div>
 
-              <div className="space-y-2 border-t border-slate-50 pt-4">
-                <div className="flex items-center text-sm text-slate-600">
-                  <Briefcase className="mr-2 h-4 w-4 text-slate-400" />
+              <div className="space-y-2 border-t border-slate-50 dark:border-slate-700/50 pt-4">
+                <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+                  <Briefcase className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
                   <span className="truncate">{employee.department}</span>
                 </div>
-                <div className="flex items-center text-sm text-slate-600">
-                  <Mail className="mr-2 h-4 w-4 text-slate-400" />
+                <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+                  <Mail className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
                   <span className="truncate">{employee.email}</span>
                 </div>
               </div>
 
               <div className="mt-4 flex justify-end">
                 <Tooltip text={t.viewProfile} position="left">
-                  <button onClick={() => setViewEmployee(employee)} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center transition-colors">
+                  <button onClick={() => setViewEmployee(employee)} className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center transition-colors">
                     {t.viewProfile} <span className="ml-1"><ChevronRight className="h-3 w-3" /></span>
                   </button>
                 </Tooltip>
@@ -521,14 +520,14 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden transition-colors duration-200">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 transition-colors duration-200">
                 <tr>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
                     onClick={() => handleSort('name')}
                   >
                     <div className="flex items-center gap-2">
@@ -538,7 +537,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
                     onClick={() => handleSort('role')}
                   >
                     <div className="flex items-center gap-2">
@@ -548,7 +547,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
                     onClick={() => handleSort('department')}
                   >
                     <div className="flex items-center gap-2">
@@ -558,7 +557,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
                     onClick={() => handleSort('status')}
                   >
                     <div className="flex items-center gap-2">
@@ -566,31 +565,31 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                       <SortIcon column="status" />
                     </div>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {t.language === 'id' ? 'Aksi' : 'Actions'}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
+              <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700 transition-colors duration-200">
                 {filteredEmployees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0">
                           <img className="h-10 w-10 rounded-full object-cover" src={employee.avatar} alt="" />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-slate-900">{employee.name}</div>
-                          <div className="text-xs text-slate-500">{employee.email}</div>
+                          <div className="text-sm font-medium text-slate-900 dark:text-white">{employee.name}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">{employee.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900">{employee.role}</div>
-                      <div className="text-xs text-slate-500">ID: {employee.id}</div>
+                      <div className="text-sm text-slate-900 dark:text-slate-300">{employee.role}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-500">ID: {employee.id}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900">{employee.department}</div>
+                      <div className="text-sm text-slate-900 dark:text-slate-300">{employee.department}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(employee.status)}`}>
@@ -632,63 +631,64 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* View Profile Modal */}
       {viewEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-            <div className="relative h-32 bg-gradient-to-r from-indigo-500 to-purple-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white dark:bg-slate-800 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in duration-200 transition-colors duration-200">
+            <div className="relative h-32 bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-800">
               <button
                 onClick={() => setViewEmployee(null)}
                 className="absolute top-4 right-4 p-1 bg-black/20 text-white rounded-full hover:bg-black/40 transition-colors"
+                aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="px-8 pb-8">
               <div className="relative -mt-16 mb-4 flex justify-between items-end">
-                <div className="rounded-full p-1 bg-white">
-                  <img src={viewEmployee.avatar} alt={viewEmployee.name} className="h-32 w-32 rounded-full object-cover border-2 border-white shadow-md" />
+                <div className="rounded-full p-1 bg-white dark:bg-slate-800 transition-colors duration-200">
+                  <img src={viewEmployee.avatar} alt={viewEmployee.name} className="h-32 w-32 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-md" />
                 </div>
                 <span className={`mb-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(viewEmployee.status)}`}>
                   {getStatusLabel(viewEmployee.status)}
                 </span>
               </div>
 
-              <h2 className="text-2xl font-bold text-slate-900">{viewEmployee.name}</h2>
-              <p className="text-slate-500 font-medium mb-6 flex items-center gap-2">
-                {viewEmployee.role} <span className="text-slate-300">•</span> {viewEmployee.department}
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{viewEmployee.name}</h2>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mb-6 flex items-center gap-2">
+                {viewEmployee.role} <span className="text-slate-300 dark:text-slate-600">•</span> {viewEmployee.department}
               </p>
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1 flex items-center gap-1"><User className="h-3 w-3" /> ID</p>
-                    <p className="text-sm font-semibold text-slate-800">{viewEmployee.id}</p>
+                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 transition-colors">
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-1 flex items-center gap-1"><User className="h-3 w-3" /> ID</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{viewEmployee.id}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1 flex items-center gap-1"><Calendar className="h-3 w-3" /> {t.joinDate}</p>
-                    <p className="text-sm font-semibold text-slate-800">{new Date(viewEmployee.joinDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })}</p>
+                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 transition-colors">
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-1 flex items-center gap-1"><Calendar className="h-3 w-3" /> {t.joinDate}</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{new Date(viewEmployee.joinDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Mail className="h-4 w-4" /></div>
+                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg"><Mail className="h-4 w-4" /></div>
                     <div className="overflow-hidden">
-                      <p className="text-xs text-slate-500">{t.emailAddress}</p>
-                      <p className="text-sm font-medium text-slate-900 truncate">{viewEmployee.email}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{t.emailAddress}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 truncate">{viewEmployee.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Phone className="h-4 w-4" /></div>
+                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg"><Phone className="h-4 w-4" /></div>
                     <div>
-                      <p className="text-xs text-slate-500">{t.phoneNumber}</p>
-                      <p className="text-sm font-medium text-slate-900">{viewEmployee.phoneNumber || '-'}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{t.phoneNumber}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200">{viewEmployee.phoneNumber || '-'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><MapPin className="h-4 w-4" /></div>
+                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg"><MapPin className="h-4 w-4" /></div>
                     <div>
-                      <p className="text-xs text-slate-500">{t.address}</p>
-                      <p className="text-sm font-medium text-slate-900">{viewEmployee.address || '-'}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{t.address}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200">{viewEmployee.address || '-'}</p>
                     </div>
                   </div>
                 </div>
@@ -699,11 +699,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       )}
 
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 p-4 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200 ${shakeModal ? 'animate-shake' : ''}`}>
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-              <h3 className="text-lg font-bold text-slate-900">{isEditMode ? t.editEmployee : t.newEmployee}</h3>
-              <button onClick={() => setIsFormModalOpen(false)} className="text-slate-400 hover:text-slate-600" disabled={isProcessing}>
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className={`w-full max-w-2xl rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200 transition-colors duration-200 ${shakeModal ? 'animate-shake' : ''}`}>
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 px-6 py-4 transition-colors">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{isEditMode ? t.editEmployee : t.newEmployee}</h3>
+              <button onClick={() => setIsFormModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" disabled={isProcessing}>
                 <X className="h-6 w-6" />
               </button>
             </div>
@@ -711,11 +711,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             <form onSubmit={handleFormSubmit} className="p-6">
               {/* Robust Global Error Banner */}
               {Object.keys(externalErrors).length > 0 && (
-                <div className="mb-6 rounded-lg bg-rose-50 p-4 flex items-start gap-3 border border-rose-200 animate-in fade-in slide-in-from-top-2">
+                <div className="mb-6 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-4 flex items-start gap-3 border border-rose-200 dark:border-rose-800/50 animate-in fade-in slide-in-from-top-2">
                   <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-sm text-rose-800 font-bold">{t.language === 'id' ? 'Terjadi Kesalahan' : 'Action Failed'}</div>
-                    <div className="text-xs text-rose-700 mt-0.5">
+                    <div className="text-sm text-rose-800 dark:text-rose-400 font-bold">{t.language === 'id' ? 'Terjadi Kesalahan' : 'Action Failed'}</div>
+                    <div className="text-xs text-rose-700 dark:text-rose-300 mt-0.5">
                       {externalErrors.message || (t.language === 'id' ? 'Harap periksa kembali detail yang dimasukkan.' : 'Please review the entered details.')}
                     </div>
                   </div>
@@ -724,11 +724,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
               <div className="mb-6 flex flex-col items-center">
                 <div className="relative group">
-                  <div className={`h-24 w-24 rounded-full overflow-hidden border-2 bg-slate-50 flex items-center justify-center transition-colors ${formData.avatar ? 'border-indigo-100' : 'border-slate-200'}`}>
+                  <div className={`h-24 w-24 rounded-full overflow-hidden border-2 bg-slate-50 dark:bg-slate-700 flex items-center justify-center transition-colors ${formData.avatar ? 'border-indigo-100 dark:border-indigo-800' : 'border-slate-200 dark:border-slate-600'}`}>
                     {formData.avatar ? (
                       <img src={formData.avatar} alt="Avatar" className="h-full w-full object-cover" />
                     ) : (
-                      <Camera className="h-8 w-8 text-slate-300" />
+                      <Camera className="h-8 w-8 text-slate-300 dark:text-slate-500" />
                     )}
                   </div>
                   <Tooltip text={t.uploadPhoto} position="right">
@@ -749,12 +749,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     onChange={handlePhotoUpload}
                   />
                 </div>
-                <p className="mt-2 text-xs text-slate-500 font-medium">{t.uploadPhoto} ({t.language === 'id' ? 'Opsional' : 'Optional'})</p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">{t.uploadPhoto} ({t.language === 'id' ? 'Opsional' : 'Optional'})</p>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">ID <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">ID <span className="text-rose-500">*</span></label>
                   <input
                     required
                     type="text"
@@ -762,27 +762,27 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     value={formData.id}
                     onChange={handleInputChange}
                     disabled={isEditMode || isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm transition-all ${errors.id ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30' : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${isEditMode ? 'bg-slate-100' : ''}`}
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.id ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${isEditMode ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-500 cursor-not-allowed' : ''}`}
                   />
                   {errors.id && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.id}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">{t.allStatus} <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.allStatus} <span className="text-rose-500">*</span></label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
                     disabled={isProcessing}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                   >
                     <option value={EmployeeStatus.ACTIVE}>{t.active}</option>
                     <option value={EmployeeStatus.ON_LEAVE}>{t.onLeave}</option>
                     <option value={EmployeeStatus.TERMINATED}>{t.terminated}</option>
                   </select>
-                  {statusWarning && <div className="mt-2 text-xs font-medium text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-100 flex gap-2"><AlertCircle className="h-3 w-3 shrink-0" /> {statusWarning}</div>}
+                  {statusWarning && <div className="mt-2 text-xs font-medium text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg border border-amber-100 dark:border-amber-800/50 flex gap-2"><AlertCircle className="h-3 w-3 shrink-0" /> {statusWarning}</div>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">{t.fullName} <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.fullName} <span className="text-rose-500">*</span></label>
                   <input
                     required
                     type="text"
@@ -790,12 +790,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     value={formData.name}
                     onChange={handleInputChange}
                     disabled={isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm transition-all ${errors.name ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30' : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.name ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
                   />
                   {errors.name && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.name}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">{t.position} <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.position} <span className="text-rose-500">*</span></label>
                   <input
                     required
                     type="text"
@@ -803,12 +803,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     value={formData.role}
                     onChange={handleInputChange}
                     disabled={isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm transition-all ${errors.role ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30' : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.role ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
                   />
                   {errors.role && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.role}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">{t.department} <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.department} <span className="text-rose-500">*</span></label>
                   <input
                     required
                     type="text"
@@ -816,12 +816,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     value={formData.department}
                     onChange={handleInputChange}
                     disabled={isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm transition-all ${errors.department ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30' : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.department ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
                   />
                   {errors.department && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.department}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">{t.emailAddress} <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.emailAddress} <span className="text-rose-500">*</span></label>
                   <input
                     required
                     type="email"
@@ -829,12 +829,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     value={formData.email}
                     onChange={handleInputChange}
                     disabled={isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm transition-all ${errors.email ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30' : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.email ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
                   />
                   {errors.email && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.email}</p>}
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700">{t.joinDate} <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.joinDate} <span className="text-rose-500">*</span></label>
                   <input
                     required
                     type="date"
@@ -842,7 +842,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     value={formData.joinDate}
                     onChange={handleInputChange}
                     disabled={isProcessing}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                   />
                 </div>
               </div>
@@ -851,7 +851,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsFormModalOpen(false)}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  className="rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
                   disabled={isProcessing}
                 >
                   {t.cancel}
@@ -878,19 +878,19 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* Save Confirmation Modal with Robust Handling */}
       {isSaveConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl animate-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl animate-in zoom-in duration-200 transition-colors duration-200">
             <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 mb-4">
-                <AlertCircle className="h-6 w-6 text-indigo-600" />
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-4">
+                <AlertCircle className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">{t.confirmSave}</h3>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">{t.areYouSureSave}</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.confirmSave}</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t.areYouSureSave}</p>
             </div>
             <div className="mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
               <button
                 onClick={handleConfirmSave}
-                className="flex items-center justify-center w-full bg-indigo-600 text-white rounded-md px-4 py-2 font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg shadow-indigo-200"
+                className="flex items-center justify-center w-full bg-indigo-600 text-white rounded-md px-4 py-2 font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
                 disabled={isProcessing}
               >
                 {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -898,7 +898,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               </button>
               <button
                 onClick={() => setIsSaveConfirmOpen(false)}
-                className="mt-3 sm:mt-0 w-full bg-white border border-slate-300 rounded-md px-4 py-2 font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="mt-3 sm:mt-0 w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md px-4 py-2 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
                 disabled={isProcessing}
               >
                 {t.cancel}
@@ -910,25 +910,25 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* Delete Confirmation Modal with Robust Error Display */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl animate-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 shadow-2xl animate-in zoom-in duration-200 transition-colors duration-200">
             {externalErrors.delete && (
-              <div className="mb-4 rounded-lg bg-rose-50 p-3 border border-rose-200 text-xs text-rose-800 font-bold flex items-center gap-2">
+              <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-3 border border-rose-200 dark:border-rose-800/50 text-xs text-rose-800 dark:text-rose-400 font-bold flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 {externalErrors.delete}
               </div>
             )}
             <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 mb-4">
-                <Trash2 className="h-6 w-6 text-rose-600" />
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 mb-4">
+                <Trash2 className="h-6 w-6 text-rose-600 dark:text-rose-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">{t.confirmDeletion}</h3>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">{t.actionUndone}</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.confirmDeletion}</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t.actionUndone}</p>
             </div>
             <div className="mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
               <button
                 onClick={handleDelete}
-                className="flex items-center justify-center w-full bg-rose-600 text-white rounded-md px-4 py-2 font-bold hover:bg-rose-700 disabled:opacity-50 transition-all shadow-lg shadow-rose-200"
+                className="flex items-center justify-center w-full bg-rose-600 text-white rounded-md px-4 py-2 font-bold hover:bg-rose-700 disabled:opacity-50 transition-all shadow-lg shadow-rose-200 dark:shadow-none"
                 disabled={isProcessing}
               >
                 {isProcessing ? (
@@ -939,7 +939,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               </button>
               <button
                 onClick={() => setIsDeleteConfirmOpen(false)}
-                className="mt-3 sm:mt-0 w-full bg-white border border-slate-300 rounded-md px-4 py-2 font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="mt-3 sm:mt-0 w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md px-4 py-2 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
                 disabled={isProcessing}
               >
                 {t.cancel}

@@ -102,142 +102,161 @@ export default function Settings({ settings, userRole }: SettingsProps) {
     }
   };
 
+  // Placeholder for handleSave, as it's used in the new header but not defined in the original code.
+  // Assuming it will eventually call handleSubmit or a similar save logic.
+  const handleSave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    handleSubmit(e as any); // Cast to any to match event type, or define handleSave to take React.FormEvent
+  };
+
   return (
     <AppLayout userRole={userRole} settings={settings}>
       <Head title={t.settings} />
-      <div className="max-w-4xl space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">{t.settings}</h2>
-          <p className="text-slate-500">Configure company details and weekly work schedules.</p>
-        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-              <Calendar className="mr-2 h-5 w-5 text-indigo-500" />
-              General Information
-            </h3>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="sm:col-span-1">
-                <label htmlFor="companyName" className="block text-sm font-medium text-slate-700">{t.companyName}</label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* General Settings */}
+          <div className="rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.generalSettings}</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <Globe className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  {t.companyName}
+                </label>
                 <input
                   type="text"
                   name="companyName"
-                  id="companyName"
                   value={formData.companyName}
                   onChange={handleGeneralChange}
-                  className={`mt-1 block w-full rounded-lg border px-3 py-2 shadow-sm focus:outline-none sm:text-sm transition-all ${errors.companyName ? 'border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                  className={`w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.companyName ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 dark:border-slate-600'
                     }`}
                 />
-                {errors.companyName && <p className="mt-1 text-xs text-rose-500 font-medium">{errors.companyName}</p>}
+                {errors.companyName && <p className="mt-1 text-xs text-rose-500">{errors.companyName}</p>}
               </div>
 
-              <div className="sm:col-span-1">
-                <label htmlFor="language" className="block text-sm font-medium text-slate-700 flex items-center">
-                  <Globe className="h-3.5 w-3.5 mr-1" /> {t.language}
+              <div>
+                <label className="mb-2 flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <Globe className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  {t.language}
                 </label>
                 <select
                   name="language"
                   id="language"
                   value={formData.language}
                   onChange={handleGeneralChange}
-                  className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="en">English</option>
+                  <option value="en">English (US)</option>
                   <option value="id">Bahasa Indonesia</option>
                 </select>
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t.companyLogo}</label>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="h-20 w-40 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+                <label className="mb-3 flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <ImageIcon className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  {t.companyLogo}
+                </label>
+                <div className="flex items-center gap-6">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 transition-colors">
                     {formData.companyLogo ? (
-                      <img src={formData.companyLogo} alt="Logo Preview" className="h-full w-full object-contain" />
+                      <img src={formData.companyLogo} alt="Logo" className="h-full w-full object-contain p-1" />
                     ) : (
-                      <ImageIcon className="h-8 w-8 text-slate-300" />
+                      <ImageIcon className="h-6 w-6 text-slate-300 dark:text-slate-500" />
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleLogoChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {t.uploadLogo}
-                    </button>
-                    {formData.companyLogo && (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleLogoChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
                       <button
                         type="button"
-                        onClick={removeLogo}
-                        className="flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-100 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        {t.removeLogo}
+                        <Upload className="mr-2 h-4 w-4" />
+                        {t.uploadLogo}
                       </button>
-                    )}
+                      {formData.companyLogo && (
+                        <button
+                          type="button"
+                          onClick={removeLogo}
+                          className="flex items-center rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-900/30 px-3 py-1.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {t.removeLogo}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Recommended size: 200x50px. Max 2MB.</p>
                   </div>
                 </div>
-                <p className="mt-1.5 text-xs text-slate-500">Recommended size: 200x50px. Max 2MB.</p>
               </div>
 
-              <div className="sm:col-span-1">
-                <label htmlFor="lateThresholdMinutes" className="block text-sm font-medium text-slate-700">{t.lateThreshold}</label>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+                <label htmlFor="lateThresholdMinutes" className="mb-2 flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <Clock className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  {t.lateThreshold}
+                </label>
                 <input
                   type="number"
                   name="lateThresholdMinutes"
                   id="lateThresholdMinutes"
                   value={formData.lateThresholdMinutes}
                   onChange={handleGeneralChange}
-                  className={`mt-1 block w-full rounded-lg border px-3 py-2 shadow-sm focus:outline-none sm:text-sm transition-all ${errors.lateThresholdMinutes ? 'border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                  className={`w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${errors.lateThresholdMinutes ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 dark:border-slate-600'
                     }`}
                 />
                 {errors.lateThresholdMinutes ? (
-                  <p className="mt-1 text-xs text-rose-500 font-medium">{errors.lateThresholdMinutes}</p>
+                  <p className="mt-1 text-xs text-rose-500">{errors.lateThresholdMinutes}</p>
                 ) : (
-                  <p className="text-xs text-slate-500 mt-1">Grace period before marking as late.</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Grace period before marking as late.</p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-              <Clock className="mr-2 h-5 w-5 text-indigo-500" />
-              {t.weeklySchedule}
-            </h3>
+          {/* Weekly Schedule */}
+          <div className="rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.weeklySchedule}</h3>
+            </div>
 
-            <div className="overflow-hidden rounded-lg border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+            <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 transition-colors duration-200">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Day</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Start Time</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">End Time</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Day</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Hours</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
+                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700 transition-colors duration-200">
                   {formData.weeklySchedule.map((day, index) => (
-                    <tr key={day.day} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                        {day.day}
+                    <tr key={day.day} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-200">
+                        {day.day.substring(0, 3)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <select
                           value={day.status}
                           onChange={(e) => handleScheduleChange(index, 'status', e.target.value)}
-                          className={`block w-full rounded-md border-0 py-1.5 pl-3 pr-8 text-sm ring-1 ring-inset focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 ${day.status === 'Work Day' ? 'text-emerald-700 bg-emerald-50 ring-emerald-200' :
-                            day.status === 'Holiday' ? 'text-amber-700 bg-amber-50 ring-amber-200' :
-                              'text-slate-500 bg-slate-50 ring-slate-200'
+                          className={`block w-full rounded-md border-0 py-1.5 pl-3 pr-8 text-xs font-medium ring-1 ring-inset focus:ring-2 focus:ring-indigo-600 transition-colors ${day.status === 'Work Day' ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 ring-emerald-200 dark:ring-emerald-800/50' :
+                            day.status === 'Holiday' ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 ring-amber-200 dark:ring-amber-800/50' :
+                              'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 ring-slate-200 dark:ring-slate-700'
                             }`}
                         >
                           <option value="Work Day">Work Day</option>
@@ -245,22 +264,21 @@ export default function Settings({ settings, userRole }: SettingsProps) {
                           <option value="Off Day">Off Day</option>
                         </select>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap hidden sm:flex items-center gap-2">
                         <input
                           type="time"
                           value={day.startTime}
                           onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
                           disabled={day.status !== 'Work Day'}
-                          className="block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:text-sm sm:leading-6"
+                          className="block w-24 rounded-md border-0 py-1 px-2 font-mono text-xs text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 transition-colors"
                         />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-slate-400 dark:text-slate-500">-</span>
                         <input
                           type="time"
                           value={day.endTime}
                           onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
                           disabled={day.status !== 'Work Day'}
-                          className="block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 sm:text-sm sm:leading-6"
+                          className="block w-24 rounded-md border-0 py-1 px-2 font-mono text-xs text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 transition-colors"
                         />
                       </td>
                     </tr>
@@ -269,25 +287,16 @@ export default function Settings({ settings, userRole }: SettingsProps) {
               </table>
             </div>
           </div>
-
-          <div className="flex items-center justify-end pt-4 border-t border-slate-100">
-            {saved && (
-              <div className="mr-4 flex items-center gap-2 text-sm text-emerald-600 font-medium animate-pulse">
-                <CheckCircle2 className="h-4 w-4" />
-                {settings.language === 'id' ? 'Pengaturan Disimpan!' : 'Settings Saved!'}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className="flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-            >
-              {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              {t.saveConfiguration}
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+        <button
+          type="submit"
+          disabled={isProcessing}
+          className="flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+        >
+          {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+          {t.saveConfiguration}
+        </button>
+      </form>
     </AppLayout>
   );
 }

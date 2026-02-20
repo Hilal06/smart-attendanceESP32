@@ -23,7 +23,13 @@ class AttendanceController extends Controller
         }
         $settings = Setting::first();
         return Inertia::render('Login', [
-            'settings' => $settings
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null,
         ]);
     }
 
@@ -209,10 +215,35 @@ class AttendanceController extends Controller
         // Map camelCase to snake_case
         $updateData = [];
         if (isset($data['companyName'])) $updateData['company_name'] = $data['companyName'];
-        if (isset($data['companyLogo'])) $updateData['company_logo'] = $data['companyLogo'];
         if (isset($data['lateThresholdMinutes'])) $updateData['late_threshold_minutes'] = $data['lateThresholdMinutes'];
         if (isset($data['weeklySchedule'])) $updateData['weekly_schedule'] = $data['weeklySchedule'];
         if (isset($data['language'])) $updateData['language'] = $data['language'];
+
+        if (array_key_exists('companyLogo', $data)) {
+            $logoData = $data['companyLogo'];
+            
+            if (empty($logoData)) {
+                $updateData['company_logo'] = null;
+            } else {
+                // If it's a base64 string (from FileReader)
+                if (preg_match('/^data:image\/(\w+);base64,/', $logoData, $type)) {
+                    $logoData = substr($logoData, strpos($logoData, ',') + 1);
+                    $type = strtolower($type[1]); // jpg, png, gif
+
+                    if (in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+                        $logoData = base64_decode($logoData);
+                        if ($logoData !== false) {
+                            $filename = 'company_logo_' . time() . '.' . $type;
+                            Storage::disk('public')->put('logos/' . $filename, $logoData);
+                            $updateData['company_logo'] = Storage::url('logos/' . $filename);
+                        }
+                    }
+                } else {
+                     // It might be already a URL
+                     $updateData['company_logo'] = $logoData;
+                }
+            }
+        }
 
         $settings = Setting::first();
         if ($settings) {
