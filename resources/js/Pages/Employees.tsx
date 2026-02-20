@@ -16,9 +16,15 @@ export default function Employees({ userRole, settings, employees }: Props) {
   const { errors } = usePage().props;
   const [processing, setProcessing] = useState(false);
 
-  const handleAdd = (emp: Employee) => {
+  const handleAdd = (emp: Employee, avatarFile?: File) => {
     setProcessing(true);
-    router.post('/employees', emp, {
+    const data: any = { ...emp };
+    if (avatarFile) {
+      data.avatar = avatarFile;
+    }
+
+    router.post('/employees', data, {
+      forceFormData: !!avatarFile,
       onFinish: () => setProcessing(false),
       onError: () => {
         // Errors are automatically available in usePage().props.errors
@@ -29,14 +35,29 @@ export default function Employees({ userRole, settings, employees }: Props) {
     });
   };
 
-  const handleEdit = (emp: Employee) => {
+  const handleEdit = (emp: Employee, avatarFile?: File) => {
     setProcessing(true);
-    router.put(`/employees/${emp.id}`, emp, {
-      onFinish: () => setProcessing(false),
-      onError: () => {
-        // Server errors passed back to component
-      }
-    });
+    const data: any = { ...emp };
+
+    if (avatarFile) {
+      data.avatar = avatarFile;
+      data._method = 'put';
+      router.post(`/employees/${emp.id}`, data, {
+        forceFormData: true,
+        onFinish: () => setProcessing(false),
+        onError: () => {
+          // Server errors passed back to component
+        }
+      });
+    } else {
+      const data: any = { ...emp };
+      router.put(`/employees/${emp.id}`, data, {
+        onFinish: () => setProcessing(false),
+        onError: () => {
+          // Server errors passed back to component
+        }
+      });
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -44,15 +65,15 @@ export default function Employees({ userRole, settings, employees }: Props) {
     router.delete(`/employees/${id}`, {
       onFinish: () => setProcessing(false),
       onError: (err: any) => {
-         // Custom delete error message if needed
+        // Custom delete error message if needed
       }
     });
   };
 
   return (
     <AppLayout userRole={userRole} settings={settings}>
-      <EmployeeList 
-        employees={employees} 
+      <EmployeeList
+        employees={employees}
         onAddEmployee={handleAdd}
         onEditEmployee={handleEdit}
         onDeleteEmployee={handleDelete}

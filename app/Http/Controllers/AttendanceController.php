@@ -232,6 +232,15 @@ class AttendanceController extends Controller
         if (empty($data['id'])) {
             $data['id'] = (string) rand(100000, 999999);
         }
+
+        // Handle Avatar Upload
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            // Save as ID.extension (e.g. 123456.jpg)
+            $filename = $data['id'] . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('avatars', $filename, 'public');
+            $data['avatar'] = Storage::url($path);
+        }
         
         Employee::create($data);
         return back();
@@ -244,6 +253,22 @@ class AttendanceController extends Controller
             $data = $request->all();
             if (isset($data['joinDate'])) $data['join_date'] = $data['joinDate'];
             if (isset($data['phoneNumber'])) $data['phone_number'] = $data['phoneNumber'];
+
+            // Handle Avatar Upload
+            if ($request->hasFile('avatar')) {
+                // Delete old avatar if it exists
+                if ($employee->avatar && str_contains($employee->avatar, '/storage/')) {
+                    $oldPath = str_replace('/storage/', '', $employee->avatar);
+                    Storage::disk('public')->delete($oldPath);
+                }
+
+                $file = $request->file('avatar');
+                // Save as ID.extension
+                $filename = $employee->id . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('avatars', $filename, 'public');
+                $data['avatar'] = Storage::url($path);
+            }
+
             $employee->update($data);
         }
         return back();

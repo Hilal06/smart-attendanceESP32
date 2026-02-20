@@ -1,9 +1,10 @@
+# Laravel
+/vendor
 /node_modules
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
-/vendor
 .env
 .env.backup
 .env.production
@@ -12,12 +13,27 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-/.idea
-/.vscode
+/auth.json
+
+# IDEs
+.idea
+.vscode
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-/uploads
-python_service/uploads
+
+# Python Service
+python_service/uploads/*
+python_service/known_faces/*
+!python_service/known_faces/.gitignore
+python_service/__pycache__/
+python_service/*.pyc
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db

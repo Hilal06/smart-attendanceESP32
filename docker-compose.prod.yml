@@ -62,7 +62,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./python_service/known_faces:/app/known_faces
+      - ./storage/app/public/avatars:/app/known_faces
       - ./python_service/uploads:/app/uploads
     networks:
       - smart-attendance-network

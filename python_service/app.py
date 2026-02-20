@@ -131,9 +131,22 @@ def recognize_face():
             "timestamp": timestamp
         })
 
+
     except Exception as e:
         print(f"Error processing request: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/reload', methods=['GET', 'POST'])
+def reload_faces():
+    global known_face_encodings, known_face_names
+    known_face_encodings = []
+    known_face_names = []
+    load_known_faces()
+    return jsonify({
+        "status": "success", 
+        "message": f"Reloaded {len(known_face_names)} faces",
+        "faces": known_face_names
+    })
 
 if __name__ == '__main__':
     # Run slightly accessible
