@@ -18,8 +18,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   t,
   settings
 }) => {
-  const { url } = usePage();
+  const { url, props } = usePage<any>();
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const auth = props.auth;
 
   // Normalize URL for comparison (remove trailing slash if present, unless it's root)
   const currentPath = url.endsWith('/') && url.length > 1 ? url.slice(0, -1) : url;
@@ -83,14 +84,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </nav>
 
           <div className="p-4 border-t border-slate-800/50 bg-slate-900/50 shrink-0">
-            {/* User Profile Mini - Placeholder for future or just visual anchor */}
-            <div className="flex items-center gap-3 px-2 py-3 mb-4 rounded-xl border border-slate-800/50 bg-slate-900 shadow-sm">
-              <div className="h-10 w-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                <UserCircle className="h-6 w-6 text-slate-400" />
+            {/* User Profile Mini */}
+            <div className="flex items-center gap-3 px-2 py-3 mb-4 rounded-xl border border-slate-800/50 bg-slate-900 shadow-sm overflow-hidden">
+              <div className="h-10 w-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+                {auth?.user?.avatar ? (
+                  <img src={auth.user.avatar} alt={auth.user.name} className="h-full w-full object-cover" />
+                ) : (
+                  <UserCircle className="h-6 w-6 text-slate-400" />
+                )}
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-slate-200 truncate">{userRole === 'admin' ? 'Administrator' : 'Employee'}</span>
-                <span className="text-xs text-slate-500 truncate capitalize">{userRole} Access</span>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-sm font-bold text-slate-200 truncate" title={auth?.user?.name || (userRole === 'admin' ? 'Administrator' : 'Employee')}>
+                  {auth?.user?.name || (userRole === 'admin' ? 'Administrator' : 'Employee')}
+                </span>
+                <span className="text-xs text-slate-500 truncate capitalize" title={auth?.user?.role ? `${auth.user.role} Access` : `${userRole} Access`}>
+                  {auth?.user?.role ? auth.user.role : `${userRole} Access`}
+                </span>
               </div>
             </div>
 

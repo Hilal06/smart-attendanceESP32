@@ -35,9 +35,38 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $role = session('userRole');
+        $authData = [
+            'role' => $role,
+            'user' => null
+        ];
+
+        if ($role === 'admin') {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if ($user) {
+                $authData['user'] = [
+                    'name' => 'Administrator',
+                    'role' => 'Administrator',
+                    'avatar' => null,
+                ];
+            }
+        } elseif ($role === 'attendance') {
+            $userId = session('userId');
+            if ($userId) {
+                $employee = \App\Models\Employee::find($userId);
+                if ($employee) {
+                    $authData['user'] = [
+                        'name' => $employee->name,
+                        'role' => $employee->role,
+                        'avatar' => $employee->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($employee->name) . '&background=random',
+                    ];
+                }
+            }
+        }
+
         return [
             ...parent::share($request),
-            //
+            'auth' => $authData,
         ];
     }
 }

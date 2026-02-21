@@ -77,3 +77,14 @@ export interface ProfileRequest {
   date: string;
   status: 'Pending' | 'Resolved';
 }
+
+export interface AuthUser {
+  name: string;
+  role: string | null;
+  avatar: string | null;
+}
+
+export interface Auth {
+  role: UserRole | null;
+  user: AuthUser | null;
+}
