@@ -461,7 +461,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
           <input
             type="text"
             placeholder={t.searchEmployees}
-            className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 pl-10 pr-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="block w-full rounded-lg border border-white/20 dark:border-slate-700/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md py-2 pl-10 pr-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -474,7 +474,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="block w-full appearance-none rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 py-2 pl-10 pr-8 text-sm text-slate-700 dark:text-slate-200 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="block w-full appearance-none rounded-lg border border-white/20 dark:border-slate-700/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md py-2 pl-10 pr-8 text-sm text-slate-700 dark:text-slate-200 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
             >
               <option value="All">{t.allStatus}</option>
               <option value={EmployeeStatus.ACTIVE}>{t.active}</option>
@@ -482,7 +482,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               <option value={EmployeeStatus.TERMINATED}>{t.terminated}</option>
             </select>
           </div>
-          <div className="flex rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-1 shadow-sm transition-colors duration-200">
+          <div className="flex rounded-lg border border-white/20 dark:border-slate-700/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md p-1 shadow-sm transition-colors duration-200">
             <button
               onClick={() => setViewMode('grid')}
               className={`rounded-md p-1.5 transition-all ${viewMode === 'grid' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300'}`}
@@ -525,7 +525,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredEmployees.map((employee) => (
-            <div key={employee.id} className="group relative rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md hover:border-indigo-100 dark:hover:border-indigo-900/50 transition-all duration-200">
+            <div key={employee.id} className="group relative rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-md hover:bg-white/95 dark:hover:bg-slate-900/95 hover:border-indigo-200/50 dark:hover:border-indigo-900/50 transition-all duration-300">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-4">
                   <img src={employee.avatar} alt={employee.name} className="h-12 w-12 rounded-full object-cover" />
@@ -615,10 +615,10 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
           )}
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden transition-colors duration-200">
+        <div className="rounded-xl border border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 transition-colors duration-200">
+            <table className="min-w-full lg:min-w-full max-w-full divide-y divide-slate-200/50 dark:divide-slate-800/50">
+              <thead className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm transition-colors duration-300">
                 <tr>
                   <th
                     scope="col"
@@ -665,10 +665,10 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800 transition-colors duration-200">
+              <tbody className="bg-transparent divide-y divide-slate-100 dark:divide-slate-800/50 transition-colors duration-300">
                 {paginatedEmployees.length > 0 ? (
                   paginatedEmployees.map((employee) => (
-                    <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <tr key={employee.id} className="hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors group">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="h-10 w-10 flex-shrink-0">
@@ -746,8 +746,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 sm:px-6 rounded-xl shadow-sm transition-colors mt-6">
-          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between border-t border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 sm:px-6 rounded-xl shadow-sm transition-colors duration-300 mt-6 overflow-hidden">
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between relative z-10">
             <div>
               <p className="text-sm text-slate-700 dark:text-slate-300">
                 {t.language === 'id' ? 'Menampilkan' : 'Showing'}{' '}
