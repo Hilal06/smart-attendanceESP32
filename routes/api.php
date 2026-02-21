@@ -10,3 +10,4 @@ Route::get('/user', function (Request $request) {
 use App\Http\Controllers\AttendanceController;
 
 Route::post('/attendance', [AttendanceController::class, 'storeAttendanceApi'])->middleware('api.key');
+Route::get('/system/status', [AttendanceController::class, 'systemStatus']);

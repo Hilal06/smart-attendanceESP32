@@ -4,8 +4,8 @@ import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCir
 
 interface EmployeeListProps {
   employees: Employee[];
-  onAddEmployee: (employee: Employee, avatarFile?: File) => void;
-  onEditEmployee: (employee: Employee, avatarFile?: File) => void;
+  onAddEmployee: (employee: Employee, avatarFile?: File, faceDataFile?: File) => void;
+  onEditEmployee: (employee: Employee, avatarFile?: File, faceDataFile?: File) => void;
   onDeleteEmployee: (id: string) => void;
   t: any;
   isProcessing?: boolean;
@@ -64,6 +64,10 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
   const [formData, setFormData] = useState<Employee>(initialFormState);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [faceDataFile, setFaceDataFile] = useState<File | null>(null);
+  const [faceDataPreview, setFaceDataPreview] = useState<string | null>(null);
+
+  const faceDataInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = useCallback((message: string, type: ToastType = 'success') => {
     if (toastTimeoutRef.current) window.clearTimeout(toastTimeoutRef.current);
@@ -194,24 +198,83 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 1024 * 1024) {
-        showToast(t.language === 'id' ? 'Ukuran file terlalu besar (Maks 1MB)' : 'File size too large (Max 1MB)', 'error');
-        return;
-      }
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, avatar: reader.result as string }));
-        showToast(t.language === 'id' ? 'Foto diunggah' : 'Photo uploaded', 'success');
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(t.language === 'id' ? 'Ukuran file terlalu besar (Maks 5MB)' : 'File size too large (Max 5MB)', 'error');
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 500;
+        const MAX_HEIGHT = 500;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setFormData(prev => ({ ...prev, avatar: dataUrl }));
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+            setAvatarFile(compressedFile);
+          }
+        }, 'image/jpeg', 0.8);
+
+        showToast(t.language === 'id' ? 'Foto dioptimalkan dan diunggah' : 'Photo optimized and uploaded', 'success');
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFaceDataUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(t.language === 'id' ? 'Ukuran file terlalu besar (Maks 5MB)' : 'File size too large (Max 5MB)', 'error');
+      return;
+    }
+
+    setFaceDataFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setFaceDataPreview(event.target?.result as string);
+      showToast(t.language === 'id' ? 'Data wajah ditambahkan' : 'Face data added', 'success');
+    };
+    reader.readAsDataURL(file);
   };
 
   const openAddModal = () => {
     setFormData(initialFormState);
     setAvatarFile(null);
+    setFaceDataFile(null);
+    setFaceDataPreview(null);
     setErrors({});
     setStatusWarning(null);
     setIsEditMode(false);
@@ -221,6 +284,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   const openEditModal = (employee: Employee) => {
     setFormData({ ...employee });
     setAvatarFile(null);
+    setFaceDataFile(null);
+    setFaceDataPreview(null);
     setErrors({});
     setStatusWarning(null);
     setIsEditMode(true);
@@ -252,8 +317,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   };
 
   const handleConfirmSave = () => {
-    if (isEditMode) onEditEmployee(formData, avatarFile || undefined);
-    else onAddEmployee(formData, avatarFile || undefined);
+    if (isEditMode) onEditEmployee(formData, avatarFile || undefined, faceDataFile || undefined);
+    else onAddEmployee(formData, avatarFile || undefined, faceDataFile || undefined);
     // Modal closing is now handled by the processing useEffect for robust syncing
   };
 
@@ -722,34 +787,66 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                 </div>
               )}
 
-              <div className="mb-6 flex flex-col items-center">
-                <div className="relative group">
-                  <div className={`h-24 w-24 rounded-full overflow-hidden border-2 bg-slate-50 dark:bg-slate-700 flex items-center justify-center transition-colors ${formData.avatar ? 'border-indigo-100 dark:border-indigo-800' : 'border-slate-200 dark:border-slate-600'}`}>
-                    {formData.avatar ? (
-                      <img src={formData.avatar} alt="Avatar" className="h-full w-full object-cover" />
-                    ) : (
-                      <Camera className="h-8 w-8 text-slate-300 dark:text-slate-500" />
-                    )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="flex flex-col items-center">
+                  <div className="relative group">
+                    <div className={`h-24 w-24 rounded-full overflow-hidden border-2 bg-slate-50 dark:bg-slate-700 flex items-center justify-center transition-colors ${formData.avatar ? 'border-indigo-100 dark:border-indigo-800' : 'border-slate-200 dark:border-slate-600'}`}>
+                      {formData.avatar ? (
+                        <img src={formData.avatar} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <Camera className="h-8 w-8 text-slate-300 dark:text-slate-500" />
+                      )}
+                    </div>
+                    <Tooltip text={t.uploadPhoto} position="right">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-0 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+                        aria-label={t.uploadPhoto}
+                      >
+                        <Upload className="h-3.5 w-3.5" />
+                      </button>
+                    </Tooltip>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                    />
                   </div>
-                  <Tooltip text={t.uploadPhoto} position="right">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
-                      aria-label={t.uploadPhoto}
-                    >
-                      <Upload className="h-3.5 w-3.5" />
-                    </button>
-                  </Tooltip>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                  />
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium text-center">{t.uploadPhoto}<br /><span className="opacity-75">({t.language === 'id' ? 'Profil' : 'Profile'})</span></p>
                 </div>
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">{t.uploadPhoto} ({t.language === 'id' ? 'Opsional' : 'Optional'})</p>
+
+                <div className="flex flex-col items-center justify-center">
+                  <div className="relative group">
+                    <div className={`h-24 w-24 rounded-xl overflow-hidden border-2 bg-slate-50 dark:bg-slate-700 flex items-center justify-center transition-colors ${faceDataPreview ? 'border-emerald-100 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-600 border-dashed'}`}>
+                      {faceDataPreview ? (
+                        <img src={faceDataPreview} alt="Face Data Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-8 w-8 text-slate-300 dark:text-slate-500" />
+                      )}
+                    </div>
+                    <Tooltip text={t.language === 'id' ? 'Unggah Data Wajah' : 'Upload Face Data'} position="right">
+                      <button
+                        type="button"
+                        onClick={() => faceDataInputRef.current?.click()}
+                        className="absolute -bottom-2 -right-2 p-1.5 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-colors"
+                        aria-label="Upload Face Data"
+                      >
+                        <Camera className="h-3.5 w-3.5" />
+                      </button>
+                    </Tooltip>
+                    <input
+                      type="file"
+                      ref={faceDataInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFaceDataUpload}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium text-center">{t.language === 'id' ? 'Data Wajah' : 'Face Data'}<br /><span className="opacity-75">({t.language === 'id' ? 'Pengenalan AI' : 'AI Recognition'})</span></p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

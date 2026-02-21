@@ -1,5 +1,6 @@
 flask
 face_recognition
-numpy
+numpy<2
 requests
 cmake
+python-dotenv

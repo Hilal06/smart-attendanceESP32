@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Employee, AttendanceRecord, AttendanceStatus, Announcement, Page } from '../types';
-import { Users, Clock, AlertTriangle, CheckCircle, Bell, Filter, SortDesc, CalendarDays, CalendarRange, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Clock, AlertTriangle, CheckCircle, Bell, Filter, SortDesc, CalendarDays, CalendarRange, Calendar, ChevronLeft, ChevronRight, Server } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { router } from '@inertiajs/react';
 
@@ -18,8 +18,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
   const [timeRange, setTimeRange] = useState<TimeRange>('Weekly');
   const [announcementSort, setAnnouncementSort] = useState<AnnouncementSort>('Latest');
   const [attendancePage, setAttendancePage] = useState(1);
+  const [systemStatus, setSystemStatus] = useState<any>(null);
   const ATTENDANCE_ROWS_PER_PAGE = 5;
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch('/api/system/status');
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) setSystemStatus(data);
+        } else {
+          if (isMounted) setSystemStatus({ status: 'offline' });
+        }
+      } catch (error) {
+        if (isMounted) setSystemStatus({ status: 'offline' });
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const todaysStats = useMemo(() => {
     const todaysRecords = attendance.filter(r => r.date === today);
@@ -224,9 +249,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-2xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-slate-100 dark:border-slate-700 h-full flex flex-col transition-colors duration-200">
-            <div className="flex items-center justify-between mb-5">
+        <div className="space-y-6 flex flex-col lg:h-[calc(100vh-10rem)]">
+          <div className="rounded-2xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Server className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+                <h3 className="font-bold text-slate-900 dark:text-white">System Status</h3>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 transition-colors duration-200">
+              <div className="flex flex-col max-w-[70%]">
+                <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Face Rec Engine</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                  {systemStatus ? `${systemStatus.loaded_faces_count || 0} faces loaded` : 'Checking status...'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="relative flex h-2.5 w-2.5">
+                  {systemStatus && systemStatus.status === 'online' ? (
+                    <>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </>
+                  ) : (
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                  )}
+                </div>
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${systemStatus?.status === 'online' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                  {systemStatus?.status === 'online' ? 'Online' : 'Offline'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex-1 flex flex-col min-h-[400px] overflow-hidden transition-colors duration-200">
+            <div className="flex items-center justify-between mb-5 shrink-0">
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
                 <h3 className="font-bold text-slate-900 dark:text-white">{t.notifications}</h3>

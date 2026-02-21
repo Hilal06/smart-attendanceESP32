@@ -16,15 +16,18 @@ export default function Employees({ userRole, settings, employees }: Props) {
   const { errors } = usePage().props;
   const [processing, setProcessing] = useState(false);
 
-  const handleAdd = (emp: Employee, avatarFile?: File) => {
+  const handleAdd = (emp: Employee, avatarFile?: File, faceDataFile?: File) => {
     setProcessing(true);
     const data: any = { ...emp };
     if (avatarFile) {
       data.avatar = avatarFile;
     }
+    if (faceDataFile) {
+      data.face_data = faceDataFile;
+    }
 
     router.post('/employees', data, {
-      forceFormData: !!avatarFile,
+      forceFormData: !!avatarFile || !!faceDataFile,
       onFinish: () => setProcessing(false),
       onError: () => {
         // Errors are automatically available in usePage().props.errors
@@ -35,12 +38,19 @@ export default function Employees({ userRole, settings, employees }: Props) {
     });
   };
 
-  const handleEdit = (emp: Employee, avatarFile?: File) => {
+  const handleEdit = (emp: Employee, avatarFile?: File, faceDataFile?: File) => {
     setProcessing(true);
     const data: any = { ...emp };
 
     if (avatarFile) {
       data.avatar = avatarFile;
+    }
+
+    if (faceDataFile) {
+      data.face_data = faceDataFile;
+    }
+
+    if (avatarFile || faceDataFile) {
       data._method = 'put';
       router.post(`/employees/${emp.id}`, data, {
         forceFormData: true,

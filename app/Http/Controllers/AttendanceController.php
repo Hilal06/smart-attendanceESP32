@@ -183,6 +183,7 @@ class AttendanceController extends Controller
     public function employees()
     {
         $settings = Setting::first();
+        $employees = Employee::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')->get();
         return Inertia::render('Employees', [
             'userRole' => session('userRole'),
             'settings' => $settings ? [
@@ -192,7 +193,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule,
                 'language' => $settings->language,
             ] : null,
-            'employees' => Employee::all()->map(function($emp) {
+            'employees' => $employees->map(function($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -272,8 +273,13 @@ class AttendanceController extends Controller
             $path = $file->storeAs('avatars', $filename, 'public');
             $data['avatar'] = Storage::url($path);
         }
-        
         Employee::create($data);
+
+        // Handle Face Data Upload
+        if ($request->hasFile('face_data')) {
+            $this->registerFaceData($data['id'], $request->file('face_data'));
+        }
+
         return back();
     }
 
@@ -301,6 +307,11 @@ class AttendanceController extends Controller
             }
 
             $employee->update($data);
+
+            // Handle Face Data Upload
+            if ($request->hasFile('face_data')) {
+                $this->registerFaceData($employee->id, $request->file('face_data'));
+            }
         }
         return back();
     }
@@ -314,6 +325,9 @@ class AttendanceController extends Controller
     public function reports()
     {
         $settings = Setting::first();
+        $attendances = Attendance::select('id', 'employee_id', 'date', 'check_in', 'check_out', 'status')->get();
+        $employees = Employee::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')->get();
+
         return Inertia::render('Reports', [
             'userRole' => session('userRole'),
             'settings' => $settings ? [
@@ -323,7 +337,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule,
                 'language' => $settings->language,
             ] : null,
-            'attendance' => Attendance::all()->map(function($att) {
+            'attendance' => $attendances->map(function($att) {
                 return [
                     'id' => $att->id,
                     'employeeId' => $att->employee_id,
@@ -333,7 +347,7 @@ class AttendanceController extends Controller
                     'status' => $att->status,
                 ];
             }),
-            'employees' => Employee::all()->map(function($emp) {
+            'employees' => $employees->map(function($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -578,6 +592,45 @@ class AttendanceController extends Controller
                 'message' => 'Welcome! Checked in at ' . $timeString,
                 'data' => $attendance
             ]);
+        }
+    }
+
+    public function systemStatus()
+    {
+        try {
+            $microserviceUrl = config('services.python_service.url', 'http://127.0.0.1:5000');
+            $response = \Illuminate\Support\Facades\Http::timeout(3)->get($microserviceUrl . '/health');
+            
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+        } catch (\Exception $e) {
+            // Silently catch the exception to return offline status
+        }
+        
+        return response()->json([
+            'status' => 'offline',
+            'face_rec_available' => false,
+            'loaded_faces_count' => 0
+        ]);
+    }
+
+    private function registerFaceData($employeeId, $file)
+    {
+        try {
+            $microserviceUrl = config('services.python_service.url', 'http://127.0.0.1:5000');
+            
+            $response = \Illuminate\Support\Facades\Http::timeout(10)->attach(
+                'file', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
+            )->post($microserviceUrl . '/register_face', [
+                'employee_id' => $employeeId,
+            ]);
+            
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::error('Failed to register face data: ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Exception registering face data: ' . $e->getMessage());
         }
     }
 }

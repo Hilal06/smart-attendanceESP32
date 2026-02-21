@@ -30,6 +30,8 @@ python_service/known_faces/*
 !python_service/known_faces/.gitignore
 python_service/__pycache__/
 python_service/*.pyc
+python_service/*.whl
+python_service/.env
 
 # Docker
 docker-compose.override.yml

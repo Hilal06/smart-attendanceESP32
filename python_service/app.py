@@ -21,6 +21,9 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 
 # Laravel API Config
+from dotenv import load_dotenv
+load_dotenv()
+
 # In Docker, this will be "http://webserver/api/attendance"
 # In Local, it defaults to "http://127.0.0.1:8000/api/attendance"
 LARAVEL_API_URL = os.environ.get("LARAVEL_API_URL", "http://127.0.0.1:8000/api/attendance")
@@ -81,6 +84,20 @@ def recognize_face():
         with open(temp_filename, "wb") as f:
             f.write(request.data)
 
+        # Enforce upload limit: If > 15 images, delete oldest 10
+        try:
+            files = [os.path.join(UPLOAD_DIR, f) for f in os.listdir(UPLOAD_DIR) if os.path.isfile(os.path.join(UPLOAD_DIR, f))]
+            if len(files) > 15:
+                # Sort files by creation/modification time (oldest first)
+                files.sort(key=os.path.getmtime)
+                # Delete the oldest 10 files
+                files_to_delete = files[:10]
+                for file_path in files_to_delete:
+                    os.remove(file_path)
+                print(f"Cleanup: Deleted {len(files_to_delete)} old images to respect the 15-file limit.")
+        except Exception as cleanup_error:
+            print(f"Warning: Failed to cleanup uploads directory: {cleanup_error}")
+
         # 2. Process Image
         matched_name = "Unknown"
         
@@ -136,6 +153,45 @@ def recognize_face():
         print(f"Error processing request: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/register_face', methods=['POST'])
+def register_face():
+    try:
+        if 'employee_id' not in request.form:
+            return jsonify({"status": "error", "message": "Missing employee_id"}), 400
+        
+        if 'file' not in request.files:
+            return jsonify({"status": "error", "message": "Missing file"}), 400
+            
+        employee_id = request.form['employee_id']
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({"status": "error", "message": "No selected file"}), 400
+            
+        if file and (file.filename.lower().endswith(('.jpg', '.jpeg', '.png'))):
+            if not os.path.exists(KNOWN_FACES_DIR):
+                os.makedirs(KNOWN_FACES_DIR)
+                
+            # Save as ID.jpg
+            filename = f"{employee_id}.jpg"
+            file_path = os.path.join(KNOWN_FACES_DIR, filename)
+            
+            file.save(file_path)
+            
+            # Reload known faces to include the new/updated one
+            global known_face_encodings, known_face_names
+            known_face_encodings = []
+            known_face_names = []
+            load_known_faces()
+            
+            return jsonify({"status": "success", "message": f"Face registered for {employee_id}"})
+        else:
+            return jsonify({"status": "error", "message": "Invalid file type. Only jpg, jpeg, png allowed."}), 400
+
+    except Exception as e:
+        print(f"Error registering face: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/reload', methods=['GET', 'POST'])
 def reload_faces():
     global known_face_encodings, known_face_names
@@ -147,6 +203,14 @@ def reload_faces():
         "message": f"Reloaded {len(known_face_names)} faces",
         "faces": known_face_names
     })
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        "status": "online",
+        "loaded_faces_count": len(known_face_names),
+        "face_rec_available": FACE_RECOGNITION_AVAILABLE
+    }), 200
 
 if __name__ == '__main__':
     # Run slightly accessible

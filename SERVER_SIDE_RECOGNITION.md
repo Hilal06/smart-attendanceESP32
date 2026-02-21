@@ -50,9 +50,15 @@ You also need **Visual Studio C++ Build Tools** (required for `dlib` library). I
     *   Example: `123456.jpg`, `EMP001.png`.
 
 ### Run the Server
-```bash
-python app.py
-```
+1.  Open your terminal or Command Prompt.
+2.  Navigate to the `python_service` folder (if you aren't already there):
+    ```bash
+    cd python_service
+    ```
+3.  Run the application:
+    ```bash
+    python app.py
+    ```
 It will start listening on Port 5000.
 
 ## 4. Testing
