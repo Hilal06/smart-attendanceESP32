@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Employee, AttendanceRecord, AttendanceStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Sparkles, Loader2, FileText, Filter, ChevronLeft, ChevronRight, CalendarDays, CalendarRange, Calendar } from 'lucide-react';
+import { Sparkles, Loader2, FileText, Filter, ChevronLeft, ChevronRight, CalendarDays, CalendarRange, Calendar, Search, X, Inbox } from 'lucide-react';
 import { generateAttendanceInsights } from '../services/geminiService';
 
 interface ReportsProps {
@@ -16,8 +16,28 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [timeRange, setTimeRange] = useState<'Weekly' | 'Monthly' | 'Yearly'>('Weekly');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const ITEMS_PER_PAGE = 5;
+  const isId = t.reportsAnalytics === 'Laporan & Analitik'; // Simple heuristic for language
+
+  const filteredAttendanceByTime = useMemo(() => {
+    const today = new Date();
+    let startDate = new Date();
+
+    if (timeRange === 'Weekly') {
+      startDate.setDate(today.getDate() - 6);
+    } else if (timeRange === 'Monthly') {
+      startDate.setDate(today.getDate() - 29);
+    } else { // Yearly
+      startDate.setFullYear(today.getFullYear(), today.getMonth() - 11, 1);
+    }
+
+    const startStr = startDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    const todayStr = today.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+
+    return attendance.filter(r => r.date >= startStr && r.date <= todayStr);
+  }, [attendance, timeRange]);
 
   const handleGenerateInsights = async () => {
     setLoadingAI(true);
@@ -124,36 +144,48 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
 
   const statusStats = useMemo(() => {
     let present = 0, late = 0, absent = 0, leave = 0;
-    attendance.forEach(r => {
+    filteredAttendanceByTime.forEach(r => {
       if (r.status === AttendanceStatus.PRESENT) present++;
       if (r.status === AttendanceStatus.LATE) late++;
       if (r.status === AttendanceStatus.ABSENT) absent++;
       if (r.status === AttendanceStatus.ON_LEAVE) leave++;
     });
-    const total = attendance.length || 1;
+    const total = filteredAttendanceByTime.length || 1;
 
     return {
       data: [
-        { name: t.present, value: present, color: '#10b981' },
-        { name: t.late, value: late, color: '#f59e0b' },
-        { name: t.absent, value: absent, color: '#f43f5e' },
-        { name: t.onLeave, value: leave, color: '#64748b' },
+        { name: t.present, value: present, color: '#10b981', statusKey: AttendanceStatus.PRESENT },
+        { name: t.late, value: late, color: '#f59e0b', statusKey: AttendanceStatus.LATE },
+        { name: t.absent, value: absent, color: '#f43f5e', statusKey: AttendanceStatus.ABSENT },
+        { name: t.onLeave, value: leave, color: '#64748b', statusKey: AttendanceStatus.ON_LEAVE },
       ],
-      total,
+      total: filteredAttendanceByTime.length,
       details: [
-        { label: t.present, value: present, percentage: Math.round((present / total) * 100), color: 'bg-emerald-500', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50' },
-        { label: t.late, value: late, percentage: Math.round((late / total) * 100), color: 'bg-amber-500', textColor: 'text-amber-700', bgColor: 'bg-amber-50' },
-        { label: t.absent, value: absent, percentage: Math.round((absent / total) * 100), color: 'bg-rose-500', textColor: 'text-rose-700', bgColor: 'bg-rose-50' },
-        { label: t.onLeave, value: leave, percentage: Math.round((leave / total) * 100), color: 'bg-slate-500', textColor: 'text-slate-700', bgColor: 'bg-slate-50' },
+        { label: t.present, value: present, percentage: Math.round((present / total) * 100), color: 'bg-emerald-500', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50', statusKey: AttendanceStatus.PRESENT },
+        { label: t.late, value: late, percentage: Math.round((late / total) * 100), color: 'bg-amber-500', textColor: 'text-amber-700', bgColor: 'bg-amber-50', statusKey: AttendanceStatus.LATE },
+        { label: t.absent, value: absent, percentage: Math.round((absent / total) * 100), color: 'bg-rose-500', textColor: 'text-rose-700', bgColor: 'bg-rose-50', statusKey: AttendanceStatus.ABSENT },
+        { label: t.onLeave, value: leave, percentage: Math.round((leave / total) * 100), color: 'bg-slate-500', textColor: 'text-slate-700', bgColor: 'bg-slate-50', statusKey: AttendanceStatus.ON_LEAVE },
       ]
     };
-  }, [attendance, t]);
+  }, [filteredAttendanceByTime, t]);
 
   const filteredAttendance = useMemo(() => {
-    let data = [...attendance].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    if (statusFilter !== 'All') data = data.filter(r => r.status === statusFilter);
+    let data = [...filteredAttendanceByTime].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (statusFilter !== 'All') {
+      data = data.filter(r => r.status === statusFilter);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      data = data.filter(r => {
+        const emp = employees.find(e => e.id === r.employeeId);
+        return emp?.name.toLowerCase().includes(query) || emp?.id.toLowerCase().includes(query);
+      });
+    }
+
     return data;
-  }, [attendance, statusFilter]);
+  }, [filteredAttendanceByTime, statusFilter, searchQuery, employees]);
 
   const totalPages = Math.ceil(filteredAttendance.length / ITEMS_PER_PAGE);
   const paginatedData = filteredAttendance.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -177,16 +209,31 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
       </div>
 
       {aiInsights && (
-        <div className="rounded-xl bg-indigo-50 dark:bg-indigo-900/20 p-6 border border-indigo-100 dark:border-indigo-800/50 animate-fade-in transition-colors">
-          <div className="flex items-center mb-4"><Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2" /><h3 className="font-semibold text-indigo-900 dark:text-indigo-200">{t.aiAnalysis}</h3></div>
-          <div className="prose prose-indigo prose-sm max-w-none text-slate-700 dark:text-slate-300" dangerouslySetInnerHTML={{ __html: aiInsights }} />
+        <div className="relative rounded-2xl bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-900/30 dark:to-slate-800/50 p-6 sm:p-8 border border-indigo-100 dark:border-indigo-800/50 shadow-sm animate-fade-in transition-all">
+          <button
+            onClick={() => setAiInsights(null)}
+            className="absolute top-4 right-4 p-2 text-indigo-400 hover:text-indigo-600 dark:text-indigo-500 dark:hover:text-indigo-300 hover:bg-indigo-100/50 dark:hover:bg-indigo-900/50 rounded-full transition-colors"
+            title={isId ? "Tutup" : "Dismiss"}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <div className="flex items-center mb-5">
+            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 mr-3">
+              <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">{t.aiAnalysis}</h3>
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">{isId ? 'Dihasilkan oleh AI' : 'Generated by AI'}</p>
+            </div>
+          </div>
+          <div className="prose prose-indigo prose-sm sm:prose-base max-w-none text-slate-700 dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: aiInsights }} />
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trend Chart */}
-        <div className="lg:col-span-2 rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="lg:col-span-2 rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors flex flex-col">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shrink-0">
             <h3 className="font-semibold text-slate-900 dark:text-white">{t.attendanceTrend}</h3>
             <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-700 p-1 transition-colors">
               {(['Weekly', 'Monthly', 'Yearly'] as const).map((range) => (
@@ -206,7 +253,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
               ))}
             </div>
           </div>
-          <div className="h-64 w-full">
+          <div className="flex-1 w-full min-h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -245,36 +292,77 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
               </ResponsiveContainer>
             </div>
 
-            <div className="w-full mt-4 space-y-3">
-              {statusStats.details.map((stat, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${stat.color}`}></div>
-                    <span className="text-slate-600 dark:text-slate-400">{stat.label}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-slate-900 dark:text-white">{stat.value}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stat.bgColor.replace('bg-', 'bg-').replace('50', '500/10')} ${stat.textColor.replace('text-', 'text-').replace('700', '400')}`}>{stat.percentage}%</span>
-                  </div>
-                </div>
-              ))}
+            <div className="w-full mt-4 space-y-2">
+              {statusStats.details.map((stat, idx) => {
+                const isActive = statusFilter === stat.statusKey;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setStatusFilter(isActive ? 'All' : stat.statusKey);
+                      setCurrentPage(1);
+                    }}
+                    className={`w-full flex items-center justify-between text-sm p-2.5 rounded-lg transition-all border ${isActive
+                      ? 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
+                      : 'border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-700/30'
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${stat.color} ${isActive ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-800 ring-' + stat.color.replace('bg-', '') : ''}`}></div>
+                      <span className={`font-medium ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>{stat.label}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`font-semibold ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>{stat.value}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${stat.bgColor.replace('50', '500/10')} ${stat.textColor.replace('700', '500 dark:text-' + stat.textColor.replace('text-', '').replace('700', '400'))}`}>{stat.percentage}%</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
 
       <div className="rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
-        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
-          <div className="flex items-center"><FileText className="h-5 w-5 text-slate-500 dark:text-slate-400 mr-2" /><h3 className="font-semibold text-slate-900 dark:text-white">{t.detailedLogs}</h3></div>
-          <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-            <Filter className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-md border-0 bg-white dark:bg-slate-900 py-1.5 px-3 text-sm text-slate-900 dark:text-white ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-indigo-600 transition-colors">
-              <option value="All">{t.allStatus}</option>
-              <option value={AttendanceStatus.PRESENT}>{t.present}</option>
-              <option value={AttendanceStatus.LATE}>{t.late}</option>
-              <option value={AttendanceStatus.ABSENT}>{t.absent}</option>
-              <option value={AttendanceStatus.ON_LEAVE}>{t.onLeave}</option>
-            </select>
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 transition-colors gap-4">
+          <div className="flex items-center">
+            <FileText className="h-5 w-5 text-slate-500 dark:text-slate-400 mr-2" />
+            <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              {t.detailedLogs}
+              {statusFilter !== 'All' && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border ${statusFilter === AttendanceStatus.PRESENT ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-400' :
+                  statusFilter === AttendanceStatus.LATE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400' :
+                    statusFilter === AttendanceStatus.ABSENT ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/30 dark:border-rose-700 dark:text-rose-400' :
+                      'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-900/30 dark:border-slate-700 dark:text-slate-400'
+                  }`}>
+                  {statusFilter === AttendanceStatus.PRESENT ? t.present : statusFilter === AttendanceStatus.LATE ? t.late : statusFilter === AttendanceStatus.ABSENT ? t.absent : t.onLeave} Filter
+                </span>
+              )}
+            </h3>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+            <div className="relative w-full sm:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder={isId ? 'Cari nama atau ID...' : 'Search name or ID...'}
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                className="block w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
+              />
+            </div>
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-slate-500 dark:text-slate-400 hidden sm:block" />
+              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="block w-full sm:w-auto rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-3 pr-8 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-600 transition-colors shadow-sm">
+                <option value="All">{t.allStatus}</option>
+                <option value={AttendanceStatus.PRESENT}>{t.present}</option>
+                <option value={AttendanceStatus.LATE}>{t.late}</option>
+                <option value={AttendanceStatus.ABSENT}>{t.absent}</option>
+                <option value={AttendanceStatus.ON_LEAVE}>{t.onLeave}</option>
+              </select>
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -290,24 +378,44 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 transition-colors">
-              {paginatedData.map((record) => {
-                const emp = getEmployee(record.employeeId);
-                return (
-                  <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{record.date}</td>
-                    <td className="px-6 py-4"><div className="flex items-center"><img className="h-8 w-8 rounded-full object-cover mr-3" src={emp?.avatar} alt="" /><div><p className="font-medium text-slate-900 dark:text-white">{emp?.name || 'Unknown'}</p><p className="text-xs text-slate-500 dark:text-slate-400">{emp?.role}</p></div></div></td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{emp?.department || '-'}</td>
-                    <td className="px-6 py-4"><span className={`rounded-full px-2 text-xs font-semibold leading-5 ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400' : record.status === AttendanceStatus.LATE ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400' : record.status === AttendanceStatus.ABSENT ? 'bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-400' : 'bg-slate-100 dark:bg-slate-500/10 text-slate-800 dark:text-slate-300'}`}>{record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : record.status === AttendanceStatus.ABSENT ? t.absent : t.onLeave}</span></td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{record.checkIn || '--:--'}</td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{record.checkOut || '--:--'}</td>
-                  </tr>
-                );
-              })}
+              {paginatedData.length > 0 ? (
+                paginatedData.map((record) => {
+                  const emp = getEmployee(record.employeeId);
+                  return (
+                    <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{record.date}</td>
+                      <td className="px-6 py-4"><div className="flex items-center"><img className="h-8 w-8 rounded-full object-cover mr-3" src={emp?.avatar} alt="" /><div><p className="font-medium text-slate-900 dark:text-white">{emp?.name || 'Unknown'}</p><p className="text-xs text-slate-500 dark:text-slate-400">{emp?.role}</p></div></div></td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{emp?.department || '-'}</td>
+                      <td className="px-6 py-4"><span className={`rounded-full px-2 text-xs font-semibold leading-5 ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400' : record.status === AttendanceStatus.LATE ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400' : record.status === AttendanceStatus.ABSENT ? 'bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-400' : 'bg-slate-100 dark:bg-slate-500/10 text-slate-800 dark:text-slate-300'}`}>{record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : record.status === AttendanceStatus.ABSENT ? t.absent : t.onLeave}</span></td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{record.checkIn || '--:--'}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{record.checkOut || '--:--'}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                      <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-full mb-4 inline-block shadow-sm">
+                        <Inbox className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                      </div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+                        {isId ? 'Tidak Ada Laporan' : 'No Records Found'}
+                      </h4>
+                      <p className="text-sm max-w-sm mx-auto">
+                        {searchQuery
+                          ? (isId ? 'Tidak ada laporan yang cocok dengan pencarian Anda.' : 'No records match your search query.')
+                          : (isId ? 'Tidak ada laporan yang cocok dengan filter yang dipilih untuk rentang waktu ini.' : 'No records match the selected filters for this time period.')}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         <div className="border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-6 py-3 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 transition-colors">
-          <div>{t.showing} <span className="font-medium text-slate-900 dark:text-slate-300">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> {t.to} <span className="font-medium text-slate-900 dark:text-slate-300">{Math.min(currentPage * ITEMS_PER_PAGE, filteredAttendance.length)}</span> {t.of} <span className="font-medium text-slate-900 dark:text-slate-300">{filteredAttendance.length}</span> {t.results}</div>
+          <div>{t.showing} <span className="font-medium text-slate-900 dark:text-slate-300">{filteredAttendance.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span> {t.to} <span className="font-medium text-slate-900 dark:text-slate-300">{Math.min(currentPage * ITEMS_PER_PAGE, filteredAttendance.length)}</span> {t.of} <span className="font-medium text-slate-900 dark:text-slate-300">{filteredAttendance.length}</span> {t.results}</div>
           <div className="flex gap-2"><button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1 rounded bg-white dark:bg-slate-800 border dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronLeft className="h-4 w-4" /></button><button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1 rounded bg-white dark:bg-slate-800 border dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronRight className="h-4 w-4" /></button></div>
         </div>
       </div>

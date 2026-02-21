@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Employee, EmployeeStatus } from '../types';
-import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter, Loader2, AlertTriangle, Upload, Camera, ChevronRight, CheckCircle2, User, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter, Loader2, AlertTriangle, Upload, Camera, ChevronRight, ChevronLeft, CheckCircle2, User, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 
 interface EmployeeListProps {
   employees: Employee[];
@@ -41,6 +41,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [statusWarning, setStatusWarning] = useState<string | null>(null);
   const [shakeModal, setShakeModal] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE_GRID = 9;
+  const ITEMS_PER_PAGE_LIST = 10;
 
   // Toast State
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
@@ -150,6 +155,15 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
     if (aValue > bValue) return direction === 'asc' ? 1 : -1;
     return 0;
   });
+
+  const getItemsPerPage = () => viewMode === 'grid' ? ITEMS_PER_PAGE_GRID : ITEMS_PER_PAGE_LIST;
+  const totalPages = Math.ceil(filteredEmployees.length / getItemsPerPage());
+  const paginatedEmployees = filteredEmployees.slice((currentPage - 1) * getItemsPerPage(), currentPage * getItemsPerPage());
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, viewMode]);
 
   const validateField = (name: string, value: string) => {
     let error = '';
@@ -583,6 +597,22 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               </div>
             </div>
           ))}
+
+          {filteredEmployees.length === 0 && (
+            <div className="col-span-full py-16 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+              <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-full mb-4 inline-block shadow-sm">
+                <Search className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+              </div>
+              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                {t.language === 'id' ? 'Karyawan Tidak Ditemukan' : 'No Employees Found'}
+              </h4>
+              <p className="text-sm max-w-sm mx-auto text-center">
+                {searchTerm
+                  ? (t.language === 'id' ? 'Tidak ada karyawan yang cocok dengan pencarian Anda.' : 'No employees match your search criteria.')
+                  : (t.language === 'id' ? 'Tidak ada karyawan yang cocok dengan filter yang dipilih.' : 'No employees match the selected filters.')}
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden transition-colors duration-200">
@@ -636,60 +666,144 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700 transition-colors duration-200">
-                {filteredEmployees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <img className="h-10 w-10 rounded-full object-cover" src={employee.avatar} alt="" />
+                {paginatedEmployees.length > 0 ? (
+                  paginatedEmployees.map((employee) => (
+                    <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <img className="h-10 w-10 rounded-full object-cover" src={employee.avatar} alt="" />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-slate-900 dark:text-white">{employee.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">{employee.email}</div>
+                          </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-slate-900 dark:text-white">{employee.name}</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">{employee.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-900 dark:text-slate-300">{employee.role}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-500">ID: {employee.id}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-900 dark:text-slate-300">{employee.department}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(employee.status)}`}>
+                          {getStatusLabel(employee.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setViewEmployee(employee)}
+                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                            title={t.viewProfile}
+                          >
+                            <User className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => openEditModal(employee)}
+                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                            title={t.editEmployee}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(employee.id)}
+                            className="text-slate-400 hover:text-rose-600 transition-colors"
+                            title={t.delete}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900 dark:text-slate-300">{employee.role}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-500">ID: {employee.id}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900 dark:text-slate-300">{employee.department}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(employee.status)}`}>
-                        {getStatusLabel(employee.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setViewEmployee(employee)}
-                          className="text-slate-400 hover:text-indigo-600 transition-colors"
-                          title={t.viewProfile}
-                        >
-                          <User className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(employee)}
-                          className="text-slate-400 hover:text-indigo-600 transition-colors"
-                          title={t.editEmployee}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => confirmDelete(employee.id)}
-                          className="text-slate-400 hover:text-rose-600 transition-colors"
-                          title={t.delete}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                        <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-full mb-4 inline-block shadow-sm">
+                          <Search className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                        </div>
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+                          {t.language === 'id' ? 'Karyawan Tidak Ditemukan' : 'No Employees Found'}
+                        </h4>
+                        <p className="text-sm max-w-sm mx-auto">
+                          {searchTerm
+                            ? (t.language === 'id' ? 'Tidak ada karyawan yang cocok dengan pencarian Anda.' : 'No employees match your search criteria.')
+                            : (t.language === 'id' ? 'Tidak ada karyawan yang cocok dengan filter yang dipilih.' : 'No employees match the selected filters.')}
+                        </p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 sm:px-6 rounded-xl shadow-sm transition-colors mt-6">
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-slate-700 dark:text-slate-300">
+                {t.language === 'id' ? 'Menampilkan' : 'Showing'}{' '}
+                <span className="font-medium">{(currentPage - 1) * getItemsPerPage() + 1}</span>{' '}
+                {t.language === 'id' ? 'hingga' : 'to'}{' '}
+                <span className="font-medium">
+                  {Math.min(currentPage * getItemsPerPage(), filteredEmployees.length)}
+                </span>{' '}
+                {t.language === 'id' ? 'dari' : 'of'}{' '}
+                <span className="font-medium">{filteredEmployees.length}</span>{' '}
+                {t.language === 'id' ? 'hasil' : 'results'}
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
+                >
+                  <span className="sr-only">Previous</span>
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
+                <div className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 dark:text-white ring-1 ring-inset ring-slate-300 dark:ring-slate-600">
+                  {currentPage} / {totalPages}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
+                >
+                  <span className="sr-only">Next</span>
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </nav>
+            </div>
+          </div>
+          {/* Mobile simplistic pagination */}
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+            </button>
+            <span className="text-sm flex items-center text-slate-600 dark:text-slate-400 font-medium">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
+            >
+              Next <ChevronRight className="ml-1 h-4 w-4" />
+            </button>
           </div>
         </div>
       )}
@@ -765,15 +879,18 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {isFormModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200 transition-colors duration-200 ${shakeModal ? 'animate-shake' : ''}`}>
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 px-6 py-4 transition-colors">
+          <div className={`w-full max-w-2xl rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in duration-200 transition-colors duration-200 ${shakeModal ? 'animate-shake' : ''}`}>
+
+            {/* Sticky Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 px-6 py-4 shrink-0 bg-white dark:bg-slate-800 rounded-t-xl z-10 transition-colors">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">{isEditMode ? t.editEmployee : t.newEmployee}</h3>
               <button onClick={() => setIsFormModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" disabled={isProcessing}>
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="p-6">
+            {/* Scrollable Form Body */}
+            <form id="employee-form" onSubmit={handleFormSubmit} className="p-6 overflow-y-auto flex-1">
               {/* Robust Global Error Banner */}
               {Object.keys(externalErrors).length > 0 && (
                 <div className="mb-6 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-4 flex items-start gap-3 border border-rose-200 dark:border-rose-800/50 animate-in fade-in slide-in-from-top-2">
@@ -944,31 +1061,34 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsFormModalOpen(false)}
-                  className="rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
-                  disabled={isProcessing}
-                >
-                  {t.cancel}
-                </button>
-                <button
-                  type="submit"
-                  className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] transition-all"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t.language === 'id' ? 'Memproses...' : 'Processing...'}
-                    </>
-                  ) : (
-                    isEditMode ? t.updateEmployee : t.saveEmployee
-                  )}
-                </button>
-              </div>
             </form>
+
+            {/* Sticky Footer */}
+            <div className="border-t border-slate-100 dark:border-slate-700 p-6 shrink-0 bg-white dark:bg-slate-800 rounded-b-xl z-10 flex justify-end space-x-3 transition-colors">
+              <button
+                type="button"
+                onClick={() => setIsFormModalOpen(false)}
+                className="rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
+                disabled={isProcessing}
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="submit"
+                form="employee-form"
+                className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] transition-all"
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t.language === 'id' ? 'Memproses...' : 'Processing...'}
+                  </>
+                ) : (
+                  isEditMode ? t.updateEmployee : t.saveEmployee
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

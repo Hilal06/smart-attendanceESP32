@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Employee, AttendanceRecord, AttendanceStatus, Announcement, Page } from '../types';
-import { Users, Clock, AlertTriangle, CheckCircle, Bell, Filter, SortDesc, CalendarDays, CalendarRange, Calendar, ChevronLeft, ChevronRight, Server } from 'lucide-react';
+import { Users, Clock, AlertTriangle, CheckCircle, Bell, Filter, SortDesc, CalendarDays, CalendarRange, Calendar, ChevronLeft, ChevronRight, Server, Search, Sun, Moon, Sunrise, Sunset } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { router } from '@inertiajs/react';
 
@@ -11,16 +11,27 @@ interface DashboardProps {
   t: any;
 }
 
-type TimeRange = 'Weekly' | 'Monthly' | 'Yearly';
+type TimeRange = 'Today' | 'Weekly' | 'Monthly' | 'Yearly';
 type AnnouncementSort = 'Latest' | 'Priority';
+type StatusFilter = 'All' | AttendanceStatus.PRESENT | AttendanceStatus.LATE | AttendanceStatus.ABSENT;
 
 export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, announcements, t }) => {
-  const [timeRange, setTimeRange] = useState<TimeRange>('Weekly');
+  const [timeRange, setTimeRange] = useState<TimeRange>('Today');
   const [announcementSort, setAnnouncementSort] = useState<AnnouncementSort>('Latest');
-  const [attendancePage, setAttendancePage] = useState(1);
   const [systemStatus, setSystemStatus] = useState<any>(null);
-  const ATTENDANCE_ROWS_PER_PAGE = 5;
+  const [activeStatusFilter, setActiveStatusFilter] = useState<StatusFilter>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  const isId = t.dashboard === 'Dasbor';
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return { text: isId ? 'Selamat Pagi' : 'Good Morning', icon: Sunrise, color: 'text-amber-500' };
+    if (hour >= 12 && hour < 17) return { text: isId ? 'Selamat Siang' : 'Good Afternoon', icon: Sun, color: 'text-amber-500' };
+    if (hour >= 17 && hour < 20) return { text: isId ? 'Selamat Sore' : 'Good Evening', icon: Sunset, color: 'text-orange-500' };
+    return { text: isId ? 'Selamat Malam' : 'Good Night', icon: Moon, color: 'text-indigo-400' };
+  }, [isId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -46,21 +57,54 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
     };
   }, []);
 
-  const todaysStats = useMemo(() => {
-    const todaysRecords = attendance.filter(r => r.date === today);
-    return {
-      present: todaysRecords.filter(r => r.status === AttendanceStatus.PRESENT).length,
-      late: todaysRecords.filter(r => r.status === AttendanceStatus.LATE).length,
-      absent: todaysRecords.filter(r => r.status === AttendanceStatus.ABSENT).length,
-      records: todaysRecords,
+  const filteredRecordsByTime = useMemo(() => {
+    const getDaysAgo = (days: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
     };
-  }, [attendance, today]);
 
-  const totalAttendancePages = Math.ceil(todaysStats.records.length / ATTENDANCE_ROWS_PER_PAGE);
-  const paginatedTodaysRecords = useMemo(() => {
-    const start = (attendancePage - 1) * ATTENDANCE_ROWS_PER_PAGE;
-    return todaysStats.records.slice(start, start + ATTENDANCE_ROWS_PER_PAGE);
-  }, [todaysStats.records, attendancePage]);
+    let startDate = today;
+    if (timeRange === 'Weekly') startDate = getDaysAgo(7);
+    else if (timeRange === 'Monthly') startDate = getDaysAgo(30);
+    else if (timeRange === 'Yearly') startDate = getDaysAgo(365);
+
+    return attendance.filter(r => r.date >= startDate && r.date <= today);
+  }, [attendance, timeRange, today]);
+
+  const activeStats = useMemo(() => {
+    return {
+      present: filteredRecordsByTime.filter(r => r.status === AttendanceStatus.PRESENT).length,
+      late: filteredRecordsByTime.filter(r => r.status === AttendanceStatus.LATE).length,
+      absent: filteredRecordsByTime.filter(r => r.status === AttendanceStatus.ABSENT).length,
+    };
+  }, [filteredRecordsByTime]);
+
+  // For the Quick Attendance Table
+  const tableRecords = useMemo(() => {
+    let records = filteredRecordsByTime;
+
+    // 1. Filter by Status Clicked on Top Cards
+    if (activeStatusFilter !== 'All') {
+      records = records.filter(r => r.status === activeStatusFilter);
+    }
+
+    // 2. Filter by Search Query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      records = records.filter(r => {
+        const emp = employees.find(e => e.id === r.employeeId);
+        return emp?.name.toLowerCase().includes(query) || emp?.id.toLowerCase().includes(query);
+      });
+    }
+
+    // Sort newest first
+    return records.sort((a, b) => {
+      const timeA = new Date(`${a.date}T${a.checkIn || '00:00'}`).getTime();
+      const timeB = new Date(`${b.date}T${b.checkIn || '00:00'}`).getTime();
+      return timeB - timeA;
+    });
+  }, [filteredRecordsByTime, activeStatusFilter, searchQuery, employees]);
 
   const sortedAnnouncements = useMemo(() => {
     const list = [...announcements];
@@ -88,7 +132,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
     }
 
     const days: Record<string, any> = {};
-    const limit = timeRange === 'Weekly' ? 7 : 30;
+    const limit = timeRange === 'Weekly' ? 7 : timeRange === 'Monthly' ? 30 : timeRange === 'Today' ? 1 : 1;
     for (let i = limit - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -105,61 +149,90 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
         if (r.status === AttendanceStatus.ABSENT) days[r.date].Absent++;
       }
     });
+
+    if (timeRange === 'Today') {
+      // Just so the chart looks nice with a single bar, maybe add an empty slot?
+      // Nah, Recharts centers a single bar fine.
+    }
+
     return Object.values(days);
   }, [attendance, timeRange, employees.length, t.language]);
 
-  const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
-    <div className={`rounded-xl bg-white dark:bg-slate-800 p-3 shadow-sm border border-slate-100 dark:border-slate-700 flex items-center gap-3 transition-colors duration-200`}>
-      <div className={`rounded-full p-2.5 ${bg} dark:bg-opacity-20 shrink-0`}>
-        <Icon className={`h-4 w-4 ${color}`} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider truncate">{title}</p>
-        <p className="text-xl font-bold text-slate-900 dark:text-white leading-none mt-1">{value}</p>
-      </div>
-    </div>
-  );
+  const StatCard = ({ title, value, icon: Icon, color, bg, statusKey }: any) => {
+    const isActive = activeStatusFilter === statusKey;
+    const isClickable = statusKey !== 'All'; // "Team" card isn't filtered
+
+    return (
+      <button
+        type="button"
+        onClick={() => isClickable && setActiveStatusFilter(isActive ? 'All' : statusKey)}
+        className={`w-full text-left rounded-xl p-4 shadow-sm border flex items-center gap-4 transition-all duration-200 ${isClickable ? 'hover:-translate-y-1 cursor-pointer' : 'cursor-default'
+          } ${isActive
+            ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 ring-2 ring-indigo-500/20'
+            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-100 dark:hover:border-slate-600'
+          }`}
+      >
+        <div className={`rounded-full p-3 ${bg} dark:bg-opacity-20 shrink-0 ${isActive ? 'scale-110' : ''} transition-transform`}>
+          <Icon className={`h-5 w-5 ${color}`} />
+        </div>
+        <div className="min-w-0">
+          <p className={`text-[11px] font-bold uppercase tracking-wider truncate mb-1 transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+            {title}
+          </p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{value}</p>
+        </div>
+      </button>
+    );
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t.dashboard}</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">{t.realTimeTracking}</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex items-center gap-3">
+          <greeting.icon className={`h-8 w-8 ${greeting.color} animate-pulse-slow`} />
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              {greeting.text}
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t.realTimeTracking}</p>
+          </div>
         </div>
 
-        <div className="inline-flex rounded-lg bg-slate-200 dark:bg-slate-800 p-1 transition-colors duration-200">
-          {(['Weekly', 'Monthly', 'Yearly'] as TimeRange[]).map((range) => (
+        <div className="inline-flex rounded-lg bg-slate-200/50 dark:bg-slate-800/50 p-1.5 transition-colors duration-200 border border-slate-200 dark:border-slate-700 shadow-inner">
+          {(['Today', 'Weekly', 'Monthly', 'Yearly'] as TimeRange[]).map((range) => (
             <button
               key={range}
-              onClick={() => { setTimeRange(range); setAttendancePage(1); }}
-              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${timeRange === range
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-300/50 dark:hover:bg-slate-700/50'
+              onClick={() => { setTimeRange(range); setActiveStatusFilter('All'); setSearchQuery(''); }}
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-xs font-bold transition-all ${timeRange === range
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-300/30 dark:hover:bg-slate-700/30'
                 }`}
             >
-              {range === 'Weekly' && <CalendarDays className="h-3.5 w-3.5" />}
-              {range === 'Monthly' && <CalendarRange className="h-3.5 w-3.5" />}
-              {range === 'Yearly' && <Calendar className="h-3.5 w-3.5" />}
-              {range === 'Weekly' ? t.weekly : range === 'Monthly' ? t.monthly : t.yearly}
+              {range === 'Today' && <Clock className="h-4 w-4" />}
+              {range === 'Weekly' && <CalendarDays className="h-4 w-4" />}
+              {range === 'Monthly' && <CalendarRange className="h-4 w-4" />}
+              {range === 'Yearly' && <Calendar className="h-4 w-4" />}
+              {range === 'Today' ? (isId ? 'Hari Ini' : 'Today') : range === 'Weekly' ? t.weekly : range === 'Monthly' ? t.monthly : t.yearly}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        <div className="lg:col-span-3 space-y-6">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard title={t.team} value={employees.length} icon={Users} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50" />
-            <StatCard title={t.present} value={todaysStats.present} icon={CheckCircle} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50" />
-            <StatCard title={t.late} value={todaysStats.late} icon={Clock} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50" />
-            <StatCard title={t.absent} value={todaysStats.absent} icon={AlertTriangle} color="text-rose-600 dark:text-rose-400" bg="bg-rose-50" />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
+        <div className="xl:col-span-3 space-y-6">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard title={t.team} value={employees.length} icon={Users} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50" statusKey="All" />
+            <StatCard title={t.present} value={activeStats.present} icon={CheckCircle} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50" statusKey={AttendanceStatus.PRESENT} />
+            <StatCard title={t.late} value={activeStats.late} icon={Clock} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50" statusKey={AttendanceStatus.LATE} />
+            <StatCard title={t.absent} value={activeStats.absent} icon={AlertTriangle} color="text-rose-600 dark:text-rose-400" bg="bg-rose-50" statusKey={AttendanceStatus.ABSENT} />
           </div>
 
           <div className="rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors duration-200">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{(timeRange === 'Weekly' ? t.weekly : timeRange === 'Monthly' ? t.monthly : t.yearly) + " " + t.attendanceTrend}</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
+                  {(timeRange === 'Today' ? (isId ? 'Hari Ini' : 'Today') : timeRange === 'Weekly' ? t.weekly : timeRange === 'Monthly' ? t.monthly : t.yearly)} {t.attendanceTrend}
+                </h3>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">{t.aggregatedRecords}</p>
               </div>
               <div className="flex gap-4 text-[10px] dark:text-slate-300">
@@ -184,68 +257,74 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             </div>
           </div>
 
-          <div className="rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center transition-colors duration-200">
-              <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{t.quickAttendance}</h3>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.activeToday}</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 transition-colors duration-200">
-                  {paginatedTodaysRecords.length > 0 ? (
-                    paginatedTodaysRecords.map((record) => {
-                      const emp = employees.find(e => e.id === record.employeeId);
-                      return (
-                        <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                          <td className="px-6 py-3">
-                            <div className="flex items-center gap-3">
-                              <img className="h-7 w-7 rounded-full object-cover border border-slate-100 dark:border-slate-600" src={emp?.avatar} alt="" />
-                              <div className="text-sm font-medium text-slate-900 dark:text-slate-200">{emp?.name}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-3 text-right">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                              record.status === AttendanceStatus.LATE ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
-                              }`}>
-                              {record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : t.absent}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={2} className="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                        {t.noRecordsToday}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {totalAttendancePages > 1 && (
-              <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between border-t border-slate-100 dark:border-slate-700 transition-colors duration-200">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t.page} <span className="font-medium text-slate-700 dark:text-slate-200">{attendancePage}</span> {t.of} <span className="font-medium text-slate-700 dark:text-slate-200">{totalAttendancePages}</span>
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    disabled={attendancePage === 1}
-                    onClick={() => setAttendancePage(p => p - 1)}
-                    className="p-1 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    disabled={attendancePage === totalAttendancePages}
-                    onClick={() => setAttendancePage(p => p + 1)}
-                    className="p-1 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+          <div className="rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors duration-200 flex flex-col h-[400px]">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                    {t.quickAttendance}
+                    {activeStatusFilter !== 'All' && (
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border ${activeStatusFilter === AttendanceStatus.PRESENT ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-400' :
+                        activeStatusFilter === AttendanceStatus.LATE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400' :
+                          'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/30 dark:border-rose-700 dark:text-rose-400'
+                        }`}>
+                        {activeStatusFilter === AttendanceStatus.PRESENT ? t.present : activeStatusFilter === AttendanceStatus.LATE ? t.late : t.absent} Filter
+                      </span>
+                    )}
+                  </h3>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 inline-block">
+                    {timeRange === 'Today' ? t.activeToday : `${tableRecords.length} Records Found`}
+                  </span>
+                </div>
+
+                <div className="relative w-full sm:w-48">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-3 w-3 text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={isId ? 'Cari nama...' : 'Search names...'}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
                 </div>
               </div>
-            )}
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-0 custom-scrollbar">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-700/60">
+                {tableRecords.length > 0 ? (
+                  tableRecords.map((record) => {
+                    const emp = employees.find(e => e.id === record.employeeId);
+                    return (
+                      <li key={record.id} className="p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors flex items-center justify-between group">
+                        <div className="flex items-center gap-3">
+                          <img className="h-8 w-8 rounded-full object-cover border border-slate-200 dark:border-slate-600 group-hover:border-indigo-300 dark:group-hover:border-indigo-600 transition-colors" src={emp?.avatar} alt="" />
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-slate-200">{emp?.name}</div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{record.date} • {record.checkIn}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                            record.status === AttendanceStatus.LATE ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
+                            }`}>
+                            {record.status === AttendanceStatus.PRESENT ? <CheckCircle className="h-3 w-3" /> : record.status === AttendanceStatus.LATE ? <Clock className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                            {record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : t.absent}
+                          </span>
+                        </div>
+                      </li>
+                    );
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full py-12 text-slate-400 dark:text-slate-500">
+                    <Search className="h-8 w-8 mb-3 opacity-20" />
+                    <p className="text-sm font-medium">{isId ? 'Tidak ada catatan.' : 'No records found.'}</p>
+                  </div>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
 
