@@ -7,12 +7,13 @@ export const generateAttendanceInsights = async (
   employees: Employee[]
 ): Promise<string> => {
   try {
-    // Initializing the AI client with the API key from environment variables as per requirements.
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your .env file.");
-      return "AI insights unavailable. Administrative configuration required.";
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+      console.warn("Gemini API Key is missing or invalid. Please set a valid VITE_GEMINI_API_KEY in your .env file.");
+      return "<strong>AI insights unavailable.</strong><br/>Please configure your `VITE_GEMINI_API_KEY` in the `.env` file to activate this feature.";
     }
+
+    // Initialize the official Google Gen AI SDK
     const ai = new GoogleGenAI({ apiKey });
 
     // Prepare data summary for the AI to consume less tokens but get better context
@@ -37,17 +38,18 @@ export const generateAttendanceInsights = async (
 
       Data: ${JSON.stringify(dataSummary)}
       
-      Format the response as HTML with simple formatting (e.g., <strong>, <ul>, <li>).
-      Keep it concise and professional.
+      CRITICAL FORMATTING RULES:
+      1. Format the response STRICTLY as valid HTML. Do not use Markdown (no **, #, or \`\`\`).
+      2. Use <strong> for emphasis, <ul>/<li> for lists, and <p> for paragraphs.
+      3. Do not wrap the response in HTML code blocks or any other wrappers.
+      4. Keep it concise, professional, and directly address management.
     `;
 
-    // Calling the model with the correct configuration and model name for text tasks.
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.5-flash',
       contents: prompt,
     });
 
-    // Directly accessing the .text property to get the generated output.
     return response.text || "No insights could be generated.";
   } catch (error) {
     console.error("Gemini API Error:", error);
