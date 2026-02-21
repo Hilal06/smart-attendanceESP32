@@ -169,7 +169,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
         className={`w-full text-left rounded-xl p-4 shadow-sm border flex items-center gap-4 transition-all duration-200 ${isClickable ? 'hover:-translate-y-1 cursor-pointer' : 'cursor-default'
           } ${isActive
             ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 ring-2 ring-indigo-500/20'
-            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-100 dark:hover:border-slate-600'
+            : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-100 dark:hover:border-slate-600'
           }`}
       >
         <div className={`rounded-full p-3 ${bg} dark:bg-opacity-20 shrink-0 ${isActive ? 'scale-110' : ''} transition-transform`}>
@@ -198,14 +198,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
           </div>
         </div>
 
-        <div className="inline-flex rounded-lg bg-slate-200/50 dark:bg-slate-800/50 p-1.5 transition-colors duration-200 border border-slate-200 dark:border-slate-700 shadow-inner">
+        <div className="inline-flex rounded-lg bg-slate-200/50 dark:bg-slate-900/50 p-1.5 transition-colors duration-200 border border-slate-200 dark:border-slate-800 shadow-inner">
           {(['Today', 'Weekly', 'Monthly', 'Yearly'] as TimeRange[]).map((range) => (
             <button
               key={range}
               onClick={() => { setTimeRange(range); setActiveStatusFilter('All'); setSearchQuery(''); }}
               className={`flex items-center gap-2 rounded-md px-4 py-2 text-xs font-bold transition-all ${timeRange === range
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-300/30 dark:hover:bg-slate-700/30'
+                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-300/30 dark:hover:bg-slate-800/30'
                 }`}
             >
               {range === 'Today' && <Clock className="h-4 w-4" />}
@@ -227,7 +227,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             <StatCard title={t.absent} value={activeStats.absent} icon={AlertTriangle} color="text-rose-600 dark:text-rose-400" bg="bg-rose-50" statusKey={AttendanceStatus.ABSENT} />
           </div>
 
-          <div className="rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors duration-200">
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors duration-200">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
@@ -257,8 +257,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             </div>
           </div>
 
-          <div className="rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors duration-200 flex flex-col h-[400px]">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
+          <div className="rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors duration-200 flex flex-col h-[400px]">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
@@ -286,21 +286,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                     placeholder={isId ? 'Cari nama...' : 'Search names...'}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="block w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
               </div>
             </div>
 
             <div className="overflow-y-auto flex-1 p-0 custom-scrollbar">
-              <ul className="divide-y divide-slate-100 dark:divide-slate-700/60">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {tableRecords.length > 0 ? (
                   tableRecords.map((record) => {
                     const emp = employees.find(e => e.id === record.employeeId);
                     return (
                       <li key={record.id} className="p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors flex items-center justify-between group">
                         <div className="flex items-center gap-3">
-                          <img className="h-8 w-8 rounded-full object-cover border border-slate-200 dark:border-slate-600 group-hover:border-indigo-300 dark:group-hover:border-indigo-600 transition-colors" src={emp?.avatar} alt="" />
+                          <img className="h-8 w-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 group-hover:border-indigo-300 dark:group-hover:border-indigo-600 transition-colors" src={emp?.avatar} alt="" />
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-slate-200">{emp?.name}</div>
                             <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{record.date} • {record.checkIn}</div>
@@ -329,7 +329,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
         </div>
 
         <div className="space-y-6 flex flex-col lg:h-[calc(100vh-10rem)]">
-          <div className="rounded-2xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors duration-200">
+          <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors duration-200">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Server className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
@@ -337,7 +337,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 transition-colors duration-200">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 transition-colors duration-200">
               <div className="flex flex-col max-w-[70%]">
                 <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Face Rec Engine</span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
@@ -362,7 +362,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex-1 flex flex-col min-h-[400px] overflow-hidden transition-colors duration-200">
+          <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex-1 flex flex-col min-h-[400px] overflow-hidden transition-colors duration-200">
             <div className="flex items-center justify-between mb-5 shrink-0">
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
@@ -371,14 +371,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               <div className="flex gap-1">
                 <button
                   onClick={() => setAnnouncementSort('Latest')}
-                  className={`p-1.5 rounded-md transition-colors ${announcementSort === 'Latest' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                  className={`p-1.5 rounded-md transition-colors ${announcementSort === 'Latest' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                   title={t.latest}
                 >
                   <Clock className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setAnnouncementSort('Priority')}
-                  className={`p-1.5 rounded-md transition-colors ${announcementSort === 'Priority' ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                  className={`p-1.5 rounded-md transition-colors ${announcementSort === 'Priority' ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                   title={t.priority}
                 >
                   <SortDesc className="h-4 w-4" />
@@ -392,10 +392,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                   <button
                     key={item.id}
                     onClick={() => router.visit('/announcements')}
-                    className="w-full text-left group rounded-xl border border-slate-100 dark:border-slate-700 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
+                    className="w-full text-left group rounded-xl border border-slate-100 dark:border-slate-800 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border dark:border-slate-600 dark:text-slate-300`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border dark:border-slate-700 dark:text-slate-300`}>
                         {item.priority === 'Urgent' ? t.priorityUrgent : item.priority === 'High' ? t.priorityHigh : t.priorityNormal}
                       </span>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
@@ -418,7 +418,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-50 dark:border-slate-700">
+            <div className="mt-6 pt-4 border-t border-slate-50 dark:border-slate-800">
               <button
                 onClick={() => router.visit('/announcements')}
                 className="w-full text-center text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"

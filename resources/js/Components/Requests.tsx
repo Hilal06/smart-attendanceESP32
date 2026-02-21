@@ -69,18 +69,18 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isId ? "Cari nama..." : "Search name..."}
-              className="pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg w-full sm:w-64 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              className="pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-800 rounded-lg w-full sm:w-64 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
             />
           </div>
 
-          <div className="flex p-1 space-x-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div className="flex p-1 space-x-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
             {(['All', 'Pending', 'Resolved'] as const).map(status => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filterStatus === status
-                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
                   }`}
               >
                 {status === 'All' ? (isId ? 'Semua' : 'All') :
@@ -91,10 +91,10 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
         {filteredRequests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-            <div className="rounded-full bg-slate-50 dark:bg-slate-700/50 p-4 mb-3 transition-colors">
+            <div className="rounded-full bg-slate-50 dark:bg-slate-800/50 p-4 mb-3 transition-colors">
               {filterStatus === 'Pending' ? <CheckCircle className="h-8 w-8 text-emerald-400 dark:text-emerald-500" /> : <Inbox className="h-8 w-8 text-slate-300 dark:text-slate-500" />}
             </div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -112,8 +112,8 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
-              <thead className="bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
+            <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
+              <thead className="bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.employee}</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.requestDetails}</th>
@@ -122,17 +122,17 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
                   <th scope="col" className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{isId ? 'Aksi' : 'Actions'}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 transition-colors">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 transition-colors">
                 {filteredRequests.map((request) => {
                   const emp = getEmployee(request.employeeId);
                   return (
-                    <tr key={request.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors">
+                    <tr key={request.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
                             src={emp?.avatar || `https://ui-avatars.com/api/?name=${request.employeeId}`}
                             alt=""
-                            className="h-8 w-8 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 border border-slate-100 dark:border-slate-700"
+                            className="h-8 w-8 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 border border-slate-100 dark:border-slate-800"
                           />
                           <div className="ml-3">
                             <div className="text-sm font-medium text-slate-900 dark:text-white">{emp?.name || request.employeeId}</div>
@@ -209,7 +209,7 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
         leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         className="fixed bottom-4 right-4 z-50 flex"
       >
-        <div className="flex items-center gap-3 bg-slate-800 dark:bg-slate-700 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 dark:border-slate-600">
+        <div className="flex items-center gap-3 bg-slate-800 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 dark:border-slate-700">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
             <CheckCircle2 className="h-5 w-5" />
           </div>
@@ -223,7 +223,7 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all border border-slate-100 dark:border-slate-700">
+          <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 text-left align-middle shadow-xl transition-all border border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-4 mb-5">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400">
                 <Trash2 className="h-6 w-6" />
@@ -241,7 +241,7 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
-                className="inline-flex justify-center rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 transition-colors"
+                className="inline-flex justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 transition-colors"
               >
                 {isId ? 'Batal' : 'Cancel'}
               </button>

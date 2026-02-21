@@ -42,9 +42,9 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 transition-colors duration-200 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-200 p-4">
       <Head title="Login" />
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-transparent dark:border-slate-700 transition-colors duration-200">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl border border-transparent dark:border-slate-800 transition-colors duration-200">
         <div className="bg-slate-900 dark:bg-slate-950 p-8 text-center rounded-t-2xl transition-colors duration-200">
           {settings?.companyLogo ? (
             <div className="mx-auto mb-6 flex h-24 w-auto max-w-[200px] items-center justify-center p-2 bg-white rounded-xl shadow-lg">
@@ -101,7 +101,7 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
                   value={data.id}
                   onChange={(e) => setData('id', e.target.value)}
                   placeholder="Enter your ID (e.g., 123456)"
-                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+                  className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                   Use your 6-digit Employee ID.
@@ -119,7 +119,7 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
                     value={data.email}
                     onChange={(e) => setData('email', e.target.value)}
                     placeholder="admin@smartattend.com"
-                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
                   {errors.email && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.email}</div>}
                 </div>
@@ -132,7 +132,7 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
                     value={data.password}
                     onChange={(e) => setData('password', e.target.value)}
                     placeholder="•••••"
-                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
                   {errors.password && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.password}</div>}
                 </div>

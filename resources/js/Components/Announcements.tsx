@@ -121,7 +121,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
               placeholder={t.language === 'id' ? 'Cari pengumuman...' : 'Search announcements...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
             />
           </div>
           <div className="relative">
@@ -129,7 +129,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="pl-9 pr-8 py-2 w-full sm:w-auto rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors appearance-none"
+              className="pl-9 pr-8 py-2 w-full sm:w-auto rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors appearance-none"
             >
               <option value="All">{t.language === 'id' ? 'Semua Prioritas' : 'All Priorities'}</option>
               <option value="Normal">{t.priorityNormal}</option>
@@ -149,8 +149,8 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
       {/* Announcements Grid */}
       <div className="grid gap-6">
         {filteredAnnouncements.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl bg-white dark:bg-slate-800 p-12 text-center shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
-            <div className="rounded-full bg-slate-100 dark:bg-slate-700 p-4 mb-4 transition-colors">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-white dark:bg-slate-900 p-12 text-center shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+            <div className="rounded-full bg-slate-100 dark:bg-slate-800 p-4 mb-4 transition-colors">
               <Megaphone className="h-8 w-8 text-slate-400 dark:text-slate-500" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -166,7 +166,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
           </div>
         ) : (
           paginatedAnnouncements.map((announcement) => (
-            <div key={announcement.id} className={`relative overflow-hidden rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border transition-all duration-200 hover:shadow-md ${announcement.priority === 'Urgent' ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-900/10' : announcement.priority === 'High' ? 'border-amber-200 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-900/10' : 'border-slate-100 dark:border-slate-700'}`}>
+            <div key={announcement.id} className={`relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border transition-all duration-200 hover:shadow-md ${announcement.priority === 'Urgent' ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-900/10' : announcement.priority === 'High' ? 'border-amber-200 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-900/10' : 'border-slate-100 dark:border-slate-800'}`}>
               {announcement.priority === 'Urgent' && (<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]"></div>)}
               {announcement.priority === 'High' && (<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>)}
               <div className="flex items-start justify-between">
@@ -185,7 +185,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
                   <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{announcement.content}</p>
                 </div>
                 {isAdmin && (
-                  <div className="flex space-x-1 ml-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg p-1 border border-slate-100 dark:border-slate-600/50">
+                  <div className="flex space-x-1 ml-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-1 border border-slate-100 dark:border-slate-700/50">
                     <button onClick={() => handleOpenEdit(announcement)} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-600 hover:shadow-sm rounded-md transition-all" title={t.editAnnouncement}>
                       <Edit className="h-4 w-4" />
                     </button>
@@ -202,7 +202,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 sm:px-6 rounded-xl shadow-sm transition-colors mt-6">
+        <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 sm:px-6 rounded-xl shadow-sm transition-colors mt-6">
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-slate-700 dark:text-slate-300">
@@ -222,7 +222,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
                 >
                   <span className="sr-only">Previous</span>
                   <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -233,7 +233,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
                 >
                   <span className="sr-only">Next</span>
                   <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -246,7 +246,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
             >
               <ChevronLeft className="mr-1 h-4 w-4" /> Previous
             </button>
@@ -256,7 +256,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
             >
               Next <ChevronRight className="ml-1 h-4 w-4" />
             </button>
@@ -268,10 +268,10 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity">
-          <div className="w-full max-w-2xl rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in duration-200 transition-colors">
+          <div className="w-full max-w-2xl rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in duration-200 transition-colors">
 
             {/* Sticky Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 px-6 py-4 shrink-0 bg-white dark:bg-slate-800 rounded-t-xl z-10 transition-colors">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 shrink-0 bg-white dark:bg-slate-900 rounded-t-xl z-10 transition-colors">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">{isEditMode ? t.editAnnouncement : t.newAnnouncement}</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" disabled={isProcessing}>
                 <X className="h-6 w-6" />
@@ -282,13 +282,13 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
             <form id="announcement-form" onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Judul' : 'Title'} <span className="text-rose-500">*</span></label>
-                <input required type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} disabled={isProcessing} className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-all ${errors.title ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} />
+                <input required type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} disabled={isProcessing} className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-all ${errors.title ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} />
                 {errors.title && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.title}</p>}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.priority}</label>
-                  <select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })} disabled={isProcessing} className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-colors appearance-none">
+                  <select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })} disabled={isProcessing} className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-colors appearance-none">
                     <option value="Normal">{t.priorityNormal}</option>
                     <option value="High">{t.priorityHigh}</option>
                     <option value="Urgent">{t.priorityUrgent}</option>
@@ -296,19 +296,19 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.date}</label>
-                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} disabled={isProcessing} className="block w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-colors [color-scheme:light] dark:[color-scheme:dark]" />
+                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} disabled={isProcessing} className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-colors [color-scheme:light] dark:[color-scheme:dark]" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Konten' : 'Content'} <span className="text-rose-500">*</span></label>
-                <textarea required rows={6} value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} disabled={isProcessing} className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-all ${errors.content ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} />
+                <textarea required rows={6} value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} disabled={isProcessing} className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-all ${errors.content ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} />
                 {errors.content && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.content}</p>}
               </div>
             </form>
 
             {/* Sticky Footer */}
-            <div className="border-t border-slate-100 dark:border-slate-700 p-6 shrink-0 bg-white dark:bg-slate-800 rounded-b-xl z-10 flex justify-end space-x-3 transition-colors">
-              <button type="button" onClick={() => setIsModalOpen(false)} disabled={isProcessing} className="rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors">{t.cancel}</button>
+            <div className="border-t border-slate-100 dark:border-slate-800 p-6 shrink-0 bg-white dark:bg-slate-900 rounded-b-xl z-10 flex justify-end space-x-3 transition-colors">
+              <button type="button" onClick={() => setIsModalOpen(false)} disabled={isProcessing} className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors">{t.cancel}</button>
               <button type="submit" form="announcement-form" disabled={isProcessing} className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] transition-all">
                 {isProcessing ? (
                   <>
@@ -326,7 +326,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
 
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 transition-opacity">
-          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 p-6 shadow-2xl animate-fade-in transition-colors"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-500/20"><AlertCircle className="h-6 w-6 text-rose-600 dark:text-rose-400" /></div><div className="mt-3 text-center sm:mt-5"><h3 className="text-lg font-medium text-slate-900 dark:text-white">{t.confirmDeletion}</h3><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t.actionUndone}</p></div><div className="mt-5 sm:grid sm:grid-cols-2 sm:gap-3"><button onClick={handleDelete} className="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-md px-4 py-2 text-sm font-medium transition-colors">{t.delete}</button><button onClick={() => setIsDeleteConfirmOpen(false)} className="mt-3 sm:mt-0 w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">{t.cancel}</button></div></div>
+          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-900 p-6 shadow-2xl animate-fade-in transition-colors"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-500/20"><AlertCircle className="h-6 w-6 text-rose-600 dark:text-rose-400" /></div><div className="mt-3 text-center sm:mt-5"><h3 className="text-lg font-medium text-slate-900 dark:text-white">{t.confirmDeletion}</h3><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t.actionUndone}</p></div><div className="mt-5 sm:grid sm:grid-cols-2 sm:gap-3"><button onClick={handleDelete} className="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-md px-4 py-2 text-sm font-medium transition-colors">{t.delete}</button><button onClick={() => setIsDeleteConfirmOpen(false)} className="mt-3 sm:mt-0 w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">{t.cancel}</button></div></div>
         </div>
       )}
     </div>

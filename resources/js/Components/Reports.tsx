@@ -200,7 +200,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
           <p className="text-slate-500 dark:text-slate-400">{t.visualizeTrends}</p>
         </div>
         <div className="flex space-x-3">
-          <button onClick={handleExportCSV} className="flex items-center rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">{t.exportCSV}</button>
+          <button onClick={handleExportCSV} className="flex items-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">{t.exportCSV}</button>
           <button onClick={handleGenerateInsights} disabled={loadingAI} className="flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-indigo-700 transition-colors disabled:opacity-75">
             {loadingAI ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             {loadingAI ? (t.language === 'id' ? 'Menganalisis...' : 'Analyzing...') : t.askAI}
@@ -232,10 +232,10 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trend Chart */}
-        <div className="lg:col-span-2 rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors flex flex-col">
+        <div className="lg:col-span-2 rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shrink-0">
             <h3 className="font-semibold text-slate-900 dark:text-white">{t.attendanceTrend}</h3>
-            <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-700 p-1 transition-colors">
+            <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 transition-colors">
               {(['Weekly', 'Monthly', 'Yearly'] as const).map((range) => (
                 <button
                   key={range}
@@ -270,7 +270,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
         </div>
 
         {/* Status Distribution */}
-        <div className="rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col transition-colors">
+        <div className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col transition-colors">
           <h3 className="mb-4 font-semibold text-slate-900 dark:text-white">{t.statusDistribution}</h3>
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="h-48 w-full">
@@ -303,8 +303,8 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
                       setCurrentPage(1);
                     }}
                     className={`w-full flex items-center justify-between text-sm p-2.5 rounded-lg transition-all border ${isActive
-                      ? 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
-                      : 'border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-700/30'
+                      ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
+                      : 'border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/30'
                       }`}
                   >
                     <div className="flex items-center gap-3">
@@ -323,8 +323,8 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
         </div>
       </div>
 
-      <div className="rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 transition-colors gap-4">
+      <div className="rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 transition-colors gap-4">
           <div className="flex items-center">
             <FileText className="h-5 w-5 text-slate-500 dark:text-slate-400 mr-2" />
             <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
@@ -333,7 +333,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border ${statusFilter === AttendanceStatus.PRESENT ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-400' :
                   statusFilter === AttendanceStatus.LATE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400' :
                     statusFilter === AttendanceStatus.ABSENT ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/30 dark:border-rose-700 dark:text-rose-400' :
-                      'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-900/30 dark:border-slate-700 dark:text-slate-400'
+                      'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-950/30 dark:border-slate-800 dark:text-slate-400'
                   }`}>
                   {statusFilter === AttendanceStatus.PRESENT ? t.present : statusFilter === AttendanceStatus.LATE ? t.late : statusFilter === AttendanceStatus.ABSENT ? t.absent : t.onLeave} Filter
                 </span>
@@ -350,12 +350,12 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
                 placeholder={isId ? 'Cari nama atau ID...' : 'Search name or ID...'}
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="block w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
+                className="block w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
               />
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto">
               <Filter className="h-4 w-4 text-slate-500 dark:text-slate-400 hidden sm:block" />
-              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="block w-full sm:w-auto rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 pl-3 pr-8 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-600 transition-colors shadow-sm">
+              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="block w-full sm:w-auto rounded-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-2 pl-3 pr-8 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-600 transition-colors shadow-sm">
                 <option value="All">{t.allStatus}</option>
                 <option value={AttendanceStatus.PRESENT}>{t.present}</option>
                 <option value={AttendanceStatus.LATE}>{t.late}</option>
@@ -366,8 +366,8 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700 text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 transition-colors">
+          <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+            <thead className="bg-slate-50 dark:bg-slate-900/50 transition-colors">
               <tr>
                 <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400">{t.date}</th>
                 <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400">{t.employee}</th>
@@ -377,12 +377,12 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
                 <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400">{t.checkOut}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 transition-colors">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 transition-colors">
               {paginatedData.length > 0 ? (
                 paginatedData.map((record) => {
                   const emp = getEmployee(record.employeeId);
                   return (
-                    <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{record.date}</td>
                       <td className="px-6 py-4"><div className="flex items-center"><img className="h-8 w-8 rounded-full object-cover mr-3" src={emp?.avatar} alt="" /><div><p className="font-medium text-slate-900 dark:text-white">{emp?.name || 'Unknown'}</p><p className="text-xs text-slate-500 dark:text-slate-400">{emp?.role}</p></div></div></td>
                       <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{emp?.department || '-'}</td>
@@ -396,7 +396,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                      <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-full mb-4 inline-block shadow-sm">
+                      <div className="bg-slate-50 dark:bg-slate-900/80 p-4 rounded-full mb-4 inline-block shadow-sm">
                         <Inbox className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                       </div>
                       <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
@@ -414,9 +414,9 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
             </tbody>
           </table>
         </div>
-        <div className="border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-6 py-3 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 transition-colors">
+        <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 px-6 py-3 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 transition-colors">
           <div>{t.showing} <span className="font-medium text-slate-900 dark:text-slate-300">{filteredAttendance.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span> {t.to} <span className="font-medium text-slate-900 dark:text-slate-300">{Math.min(currentPage * ITEMS_PER_PAGE, filteredAttendance.length)}</span> {t.of} <span className="font-medium text-slate-900 dark:text-slate-300">{filteredAttendance.length}</span> {t.results}</div>
-          <div className="flex gap-2"><button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1 rounded bg-white dark:bg-slate-800 border dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronLeft className="h-4 w-4" /></button><button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1 rounded bg-white dark:bg-slate-800 border dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronRight className="h-4 w-4" /></button></div>
+          <div className="flex gap-2"><button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1 rounded bg-white dark:bg-slate-900 border dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronLeft className="h-4 w-4" /></button><button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1 rounded bg-white dark:bg-slate-900 border dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronRight className="h-4 w-4" /></button></div>
         </div>
       </div>
     </div>
