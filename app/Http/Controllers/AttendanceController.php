@@ -367,8 +367,20 @@ class AttendanceController extends Controller
     public function settings()
     {
         $settings = Setting::first();
+        $admin = null;
+        if (session('userRole') === 'admin') {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if ($user) {
+                $admin = [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ];
+            }
+        }
+
         return Inertia::render('Settings', [
             'userRole' => session('userRole'),
+            'admin' => $admin,
             'settings' => $settings ? [
                 'companyName' => $settings->company_name,
                 'companyLogo' => $settings->company_logo,
@@ -377,6 +389,42 @@ class AttendanceController extends Controller
                 'language' => $settings->language,
             ] : null
         ]);
+    }
+
+    public function updateAdmin(Request $request)
+    {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        if (!$user) {
+            return back()->withErrors(['message' => 'User not found.']);
+        }
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
+            'current_password' => ['required', 'string'],
+            'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'The provided password does not match your current password.']);
+        }
+
+        /** @var \App\Models\User $user */
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->filled('new_password')) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+        }
+
+        $user->save();
+
+        return back()->with('message', 'Admin credentials updated successfully.');
     }
 
     public function announcements()

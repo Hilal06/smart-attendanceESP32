@@ -30,6 +30,7 @@ Route::group([], function () {
     // Settings
     Route::get('/settings', [AttendanceController::class, 'settings'])->name('settings');
     Route::post('/settings', [AttendanceController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/admin', [AttendanceController::class, 'updateAdmin'])->name('settings.admin.update');
 
     // Announcements
     Route::get('/announcements', [AttendanceController::class, 'announcements'])->name('announcements');

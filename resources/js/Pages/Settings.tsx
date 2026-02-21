@@ -1,19 +1,26 @@
-import React, { useState, useRef } from 'react';
-import { Head, router } from '@inertiajs/react';
+import React, { useState, useRef, Fragment } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 import AppLayout from '../Layouts/AppLayout';
 import { Settings as SettingsType, DayStatus, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { Save, Clock, Calendar, AlertCircle, Globe, Image as ImageIcon, Trash2, Upload, Loader2, CheckCircle2 } from 'lucide-react';
+import { Save, Clock, Calendar, AlertCircle, Globe, Image as ImageIcon, Trash2, Upload, Loader2, CheckCircle2, Shield } from 'lucide-react';
 
 interface SettingsProps {
   settings: SettingsType;
   userRole: UserRole;
+  admin?: {
+    name: string;
+    email: string;
+  };
 }
 
-export default function Settings({ settings, userRole }: SettingsProps) {
+export default function Settings({ settings, userRole, admin }: SettingsProps) {
   const t = TRANSLATIONS[settings.language];
   const [formData, setFormData] = useState<SettingsType>(settings);
   const [saved, setSaved] = useState(false);
+  const [adminSaved, setAdminSaved] = useState(false);
+  const [showAdminConfirm, setShowAdminConfirm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +113,31 @@ export default function Settings({ settings, userRole }: SettingsProps) {
   // Assuming it will eventually call handleSubmit or a similar save logic.
   const handleSave = (e: React.MouseEvent<HTMLButtonElement>) => {
     handleSubmit(e as any); // Cast to any to match event type, or define handleSave to take React.FormEvent
+  };
+
+  const adminForm = useForm({
+    name: admin?.name || '',
+    email: admin?.email || '',
+    current_password: '',
+    new_password: '',
+    new_password_confirmation: '',
+  });
+
+  const handleAdminSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowAdminConfirm(true);
+  };
+
+  const confirmAdminSubmit = () => {
+    setShowAdminConfirm(false);
+    adminForm.post('/settings/admin', {
+      preserveScroll: true,
+      onSuccess: () => {
+        adminForm.reset('current_password', 'new_password', 'new_password_confirmation');
+        setAdminSaved(true);
+        setTimeout(() => setAdminSaved(false), 3000);
+      }
+    });
   };
 
   return (
@@ -297,6 +329,141 @@ export default function Settings({ settings, userRole }: SettingsProps) {
           {t.saveConfiguration}
         </button>
       </form>
+
+      {userRole === 'admin' && admin && (
+        <form onSubmit={handleAdminSubmit} className="space-y-6 mt-8">
+          <div className="rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
+                <Shield className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Admin Credentials</h3>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
+                  <input
+                    type="text"
+                    value={adminForm.data.name}
+                    onChange={e => adminForm.setData('name', e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  {adminForm.errors.name && <p className="mt-1 text-xs text-rose-500">{adminForm.errors.name}</p>}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+                  <input
+                    type="email"
+                    value={adminForm.data.email}
+                    onChange={e => adminForm.setData('email', e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  {adminForm.errors.email && <p className="mt-1 text-xs text-rose-500">{adminForm.errors.email}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Current Password</label>
+                  <input
+                    type="password"
+                    value={adminForm.data.current_password}
+                    onChange={e => adminForm.setData('current_password', e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  {adminForm.errors.current_password && <p className="mt-1 text-xs text-rose-500">{adminForm.errors.current_password}</p>}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">New Password (leave blank to keep current)</label>
+                  <input
+                    type="password"
+                    value={adminForm.data.new_password}
+                    onChange={e => adminForm.setData('new_password', e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  {adminForm.errors.new_password && <p className="mt-1 text-xs text-rose-500">{adminForm.errors.new_password}</p>}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={adminForm.data.new_password_confirmation}
+                    onChange={e => adminForm.setData('new_password_confirmation', e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-4">
+              <Transition
+                show={adminSaved}
+                enter="transition ease-in-out duration-300 transform"
+                enterFrom="opacity-0 translate-y-2"
+                enterTo="opacity-100 translate-y-0"
+                leave="transition ease-in-out duration-300 transform"
+                leaveFrom="opacity-100 translate-y-0"
+                leaveTo="opacity-0 translate-y-2"
+              >
+                <div className="flex items-center text-sm text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  Credentials updated
+                </div>
+              </Transition>
+              <button
+                type="submit"
+                disabled={adminForm.processing}
+                className="flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+              >
+                {adminForm.processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Update Credentials
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Admin Confirmation Modal */}
+      {showAdminConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all border border-slate-100 dark:border-slate-700">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white pb-1">Confirm Update</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Are you sure you want to update the admin credentials? You will need to use the new credentials on your next login.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowAdminConfirm(false)}
+                className="inline-flex justify-center rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmAdminSubmit}
+                className="inline-flex justify-center rounded-lg border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 transition-colors"
+              >
+                Yes, update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </AppLayout>
   );
 }
