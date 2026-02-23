@@ -385,16 +385,16 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
             </div>
           </div>
         </div>
-        <div className="overflow-x-auto p-4 pt-0">
-          <table className="min-w-full border-separate border-spacing-y-2 text-sm">
+        <div className="overflow-x-auto px-6 pb-6 pt-2">
+          <table className="min-w-full border-separate border-spacing-y-3 text-sm">
             <thead>
               <tr className="bg-transparent">
-                <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400 text-xs tracking-wider">{t.date}</th>
-                <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400 text-xs tracking-wider">{t.employee}</th>
-                <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400 text-xs tracking-wider">{t.department}</th>
-                <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400 text-xs tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400 text-xs tracking-wider">{t.checkIn}</th>
-                <th className="px-6 py-3 text-left font-medium uppercase text-slate-500 dark:text-slate-400 text-xs tracking-wider">{t.checkOut}</th>
+                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.date}</th>
+                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.employee}</th>
+                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.department}</th>
+                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">Status</th>
+                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.checkIn}</th>
+                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.checkOut}</th>
               </tr>
             </thead>
             <tbody className="bg-transparent">
@@ -402,22 +402,23 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
                 paginatedData.map((record) => {
                   const emp = getEmployee(record.employeeId);
                   return (
-                    <tr key={record.id} className="group bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl hover:-translate-y-0.5 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/50">
-                      <td className="px-6 py-4 rounded-l-xl text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">{record.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-9 w-9 rounded-full object-cover mr-3 ring-2 ring-white dark:ring-slate-800 shadow-sm" src={emp?.avatar} alt="" /><div><p className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{emp?.name || 'Unknown'}</p><p className="text-xs text-slate-500 dark:text-slate-400">{emp?.role}</p></div></div></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400">{emp?.department || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap"><span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30' : record.status === AttendanceStatus.LATE ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30' : record.status === AttendanceStatus.ABSENT ? 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/30' : 'bg-slate-100 dark:bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/50'}`}>{record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : record.status === AttendanceStatus.ABSENT ? t.absent : t.onLeave}</span></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400 font-mono text-sm">{record.checkIn || '--:--'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap rounded-r-xl text-slate-500 dark:text-slate-400 font-mono text-sm">{record.checkOut || '--:--'}</td>
+                    <tr key={record.id} className="group relative bg-white/60 dark:bg-slate-800/60 shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                      <td colSpan={0} className="p-0 z-0"><div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-l-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 scale-y-50 group-hover:scale-y-100"></div></td>
+                      <td className="px-6 py-4 rounded-l-2xl text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap relative z-10">{record.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap relative z-10"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover mr-4 ring-2 ring-white/50 dark:ring-slate-800/50 shadow-sm" src={emp?.avatar} alt="" /><div><p className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{emp?.name || 'Unknown'}</p><p className="text-xs font-medium text-slate-500 dark:text-slate-400">{emp?.role}</p></div></div></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-400 text-sm font-medium relative z-10">{emp?.department || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap relative z-10"><span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold shadow-sm border ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400' : record.status === AttendanceStatus.LATE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400' : record.status === AttendanceStatus.ABSENT ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-500/10 dark:border-slate-700/50 dark:text-slate-300'}`}>{record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : record.status === AttendanceStatus.ABSENT ? t.absent : t.onLeave}</span></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-mono text-sm relative z-10">{record.checkIn || '--:--'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap rounded-r-2xl text-slate-600 dark:text-slate-300 font-mono text-sm relative z-10">{record.checkOut || '--:--'}</td>
                     </tr>
                   );
                 })
               ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center">
+                <tr className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                  <td colSpan={6} className="px-6 py-16 text-center rounded-2xl relative z-10">
                     <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                      <div className="bg-slate-50 dark:bg-slate-900/80 p-4 rounded-full mb-4 inline-block shadow-sm animate-bounce">
-                        <Inbox className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                      <div className="bg-white dark:bg-slate-800 p-4 rounded-full mb-4 inline-block shadow-sm ring-4 ring-slate-50 dark:ring-slate-900/50 animate-bounce">
+                        <Inbox className="h-8 w-8 text-slate-300 dark:text-slate-500" />
                       </div>
                       <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
                         {isId ? 'Tidak Ada Laporan' : 'No Records Found'}

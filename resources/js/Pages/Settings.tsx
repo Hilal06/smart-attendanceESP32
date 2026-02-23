@@ -189,7 +189,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
       <Head title={t.settings} />
 
       {/* Tabs */}
-      <div className="mb-8 flex space-x-1 border-b border-slate-200 dark:border-slate-800 pb-px overflow-x-auto">
+      <div className="mb-8 flex space-x-1 border-b border-slate-200/50 dark:border-slate-800/50 pb-px overflow-x-auto">
         <button
           onClick={() => setActiveTab('general')}
           type="button"
@@ -231,7 +231,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
         {(activeTab === 'general' || activeTab === 'schedule') && (
           <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
             {activeTab === 'general' && (
-              <div className="max-w-3xl rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors duration-200">
+              <div className="max-w-3xl rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-700/50 transition-colors duration-300">
                 <div className="mb-6 flex items-center gap-3">
                   <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
                     <AlertCircle className="h-5 w-5" />
@@ -353,7 +353,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
 
             {/* Weekly Schedule */}
             {activeTab === 'schedule' && (
-              <div className="max-w-4xl rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors duration-200">
+              <div className="max-w-4xl rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-700/50 transition-colors duration-300">
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
@@ -372,18 +372,18 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
                   </button>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                  <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 transition-colors duration-200">
+                <div className="overflow-hidden rounded-xl border border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm shadow-inner">
+                  <table className="min-w-full divide-y divide-slate-200/50 dark:divide-slate-700/50">
+                    <thead className="bg-white/50 dark:bg-slate-800/50 transition-colors duration-300">
                       <tr>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Day</th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Hours</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Day</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Hours</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800 transition-colors duration-200">
+                    <tbody className="divide-y divide-slate-200/50 dark:divide-slate-700/50 transition-colors duration-300 bg-transparent">
                       {formData.weeklySchedule.map((day, index) => (
-                        <tr key={day.day} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <tr key={day.day} className="hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors">
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-200">
                             {day.day.substring(0, 3)}
                           </td>
@@ -439,7 +439,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
         {activeTab === 'security' && userRole === 'admin' && admin && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 max-w-4xl">
             <form onSubmit={handleAdminSubmit} className="space-y-6">
-              <div className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors duration-200">
+              <div className="rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-700/50 transition-colors duration-300">
                 <div className="mb-6 flex items-center gap-3">
                   <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
                     <Shield className="h-5 w-5" />
@@ -535,7 +535,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
             </form>
 
             {/* 2FA Stub */}
-            <div className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors duration-200">
+            <div className="rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-700/50 transition-colors duration-300">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
@@ -563,25 +563,25 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
 
       {/* Admin Confirmation Modal */}
       {showAdminConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity">
-          <div className="w-full max-w-md rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in duration-200 transition-colors">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-all duration-300">
+          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300 transition-colors">
             {/* Sticky Header */}
-            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 px-6 py-4 shrink-0 bg-white dark:bg-slate-900 rounded-t-xl z-10 transition-colors">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+            <div className="flex items-center gap-3 border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-5 shrink-0 bg-white/50 dark:bg-slate-900/50 rounded-t-2xl z-10 transition-colors">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 shadow-sm ring-2 ring-white/50 dark:ring-slate-800/50">
                 <AlertCircle className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Confirm Update</h3>
+              <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">Confirm Update</h3>
             </div>
 
             {/* Scrollable Body */}
-            <div className="p-6 overflow-y-auto flex-1">
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+            <div className="p-6 overflow-y-auto flex-1 font-medium">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 Are you sure you want to update the admin credentials? You will need to use the new credentials on your next login.
               </p>
             </div>
 
             {/* Sticky Footer */}
-            <div className="border-t border-slate-100 dark:border-slate-800 p-6 shrink-0 bg-slate-50 dark:bg-slate-900 rounded-b-xl z-10 flex justify-end gap-3 transition-colors">
+            <div className="border-t border-slate-200/50 dark:border-slate-800/50 p-6 shrink-0 bg-slate-50/50 dark:bg-slate-900/50 rounded-b-2xl z-10 flex justify-end gap-3 transition-colors">
               <button
                 type="button"
                 onClick={() => setShowAdminConfirm(false)}

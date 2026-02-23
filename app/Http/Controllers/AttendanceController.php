@@ -159,10 +159,11 @@ class AttendanceController extends Controller
                     'role' => $emp->role,
                     'department' => $emp->department,
                     'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
-                    'email' => $emp->email,
-                    'joinDate' => $emp->join_date,
-                    'phoneNumber' => $emp->phone_number,
-                    'address' => $emp->address,
+                    // Nullifying unnecessary fields to reduce Dashboard JSON payload
+                    'email' => null,
+                    'joinDate' => null,
+                    'phoneNumber' => null,
+                    'address' => null,
                     'status' => $emp->status,
                 ];
             }),
@@ -212,6 +213,10 @@ class AttendanceController extends Controller
 
     public function updateSettings(Request $request)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $data = $request->all();
         // Map camelCase to snake_case
         $updateData = [];
@@ -257,6 +262,10 @@ class AttendanceController extends Controller
 
     public function storeEmployee(Request $request)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $data = $request->all();
         if (isset($data['joinDate'])) $data['join_date'] = $data['joinDate'];
         if (isset($data['phoneNumber'])) $data['phone_number'] = $data['phoneNumber'];
@@ -285,6 +294,10 @@ class AttendanceController extends Controller
 
     public function updateEmployee(Request $request, $id)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $employee = Employee::find($id);
         if ($employee) {
             $data = $request->all();
@@ -318,6 +331,10 @@ class AttendanceController extends Controller
 
     public function deleteEmployee($id)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         Employee::destroy($id);
         return back();
     }
@@ -354,10 +371,11 @@ class AttendanceController extends Controller
                     'role' => $emp->role,
                     'department' => $emp->department,
                     'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
-                    'email' => $emp->email,
-                    'joinDate' => $emp->join_date,
-                    'phoneNumber' => $emp->phone_number,
-                    'address' => $emp->address,
+                    // Nullifying unnecessary fields to reduce Reports JSON payload
+                    'email' => null,
+                    'joinDate' => null,
+                    'phoneNumber' => null,
+                    'address' => null,
                     'status' => $emp->status,
                 ];
             })
@@ -439,6 +457,10 @@ class AttendanceController extends Controller
 
     public function storeAnnouncement(Request $request)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $data = $request->all();
         if (!isset($data['id'])) {
             $data['id'] = (string)time();
@@ -449,6 +471,10 @@ class AttendanceController extends Controller
 
     public function updateAnnouncement(Request $request, $id)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $announcement = Announcement::find($id);
         if ($announcement) {
             $announcement->update($request->all());
@@ -458,6 +484,10 @@ class AttendanceController extends Controller
 
     public function deleteAnnouncement($id)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         Announcement::destroy($id);
         return back();
     }
@@ -524,6 +554,10 @@ class AttendanceController extends Controller
 
     public function updateRequest(Request $request, $id)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $req = EmployeeRequest::find($id);
         if ($req) {
             // Frontend sends status updates
@@ -534,6 +568,10 @@ class AttendanceController extends Controller
 
     public function deleteRequest($id)
     {
+        if (session('userRole') !== 'admin') {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         EmployeeRequest::destroy($id);
         return back();
     }
