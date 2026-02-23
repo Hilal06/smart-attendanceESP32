@@ -836,129 +836,131 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* View Profile Modal */}
       {viewEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 transition-all duration-300">
-          <div className="w-full max-w-lg rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300 transition-colors backdrop-blur-xl">
-            <div className="relative h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 dark:from-indigo-600 dark:via-purple-700 dark:to-indigo-800">
-              <button
-                onClick={() => {
-                  setViewEmployee(null);
-                  setAiSummary(null);
-                }}
-                className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all backdrop-blur-sm"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="px-8 pb-8 relative">
-              <div className="absolute -top-16 left-8 flex items-end gap-4">
-                <div className="rounded-full p-1.5 bg-white dark:bg-slate-900 shadow-lg transition-colors duration-200">
-                  <img src={viewEmployee.avatar} alt={viewEmployee.name} className="h-28 w-28 rounded-full object-cover border-2 border-slate-100 dark:border-slate-800" />
-                </div>
-                <div className="pb-3">
-                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold shadow-sm border ${viewEmployee.status === EmployeeStatus.ACTIVE ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400' :
-                    viewEmployee.status === EmployeeStatus.ON_LEAVE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400' :
-                      'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400'
-                    }`}>
-                    {getStatusLabel(viewEmployee.status)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-16 sm:flex sm:justify-between sm:items-start">
-                <div>
-                  <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">{viewEmployee.name}</h2>
-                  <p className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2 mt-1">
-                    {viewEmployee.role} <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span> {viewEmployee.department}
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+          <div className="flex min-h-full p-4 sm:p-6">
+            <div className="m-auto w-full max-w-lg rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300 transition-colors">
+              <div className="relative h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 dark:from-indigo-600 dark:via-purple-700 dark:to-indigo-800">
                 <button
-                  onClick={() => handleGenerateAISummary(viewEmployee)}
-                  disabled={isGeneratingSummary}
-                  className="mt-4 sm:mt-0 flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all w-full sm:w-auto overflow-hidden relative group"
+                  onClick={() => {
+                    setViewEmployee(null);
+                    setAiSummary(null);
+                  }}
+                  className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all backdrop-blur-sm"
+                  aria-label="Close"
                 >
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="relative z-10 flex items-center gap-2">
-                    {isGeneratingSummary ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>✨</span>}
-                    {isGeneratingSummary ? (t.language === 'id' ? 'Menghasilkan...' : 'Generating...') : 'AI Summary'}
-                  </span>
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-
-              {/* AI Summary Display */}
-              {(isGeneratingSummary || aiSummary || generateError) && (
-                <div className="mt-6 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-900/10 p-5 backdrop-blur-sm shadow-sm transition-all duration-300 animate-in slide-in-from-top-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-lg">✨</span>
-                    <h3 className="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">{t.language === 'id' ? 'Ringkasan Kinerja AI' : 'AI Performance Summary'}</h3>
+              <div className="px-8 pb-8 relative">
+                <div className="absolute -top-16 left-8 flex items-end gap-4">
+                  <div className="rounded-full p-1.5 bg-white dark:bg-slate-900 shadow-lg transition-colors duration-200">
+                    <img src={viewEmployee.avatar} alt={viewEmployee.name} className="h-28 w-28 rounded-full object-cover border-2 border-slate-100 dark:border-slate-800" />
                   </div>
-
-                  {isGeneratingSummary && (
-                    <div className="space-y-3 animate-pulse">
-                      <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-3/4"></div>
-                      <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-full"></div>
-                      <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-5/6"></div>
-                    </div>
-                  )}
-
-                  {generateError && !isGeneratingSummary && (
-                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 text-sm font-medium">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      <p>{generateError}</p>
-                    </div>
-                  )}
-
-                  {aiSummary && !isGeneratingSummary && !generateError && (
-                    <div
-                      className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed prose-p:mb-2 prose-strong:text-indigo-700 dark:prose-strong:text-indigo-300"
-                      dangerouslySetInnerHTML={{ __html: aiSummary }}
-                    />
-                  )}
-                </div>
-              )}
-
-              <div className="mt-8 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
-                    <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
-                      <User className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.language === 'id' ? 'ID Karyawan' : 'Employee ID'}</p>
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewEmployee.id}</p>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
-                    <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.joinDate}</p>
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{new Date(viewEmployee.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p>
-                    </div>
+                  <div className="pb-3">
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold shadow-sm border ${viewEmployee.status === EmployeeStatus.ACTIVE ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400' :
+                      viewEmployee.status === EmployeeStatus.ON_LEAVE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400' :
+                        'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400'
+                      }`}>
+                      {getStatusLabel(viewEmployee.status)}
+                    </span>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden flex flex-col">
-                  <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Mail className="h-5 w-5" /></div>
-                    <div className="overflow-hidden">
-                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.emailAddress}</p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 truncate mt-0.5">{viewEmployee.email}</p>
+                <div className="pt-20 sm:flex sm:justify-between sm:items-start">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">{viewEmployee.name}</h2>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2 mt-1">
+                      {viewEmployee.role} <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span> {viewEmployee.department}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleGenerateAISummary(viewEmployee)}
+                    disabled={isGeneratingSummary}
+                    className="mt-4 sm:mt-0 flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all w-full sm:w-auto overflow-hidden relative group"
+                  >
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    <span className="relative z-10 flex items-center gap-2">
+                      {isGeneratingSummary ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>✨</span>}
+                      {isGeneratingSummary ? (t.language === 'id' ? 'Menghasilkan...' : 'Generating...') : 'AI Summary'}
+                    </span>
+                  </button>
+                </div>
+
+                {/* AI Summary Display */}
+                {(isGeneratingSummary || aiSummary || generateError) && (
+                  <div className="mt-6 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-900/10 p-5 backdrop-blur-sm shadow-sm transition-all duration-300 animate-in slide-in-from-top-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">✨</span>
+                      <h3 className="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">{t.language === 'id' ? 'Ringkasan Kinerja AI' : 'AI Performance Summary'}</h3>
+                    </div>
+
+                    {isGeneratingSummary && (
+                      <div className="space-y-3 animate-pulse">
+                        <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-3/4"></div>
+                        <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-full"></div>
+                        <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-5/6"></div>
+                      </div>
+                    )}
+
+                    {generateError && !isGeneratingSummary && (
+                      <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 text-sm font-medium">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <p>{generateError}</p>
+                      </div>
+                    )}
+
+                    {aiSummary && !isGeneratingSummary && !generateError && (
+                      <div
+                        className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed prose-p:mb-2 prose-strong:text-indigo-700 dark:prose-strong:text-indigo-300"
+                        dangerouslySetInnerHTML={{ __html: aiSummary }}
+                      />
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-8 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
+                      <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
+                        <User className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.language === 'id' ? 'ID Karyawan' : 'Employee ID'}</p>
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewEmployee.id}</p>
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
+                      <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
+                        <Calendar className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.joinDate}</p>
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{new Date(viewEmployee.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Phone className="h-5 w-5" /></div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.phoneNumber}</p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 mt-0.5">{viewEmployee.phoneNumber || '-'}</p>
+
+                  <div className="rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden flex flex-col">
+                    <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
+                      <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Mail className="h-5 w-5" /></div>
+                      <div className="overflow-hidden">
+                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.emailAddress}</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-200 truncate mt-0.5">{viewEmployee.email}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><MapPin className="h-5 w-5" /></div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.address}</p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 leading-relaxed mt-0.5 max-w-[300px]">{viewEmployee.address || '-'}</p>
+                    <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
+                      <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Phone className="h-5 w-5" /></div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.phoneNumber}</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-200 mt-0.5">{viewEmployee.phoneNumber || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                      <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><MapPin className="h-5 w-5" /></div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.address}</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-200 leading-relaxed mt-0.5 max-w-[300px]">{viewEmployee.address || '-'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
