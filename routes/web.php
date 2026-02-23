@@ -8,13 +8,10 @@ Route::get('/login', [AttendanceController::class, 'loginPage'])->name('login');
 Route::post('/login', [AttendanceController::class, 'authenticate'])->name('login.attempt');
 Route::post('/logout', [AttendanceController::class, 'logout'])->name('logout');
 
+use App\Http\Middleware\CheckUserSession;
+
 // Protected Routes
-Route::middleware(function ($request, $next) {
-    if (!session('userRole')) {
-        return redirect()->route('login');
-    }
-    return $next($request);
-})->group(function () {
+Route::middleware([CheckUserSession::class])->group(function () {
     Route::get('/', [AttendanceController::class, 'dashboard'])->name('dashboard');
 
     // Employees
