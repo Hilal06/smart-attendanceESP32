@@ -166,21 +166,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
       <button
         type="button"
         onClick={() => isClickable && setActiveStatusFilter(isActive ? 'All' : statusKey)}
-        className={`w-full text-left rounded-xl p-4 shadow-sm flex items-center gap-4 transition-all duration-300 ${isClickable ? 'hover:-translate-y-1 hover:shadow-md cursor-pointer' : 'cursor-default'
+        className={`relative overflow-hidden w-full text-left rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 transition-all duration-300 ${isClickable ? 'hover:-translate-y-1 hover:shadow-lg cursor-pointer' : 'cursor-default'
           } ${isActive
-            ? 'bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-indigo-200 dark:border-indigo-500/30 ring-2 ring-indigo-500/20 shadow-indigo-500/10'
-            : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/20 dark:border-slate-800 hover:bg-white/95 dark:hover:bg-slate-900/90 hover:border-indigo-100/50 dark:hover:border-slate-700/50'
+            ? 'bg-white/95 dark:bg-slate-800/90 backdrop-blur-xl border border-indigo-300 dark:border-indigo-500/50 ring-2 ring-indigo-500/30 shadow-[0_8px_30px_rgb(99,102,241,0.2)] dark:shadow-[0_8px_30px_rgb(99,102,241,0.15)] scale-[1.03] z-10'
+            : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/40 dark:border-slate-800 hover:bg-white/95 dark:hover:bg-slate-800/90 hover:border-indigo-200/50 dark:hover:border-slate-700/50 shadow-sm z-0'
           }`}
       >
-        <div className={`rounded-full p-3 ${bg} dark:bg-opacity-20 shrink-0 ${isActive ? 'scale-110' : ''} transition-transform`}>
-          <Icon className={`h-5 w-5 ${color}`} />
-        </div>
-        <div className="min-w-0">
-          <p className={`text-[11px] font-bold uppercase tracking-wider truncate mb-1 transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+        <div className="min-w-0 z-10">
+          <p className={`text-[11px] font-bold uppercase tracking-wider truncate mb-1.5 transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}>
             {title}
           </p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{value}</p>
+          <p className={`text-3xl font-extrabold leading-none transition-colors ${isActive ? 'text-indigo-900 dark:text-white' : 'text-slate-900 dark:text-white'}`}>{value}</p>
         </div>
+        <div className={`relative flex items-center justify-center rounded-xl p-3 sm:p-4 ${bg} dark:bg-opacity-20 shrink-0 ${isActive ? 'scale-110 shadow-inner ring-4 ring-offset-2 ring-white dark:ring-slate-800 ring-opacity-50 ring-' + bg.replace('bg-', '') : 'shadow-sm'} transition-all z-10`}>
+          <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${color} transition-colors`} />
+        </div>
+        {/* Subtle background glow effect if active */}
+        {isActive && (
+          <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-indigo-500/20 dark:bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        )}
       </button>
     );
   };
@@ -243,15 +247,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
             <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                  <defs>
+                    <linearGradient id="colorPresentDash" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.9} />
+                      <stop offset="95%" stopColor="#818cf8" stopOpacity={0.4} />
+                    </linearGradient>
+                    <linearGradient id="colorLateDash" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.9} />
+                      <stop offset="95%" stopColor="#fcd34d" stopOpacity={0.4} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" strokeOpacity={0.6} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} dx={-10} />
                   <Tooltip
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '11px' }}
+                    cursor={{ fill: 'rgba(248, 250, 252, 0.4)' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', fontSize: '12px', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)' }}
+                    itemStyle={{ fontWeight: 600 }}
                   />
-                  <Bar dataKey="Present" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={timeRange === 'Weekly' ? 32 : 16} />
-                  <Bar dataKey="Late" fill="#fbbf24" radius={[4, 4, 0, 0]} barSize={timeRange === 'Weekly' ? 32 : 16} />
+                  <Bar dataKey="Present" fill="url(#colorPresentDash)" radius={[6, 6, 0, 0]} barSize={timeRange === 'Weekly' ? 28 : (timeRange === 'Yearly' ? 24 : 14)} />
+                  <Bar dataKey="Late" fill="url(#colorLateDash)" radius={[6, 6, 0, 0]} barSize={timeRange === 'Weekly' ? 28 : (timeRange === 'Yearly' ? 24 : 14)} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -292,28 +307,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               </div>
             </div>
 
-            <div className="overflow-y-auto flex-1 p-0 custom-scrollbar">
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div className="overflow-y-auto flex-1 p-2 sm:p-4 custom-scrollbar">
+              <ul className="space-y-2.5">
                 {tableRecords.length > 0 ? (
                   tableRecords.map((record) => {
                     const emp = employees.find(e => e.id === record.employeeId);
                     return (
-                      <li key={record.id} className="p-4 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between group">
-                        <div className="flex items-center gap-3">
-                          <img className="h-8 w-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 group-hover:border-indigo-300 dark:group-hover:border-indigo-600 transition-colors" src={emp?.avatar} alt="" />
+                      <li key={record.id} className="relative overflow-hidden p-3 sm:p-4 bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between group">
+                        <div className="flex items-center gap-3.5 z-10">
+                          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all duration-300" src={emp?.avatar} alt="" />
                           <div>
-                            <div className="text-sm font-bold text-slate-900 dark:text-slate-200">{emp?.name}</div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{record.date} • {record.checkIn}</div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{emp?.name}</div>
+                            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">{record.date} <span className="mx-1">•</span> <span className="font-mono">{record.checkIn}</span></div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                            record.status === AttendanceStatus.LATE ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
+                        <div className="text-right z-10">
+                          <span className={`inline-flex items-center justify-center min-w-[80px] sm:min-w-[90px] gap-1.5 rounded-full px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider border ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400 shadow-[0_0_15px_-3px_rgba(16,185,129,0.1)]' :
+                            record.status === AttendanceStatus.LATE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400 shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)]' : 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400 shadow-[0_0_15px_-3px_rgba(244,63,94,0.1)]'
                             }`}>
-                            {record.status === AttendanceStatus.PRESENT ? <CheckCircle className="h-3 w-3" /> : record.status === AttendanceStatus.LATE ? <Clock className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                            {record.status === AttendanceStatus.PRESENT ? <CheckCircle className="h-3.5 w-3.5" /> : record.status === AttendanceStatus.LATE ? <Clock className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
                             {record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : t.absent}
                           </span>
                         </div>
+                        {/* Hover accent background */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 dark:from-indigo-900/10 transition-opacity duration-300 pointer-events-none"></div>
                       </li>
                     );
                   })
@@ -337,25 +354,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700 transition-colors duration-300">
-              <div className="flex flex-col max-w-[70%]">
-                <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Face Rec Engine</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+            <div className="relative overflow-hidden flex items-center justify-between p-4 rounded-xl bg-slate-900 border border-slate-800 dark:bg-slate-950 dark:border-slate-800/80 shadow-inner group transition-colors duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none"></div>
+              <div className="flex flex-col max-w-[70%] z-10">
+                <span className="text-sm font-bold text-white leading-tight tracking-wide">Face Rec Engine</span>
+                <span className="text-xs text-slate-400 mt-1 leading-tight flex items-center gap-1.5 font-medium">
+                  <div className="h-1.5 w-1.5 rounded-full bg-slate-500"></div>
                   {systemStatus ? `${systemStatus.loaded_faces_count || 0} faces loaded` : 'Checking status...'}
                 </span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2.5 shrink-0 z-10 bg-slate-800/80 dark:bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700/50 backdrop-blur-sm">
                 <div className="relative flex h-2.5 w-2.5">
                   {systemStatus && systemStatus.status === 'online' ? (
                     <>
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                     </>
                   ) : (
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"></span>
                   )}
                 </div>
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${systemStatus?.status === 'online' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${systemStatus?.status === 'online' ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {systemStatus?.status === 'online' ? 'Online' : 'Offline'}
                 </span>
               </div>
@@ -392,20 +411,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                   <button
                     key={item.id}
                     onClick={() => router.visit('/announcements')}
-                    className="w-full text-left group rounded-xl border border-slate-200/50 dark:border-slate-800/50 p-4 transition-all hover:bg-white/90 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 backdrop-blur-sm"
+                    className="relative w-full text-left group rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 p-4 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 overflow-hidden hover:-translate-y-0.5"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border dark:border-slate-700 dark:text-slate-300`}>
+                    {/* Priority Accent Line */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.priority === 'Urgent' ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]' :
+                        item.priority === 'High' ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]' :
+                          'bg-indigo-400'
+                      }`}></div>
+
+                    <div className="flex items-center justify-between mb-2.5 pl-2">
+                      <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${item.priority === 'Urgent' ? 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' :
+                          item.priority === 'High' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                        }`}>
                         {item.priority === 'Urgent' ? t.priorityUrgent : item.priority === 'High' ? t.priorityHigh : t.priorityNormal}
                       </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-wide">
                         {new Date(item.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Jakarta' })}
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1.5 pl-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
                       {item.title}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed pl-2">
                       {item.content}
                     </p>
                   </button>

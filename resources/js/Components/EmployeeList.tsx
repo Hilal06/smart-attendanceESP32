@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Employee, EmployeeStatus } from '../types';
+import { Employee, EmployeeStatus, AttendanceRecord } from '../types';
+import { generateEmployeePerformanceSummary } from '../services/geminiService';
 import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter, Loader2, AlertTriangle, Upload, Camera, ChevronRight, ChevronLeft, CheckCircle2, User, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 
 interface EmployeeListProps {
@@ -41,6 +42,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [statusWarning, setStatusWarning] = useState<string | null>(null);
   const [shakeModal, setShakeModal] = useState(false);
+
+  // AI Summary State
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -97,7 +103,6 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       }
     }
   }, [externalErrors, isFormModalOpen, showToast]);
-
   // Handle successful completion of operations
   const prevProcessing = useRef(isProcessing);
   useEffect(() => {
@@ -112,6 +117,24 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
     }
     prevProcessing.current = isProcessing;
   }, [isProcessing, externalErrors, t.language, showToast]);
+
+  const handleGenerateAISummary = async (emp: Employee) => {
+    setIsGeneratingSummary(true);
+    setGenerateError(null);
+    try {
+      // In a real app we'd fetch this employee's actual attendance records via API here.
+      // For this frontend demo, we'll pass an empty array, and the AI will still generate
+      // a summary based on the employee's basic info using the fallback prompt logic.
+      const records: AttendanceRecord[] = [];
+      const htmlResponse = await generateEmployeePerformanceSummary(emp, records);
+      setAiSummary(htmlResponse);
+    } catch (err) {
+      console.error(err);
+      setGenerateError(t.language === 'id' ? 'Gagal menghasilkan ringkasan AI.' : 'Failed to generate AI summary.');
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = () => setActiveMenuId(null);
@@ -618,11 +641,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
         <div className="rounded-xl border border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="min-w-full lg:min-w-full max-w-full divide-y divide-slate-200/50 dark:divide-slate-800/50">
-              <thead className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm transition-colors duration-300">
-                <tr>
+              <thead className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md transition-colors duration-300 sticky top-0 z-20 shadow-sm border-b border-white/20 dark:border-slate-800">
+                <tr className="flex items-center justify-between w-full">
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group px-6 py-3 text-left hidden sm:flex flex-1 min-w-[200px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('name')}
                   >
                     <div className="flex items-center gap-2">
@@ -632,7 +655,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group px-6 py-3 text-left hidden sm:flex flex-1 min-w-[150px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('role')}
                   >
                     <div className="flex items-center gap-2">
@@ -642,7 +665,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group px-6 py-3 text-left hidden sm:flex flex-1 min-w-[150px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('department')}
                   >
                     <div className="flex items-center gap-2">
@@ -652,71 +675,74 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group px-6 py-3 text-left hidden sm:flex flex-shrink-0 min-w-[120px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('status')}
                   >
                     <div className="flex items-center gap-2">
-                      Status
+                      {t.language === 'id' ? 'Status' : 'Status'}
                       <SortIcon column="status" />
                     </div>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-right hidden sm:block flex-shrink-0 min-w-[120px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {t.language === 'id' ? 'Aksi' : 'Actions'}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-transparent divide-y divide-slate-100 dark:divide-slate-800/50 transition-colors duration-300">
+              <tbody className="bg-transparent flex flex-col gap-2 mt-2 transition-colors duration-300 px-1 pb-1">
                 {paginatedEmployees.length > 0 ? (
                   paginatedEmployees.map((employee) => (
-                    <tr key={employee.id} className="hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <img className="h-10 w-10 rounded-full object-cover" src={employee.avatar} alt="" />
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white">{employee.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">{employee.email}</div>
+                    <tr key={employee.id} className="relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between group">
+                      <td className="px-6 py-4 whitespace-nowrap min-w-[200px] flex-1 z-10">
+                        <div className="flex items-center gap-4">
+                          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all duration-300" src={employee.avatar} alt="" />
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{employee.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{employee.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-slate-900 dark:text-slate-300">{employee.role}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-500">ID: {employee.id}</div>
+                      <td className="px-6 py-4 whitespace-nowrap min-w-[150px] flex-1 z-10">
+                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-300">{employee.role}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-500 font-mono">ID: {employee.id}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-slate-900 dark:text-slate-300">{employee.department}</div>
+                      <td className="px-6 py-4 whitespace-nowrap min-w-[150px] flex-1 z-10">
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{employee.department}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(employee.status)}`}>
+                      <td className="px-6 py-4 whitespace-nowrap min-w-[120px] flex-shrink-0 z-10">
+                        <span className={`inline-flex items-center justify-center min-w-[80px] rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider border ${employee.status === EmployeeStatus.ACTIVE ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400 shadow-[0_0_15px_-3px_rgba(16,185,129,0.1)]' :
+                          employee.status === EmployeeStatus.ON_LEAVE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400 shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)]' :
+                            'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400 shadow-[0_0_15px_-3px_rgba(244,63,94,0.1)]'
+                          }`}>
                           {getStatusLabel(employee.status)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex-shrink-0 z-10">
+                        <div className="flex items-center justify-end gap-3">
                           <button
                             onClick={() => setViewEmployee(employee)}
-                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition-colors"
                             title={t.viewProfile}
                           >
                             <User className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openEditModal(employee)}
-                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition-colors"
                             title={t.editEmployee}
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => confirmDelete(employee.id)}
-                            className="text-slate-400 hover:text-rose-600 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/40 dark:hover:text-rose-400 transition-colors"
                             title={t.delete}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
+                      {/* Professional Hover accent background */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 dark:from-indigo-900/10 transition-opacity duration-300 pointer-events-none"></div>
                     </tr>
                   ))
                 ) : (
@@ -810,64 +836,129 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* View Profile Modal */}
       {viewEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in zoom-in duration-200 transition-colors duration-200">
-            <div className="relative h-32 bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 transition-all duration-300">
+          <div className="w-full max-w-lg rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300 transition-colors backdrop-blur-xl">
+            <div className="relative h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 dark:from-indigo-600 dark:via-purple-700 dark:to-indigo-800">
               <button
-                onClick={() => setViewEmployee(null)}
-                className="absolute top-4 right-4 p-1 bg-black/20 text-white rounded-full hover:bg-black/40 transition-colors"
+                onClick={() => {
+                  setViewEmployee(null);
+                  setAiSummary(null);
+                }}
+                className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all backdrop-blur-sm"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="px-8 pb-8">
-              <div className="relative -mt-16 mb-4 flex justify-between items-end">
-                <div className="rounded-full p-1 bg-white dark:bg-slate-900 transition-colors duration-200">
-                  <img src={viewEmployee.avatar} alt={viewEmployee.name} className="h-32 w-32 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-md" />
+            <div className="px-8 pb-8 relative">
+              <div className="absolute -top-16 left-8 flex items-end gap-4">
+                <div className="rounded-full p-1.5 bg-white dark:bg-slate-900 shadow-lg transition-colors duration-200">
+                  <img src={viewEmployee.avatar} alt={viewEmployee.name} className="h-28 w-28 rounded-full object-cover border-2 border-slate-100 dark:border-slate-800" />
                 </div>
-                <span className={`mb-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(viewEmployee.status)}`}>
-                  {getStatusLabel(viewEmployee.status)}
-                </span>
+                <div className="pb-3">
+                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold shadow-sm border ${viewEmployee.status === EmployeeStatus.ACTIVE ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400' :
+                    viewEmployee.status === EmployeeStatus.ON_LEAVE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400' :
+                      'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400'
+                    }`}>
+                    {getStatusLabel(viewEmployee.status)}
+                  </span>
+                </div>
               </div>
 
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{viewEmployee.name}</h2>
-              <p className="text-slate-500 dark:text-slate-400 font-medium mb-6 flex items-center gap-2">
-                {viewEmployee.role} <span className="text-slate-300 dark:text-slate-600">•</span> {viewEmployee.department}
-              </p>
+              <div className="mt-16 sm:flex sm:justify-between sm:items-start">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">{viewEmployee.name}</h2>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2 mt-1">
+                    {viewEmployee.role} <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span> {viewEmployee.department}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleGenerateAISummary(viewEmployee)}
+                  disabled={isGeneratingSummary}
+                  className="mt-4 sm:mt-0 flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all w-full sm:w-auto overflow-hidden relative group"
+                >
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="relative z-10 flex items-center gap-2">
+                    {isGeneratingSummary ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>✨</span>}
+                    {isGeneratingSummary ? (t.language === 'id' ? 'Menghasilkan...' : 'Generating...') : 'AI Summary'}
+                  </span>
+                </button>
+              </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 transition-colors">
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-1 flex items-center gap-1"><User className="h-3 w-3" /> ID</p>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{viewEmployee.id}</p>
+              {/* AI Summary Display */}
+              {(isGeneratingSummary || aiSummary || generateError) && (
+                <div className="mt-6 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-900/10 p-5 backdrop-blur-sm shadow-sm transition-all duration-300 animate-in slide-in-from-top-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">✨</span>
+                    <h3 className="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">{t.language === 'id' ? 'Ringkasan Kinerja AI' : 'AI Performance Summary'}</h3>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 transition-colors">
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-1 flex items-center gap-1"><Calendar className="h-3 w-3" /> {t.joinDate}</p>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{new Date(viewEmployee.joinDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })}</p>
+
+                  {isGeneratingSummary && (
+                    <div className="space-y-3 animate-pulse">
+                      <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-3/4"></div>
+                      <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-full"></div>
+                      <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-5/6"></div>
+                    </div>
+                  )}
+
+                  {generateError && !isGeneratingSummary && (
+                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 text-sm font-medium">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <p>{generateError}</p>
+                    </div>
+                  )}
+
+                  {aiSummary && !isGeneratingSummary && !generateError && (
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed prose-p:mb-2 prose-strong:text-indigo-700 dark:prose-strong:text-indigo-300"
+                      dangerouslySetInnerHTML={{ __html: aiSummary }}
+                    />
+                  )}
+                </div>
+              )}
+
+              <div className="mt-8 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
+                    <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.language === 'id' ? 'ID Karyawan' : 'Employee ID'}</p>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewEmployee.id}</p>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
+                    <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.joinDate}</p>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{new Date(viewEmployee.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg"><Mail className="h-4 w-4" /></div>
+                <div className="rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden flex flex-col">
+                  <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Mail className="h-5 w-5" /></div>
                     <div className="overflow-hidden">
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{t.emailAddress}</p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 truncate">{viewEmployee.email}</p>
+                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.emailAddress}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 truncate mt-0.5">{viewEmployee.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg"><Phone className="h-4 w-4" /></div>
+                  <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Phone className="h-5 w-5" /></div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{t.phoneNumber}</p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200">{viewEmployee.phoneNumber || '-'}</p>
+                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.phoneNumber}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 mt-0.5">{viewEmployee.phoneNumber || '-'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg"><MapPin className="h-4 w-4" /></div>
+                  <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><MapPin className="h-5 w-5" /></div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{t.address}</p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200">{viewEmployee.address || '-'}</p>
+                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.address}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 leading-relaxed mt-0.5 max-w-[300px]">{viewEmployee.address || '-'}</p>
                     </div>
                   </div>
                 </div>
@@ -878,14 +969,19 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       )}
 
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in duration-200 transition-colors duration-200 ${shakeModal ? 'animate-shake' : ''}`}>
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-all duration-300">
+          <div className={`w-full max-w-2xl rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-white/20 dark:border-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 transition-colors backdrop-blur-xl ${shakeModal ? 'animate-shake' : ''}`}>
 
             {/* Sticky Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 shrink-0 bg-white dark:bg-slate-900 rounded-t-xl z-10 transition-colors">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{isEditMode ? t.editEmployee : t.newEmployee}</h3>
-              <button onClick={() => setIsFormModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" disabled={isProcessing}>
-                <X className="h-6 w-6" />
+            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-5 shrink-0 bg-white/50 dark:bg-slate-900/50 rounded-t-2xl z-10 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
+                  {isEditMode ? <Edit className="h-5 w-5" /> : <User className="h-5 w-5" />}
+                </div>
+                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">{isEditMode ? t.editEmployee : t.newEmployee}</h3>
+              </div>
+              <button onClick={() => setIsFormModalOpen(false)} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700" disabled={isProcessing}>
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -1095,16 +1191,16 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* Save Confirmation Modal with Robust Handling */}
       {isSaveConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl animate-in zoom-in duration-200 transition-colors duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-4 transition-all duration-300">
+          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-800 p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200 transition-colors backdrop-blur-xl">
             <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-4">
-                <AlertCircle className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 mb-6 shadow-inner ring-4 ring-indigo-50/50 dark:ring-indigo-500/5">
+                <AlertCircle className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.confirmSave}</h3>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t.areYouSureSave}</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.confirmSave}</h3>
+              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-[280px] mx-auto">{t.areYouSureSave}</p>
             </div>
-            <div className="mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleConfirmSave}
                 className="flex items-center justify-center w-full bg-indigo-600 text-white rounded-md px-4 py-2 font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
@@ -1127,22 +1223,22 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* Delete Confirmation Modal with Robust Error Display */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl animate-in zoom-in duration-200 transition-colors duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-4 transition-all duration-300">
+          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-800 p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200 transition-colors backdrop-blur-xl">
             {externalErrors['delete'] && (
-              <div className="mb-4 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-3 border border-rose-200 dark:border-rose-800/50 text-xs text-rose-800 dark:text-rose-400 font-bold flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
+              <div className="mb-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 p-4 border border-rose-200/50 dark:border-rose-500/20 text-sm text-rose-800 dark:text-rose-400 font-bold flex items-center gap-3 shadow-inner">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
                 {externalErrors['delete']}
               </div>
             )}
             <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 mb-4">
-                <Trash2 className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-500/10 mb-6 shadow-inner ring-4 ring-rose-50/50 dark:ring-rose-500/5">
+                <Trash2 className="h-8 w-8 text-rose-600 dark:text-rose-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.confirmDeletion}</h3>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t.actionUndone}</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.confirmDeletion}</h3>
+              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-[280px] mx-auto">{t.actionUndone}</p>
             </div>
-            <div className="mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleDelete}
                 className="flex items-center justify-center w-full bg-rose-600 text-white rounded-md px-4 py-2 font-bold hover:bg-rose-700 disabled:opacity-50 transition-all shadow-lg shadow-rose-200 dark:shadow-none"
