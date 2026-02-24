@@ -1,6 +1,6 @@
 # SmartAttend - Enterprise Attendance System
 
-SmartAttend is a sophisticated, enterprise-ready attendance management platform designed for modern organizations. It combines a robust **Laravel 12** backend with a dynamic **React (Inertia.js)** frontend, **Dockerized deployment**, and an integrated **Python Face Recognition Service** to streamline HR operations.
+SmartAttend is a sophisticated, enterprise-ready attendance management platform designed for modern organizations. It combines a robust **Laravel 12** backend with a dynamic **React 19 (Inertia.js V2)** frontend, **Dockerized deployment**, and an integrated **Python Face Recognition Service** to streamline HR operations.
 
 Designed for seamless integration with **ESP32-CAM** devices for contactless, facial recognition-based attendance.
 
@@ -10,24 +10,24 @@ Designed for seamless integration with **ESP32-CAM** devices for contactless, fa
 
 ### 1. Advanced Biometric Attendance
 - **Face Recognition**: Automated attendance via ESP32-CAM and a Python-based recognition engine (Dlib).
-- **Auto-Enrollment**: Uploading an employee avatar automatically enrolls them in the recognition system.
+- **Auto-Enrollment**: Uploading employee face data sets up the individual for facial recognition seamlessly.
 - **Real-time Sync**: Hot-reload capability ensures new faces are recognized instantly without server restarts.
 
 ### 2. Comprehensive Workforce Management
-- **Smart Employee Directory**: CRUD operations with automatic **Random ID Generation** and Avatar Management.
+- **Smart Employee Directory**: CRUD operations for managing internal accounts ranging from students/employees to teachers/administrators.
 - **Attendance Tracking**: Real-time status monitoring (`Present`, `Late`, `Absent`, `On Leave`).
 - **Employee Requests**: Seamlessly handle leave and remote work requests directly from the dashboard.
-- **Company Announcements**: Broadcasting system for HR to push important notices to employees.
+- **Company Announcements**: Broadcasting system for HR to push important notices to employees with variable priority levels.
 
 ### 3. Intelligent Analytics & Reporting
-- **Performance Dashboards**: Interactive charts for weekly attendance trends.
+- **Performance Dashboards**: Interactive charts for weekly attendance trends built directly into the UI.
 - **Detailed Reports**: Comprehensive, tabular views of attendance history and employee statistics.
-- **Optimized Queries**: Dashboards efficiently process data using optimized eloquent queries and date filtering.
+- **AI Insights (beta)**: Generate comprehensive textual attendance analyses via an integrated **Gemini AI service**.
 
 ### 4. Customization & Security
 - **Dynamic Settings**: Configure late thresholds, work schedules, API keys, and language preferences.
 - **Bilingual Support**: Toggle between **English** and **Indonesian (Bahasa Indonesia)**.
-- **Role-Based Access**: Secure Admin and Employee login portals with session management.
+- **Role-Based Access**: Multi-tiered environment structured using **Spatie Laravel Permission** providing fine-grained access to Admin, Teacher, and Student/Employee capabilities.
 
 ---
 
@@ -35,13 +35,13 @@ Designed for seamless integration with **ESP32-CAM** devices for contactless, fa
 
 | Component | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Backend** | **Laravel** | `11.x` | Core framework, Auth, API, ORM. |
-| **Frontend** | **React** | `18.x` | Component-based UI (`Vite` bundled). |
-| **Bridge** | **Inertia.js** | `1.x` | Modern monolith architecture routing and state. |
-| **UI Styling** | **Tailwind CSS** | `3.x` | Utility-first CSS framework for rapid styling. |
-| **Database** | **MySQL** | `8.0` | Relational data persistence. |
+| **Backend** | **Laravel** | `12.x` | Core PHP framework, Web Routing, Authentication, and the backend API logic. |
+| **Frontend** | **React** | `19.x` | Modern component-based frontend framework powered by Vite. |
+| **Bridge** | **Inertia.js** | `2.x` | Bridges the Monolith gap allowing React views to be server-driven via Laravel. |
+| **UI Styling** | **Tailwind CSS** | `4.x` | The latest version of the utility-first CSS framework for rapid and modern styling. |
+| **Database** | **MySQL** | `8.0` | Secure and robust persistent relational storage mapping back to Laravel Eloquent models. |
 | **Recognition** | **Python (Flask)** | `3.10` | Face recognition microservice using `face_recognition`. |
-| **Container** | **Docker** | `27.x` | Containerization and orchestration for production. |
+| **Container** | **Docker** | `27.x` | Containerization and orchestration for automated production-ready delivery. |
 
 ---
 
@@ -77,7 +77,7 @@ Designed for seamless integration with **ESP32-CAM** devices for contactless, fa
 
 ### Option 2: Manual Setup (Local Development)
 
-**Prerequisites**: PHP 8.2+, Node.js, MySQL, Python 3.10+ (with Visual C++ Build Tools).
+**Prerequisites**: PHP 8.2+, Node.js 20+, MySQL, Python 3.10+ (with Visual C++ Build Tools).
 
 1.  **Install PHP & Node Dependencies**
     ```bash
@@ -113,7 +113,7 @@ Designed for seamless integration with **ESP32-CAM** devices for contactless, fa
 
 The system uses a dedicated Python microservice for face recognition.
 
-1.  **Enrollment**: Simply upload a photo when creating or editing an employee in the dashboard.
+1.  **Enrollment**: Upload a photo in the 'face data' upload box when creating or editing a profile on the dashboard.
 2.  **Recognition**: The ESP32-CAM captures an image and sends it to the Python service.
 3.  **Matching**: The service compares the captured face with the uploaded avatars.
 4.  **Attendance**: If a match is found (e.g., ID `123456`), an attendance record is created via the Laravel API.
@@ -141,7 +141,7 @@ If you add photos manually to the folder, trigger a reload at:
 **Body**:
 ```json
 {
-  "employee_id": "123456"
+  "profile_id": "123456"
 }
 ```
 
