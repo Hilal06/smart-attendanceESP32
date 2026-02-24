@@ -1,16 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Employee, AttendanceRecord, AttendanceStatus } from '../types';
+import { Profile, AttendanceRecord, AttendanceStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Sparkles, Loader2, FileText, Filter, ChevronLeft, ChevronRight, CalendarDays, CalendarRange, Calendar, Search, X, Inbox } from 'lucide-react';
 import { generateAttendanceInsights } from '../services/geminiService';
 
 interface ReportsProps {
   attendance: AttendanceRecord[];
-  employees: Employee[];
+  profiles: Profile[];
   t: any;
 }
 
-export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) => {
+export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => {
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiInsights, setAiInsights] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -41,20 +41,20 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
 
   const handleGenerateInsights = async () => {
     setLoadingAI(true);
-    const insights = await generateAttendanceInsights(attendance, employees);
+    const insights = await generateAttendanceInsights(attendance, profiles);
     setAiInsights(insights);
     setLoadingAI(false);
   };
 
   const handleExportCSV = () => {
-    const headers = [t.date, 'ID', t.employee, t.department, t.position, 'Status', t.checkIn, t.checkOut];
+    const headers = [t.date, 'ID', t.profile, t.department, t.position, 'Status', t.checkIn, t.checkOut];
     const csvRows = [headers.join(',')];
 
     attendance.forEach(record => {
-      const emp = employees.find(e => e.id === record.employeeId);
+      const emp = profiles.find(e => e.id === record.profileId);
       const row = [
         record.date,
-        record.employeeId,
+        record.profileId,
         `"${emp?.name || 'Unknown'}"`,
         `"${emp?.department || ''}"`,
         `"${emp?.role || ''}"`,
@@ -179,18 +179,18 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       data = data.filter(r => {
-        const emp = employees.find(e => e.id === r.employeeId);
+        const emp = profiles.find(e => e.id === r.profileId);
         return emp?.name.toLowerCase().includes(query) || emp?.id.toLowerCase().includes(query);
       });
     }
 
     return data;
-  }, [filteredAttendanceByTime, statusFilter, searchQuery, employees]);
+  }, [filteredAttendanceByTime, statusFilter, searchQuery, profiles]);
 
   const totalPages = Math.ceil(filteredAttendance.length / ITEMS_PER_PAGE);
   const paginatedData = filteredAttendance.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const getEmployee = (id: string) => employees.find(e => e.id === id);
+  const getProfile = (id: string) => profiles.find(e => e.id === id);
 
   return (
     <div className="space-y-6">
@@ -390,7 +390,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
             <thead>
               <tr className="bg-transparent">
                 <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.date}</th>
-                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.employee}</th>
+                <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.profile}</th>
                 <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.department}</th>
                 <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">Status</th>
                 <th className="px-6 py-3 text-left font-semibold uppercase text-slate-400 dark:text-slate-500 text-[10px] tracking-widest">{t.checkIn}</th>
@@ -400,7 +400,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, employees, t }) =>
             <tbody className="bg-transparent">
               {paginatedData.length > 0 ? (
                 paginatedData.map((record) => {
-                  const emp = getEmployee(record.employeeId);
+                  const emp = getProfile(record.profileId);
                   return (
                     <tr key={record.id} className="group relative bg-white/60 dark:bg-slate-800/60 shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                       <td colSpan={0} className="p-0 z-0"><div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-l-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 scale-y-50 group-hover:scale-y-100"></div></td>

@@ -41,24 +41,38 @@ class HandleInertiaRequests extends Middleware
             'user' => null
         ];
 
+        // Fetch permissions if user is fully authenticated
+        $permissions = [];
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            // Spatie method to grab all direct and role-based permissions
+            $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+            
+            // Sync session role fallback to actual user role if unset
+            if (!$role) {
+                $role = $user->role;
+            }
+        }
+
         if ($role === 'admin') {
-            $user = \Illuminate\Support\Facades\Auth::user();
             if ($user) {
                 $authData['user'] = [
                     'name' => 'Administrator',
                     'role' => 'Administrator',
                     'avatar' => null,
+                    'permissions' => $permissions,
                 ];
             }
-        } elseif ($role === 'attendance') {
+        } elseif ($role === 'attendance' || in_array($role, ['teacher', 'student'])) {
             $userId = session('userId');
             if ($userId) {
-                $employee = \App\Models\Employee::find($userId);
-                if ($employee) {
+                $profile = \App\Models\Profile::find($userId);
+                if ($profile) {
                     $authData['user'] = [
-                        'name' => $employee->name,
-                        'role' => $employee->role,
-                        'avatar' => $employee->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($employee->name) . '&background=random',
+                        'name' => $profile->name,
+                        'role' => $profile->role,
+                        'avatar' => $profile->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($profile->name) . '&background=random',
+                        'permissions' => $permissions,
                     ];
                 }
             }

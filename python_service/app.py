@@ -42,7 +42,7 @@ def load_known_faces():
     print("Loading known faces...")
     if not os.path.exists(KNOWN_FACES_DIR):
         os.makedirs(KNOWN_FACES_DIR)
-        print(f"Created directory: {KNOWN_FACES_DIR} - Put employee images here!")
+        print(f"Created directory: {KNOWN_FACES_DIR} - Put profile images here!")
         return
 
     for filename in os.listdir(KNOWN_FACES_DIR):
@@ -130,7 +130,7 @@ def recognize_face():
                 print(f"Logging attendance for {matched_name}...")
                 response = requests.post(
                     LARAVEL_API_URL, 
-                    json={"employee_id": matched_name},
+                    json={"profile_id": matched_name},
                     headers={"X-API-KEY": API_KEY}
                 )
                 print(f"Laravel Response: {response.status_code} - {response.text}")
@@ -140,7 +140,7 @@ def recognize_face():
         
         # 3. (Optional) Forward to Laravel
         # if matched_name != "Unknown":
-        #     requests.post("http://localhost:8000/api/attendance", json={"employee_id": matched_name})
+        #     requests.post("http://localhost:8000/api/attendance", json={"profile_id": matched_name})
 
         return jsonify({
             "status": "success",
@@ -156,13 +156,13 @@ def recognize_face():
 @app.route('/register_face', methods=['POST'])
 def register_face():
     try:
-        if 'employee_id' not in request.form:
-            return jsonify({"status": "error", "message": "Missing employee_id"}), 400
+        if 'profile_id' not in request.form:
+            return jsonify({"status": "error", "message": "Missing profile_id"}), 400
         
         if 'file' not in request.files:
             return jsonify({"status": "error", "message": "Missing file"}), 400
             
-        employee_id = request.form['employee_id']
+        profile_id = request.form['profile_id']
         file = request.files['file']
         
         if file.filename == '':
@@ -173,7 +173,7 @@ def register_face():
                 os.makedirs(KNOWN_FACES_DIR)
                 
             # Save as ID.jpg
-            filename = f"{employee_id}.jpg"
+            filename = f"{profile_id}.jpg"
             file_path = os.path.join(KNOWN_FACES_DIR, filename)
             
             file.save(file_path)
@@ -184,7 +184,7 @@ def register_face():
             known_face_names = []
             load_known_faces()
             
-            return jsonify({"status": "success", "message": f"Face registered for {employee_id}"})
+            return jsonify({"status": "success", "message": f"Face registered for {profile_id}"})
         else:
             return jsonify({"status": "error", "message": "Invalid file type. Only jpg, jpeg, png allowed."}), 400
 

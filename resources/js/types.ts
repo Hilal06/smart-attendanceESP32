@@ -1,6 +1,7 @@
 export enum Page {
   DASHBOARD = 'dashboard',
-  EMPLOYEES = 'employees',
+  PROFILES = 'profiles',
+  STUDENTS = 'students',
   REPORTS = 'reports',
   SETTINGS = 'settings',
   ANNOUNCEMENTS = 'announcements',
@@ -15,15 +16,15 @@ export enum AttendanceStatus {
   ON_LEAVE = 'On Leave',
 }
 
-export enum EmployeeStatus {
+export enum ProfileStatus {
   ACTIVE = 'Active',
   ON_LEAVE = 'On Leave',
   TERMINATED = 'Terminated',
 }
 
-export type UserRole = 'admin' | 'attendance';
+export type UserRole = 'admin' | 'attendance' | 'teacher' | 'student';
 
-export interface Employee {
+export interface Profile {
   id: string;
   name: string;
   role: string;
@@ -33,12 +34,13 @@ export interface Employee {
   joinDate: string;
   phoneNumber?: string;
   address?: string;
-  status: EmployeeStatus;
+  status: ProfileStatus;
+  canChangePassword?: boolean;
 }
 
 export interface AttendanceRecord {
   id: string;
-  employeeId: string;
+  profileId: string;
   date: string;
   checkIn: string | null; // HH:mm format
   checkOut: string | null; // HH:mm format
@@ -72,7 +74,7 @@ export interface Announcement {
 
 export interface ProfileRequest {
   id: string;
-  employeeId: string;
+  profileId: string;
   description: string;
   date: string;
   status: 'Pending' | 'Resolved';
@@ -82,6 +84,7 @@ export interface AuthUser {
   name: string;
   role: string | null;
   avatar: string | null;
+  permissions?: string[];
 }
 
 export interface Auth {

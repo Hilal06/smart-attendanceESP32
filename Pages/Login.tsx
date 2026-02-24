@@ -85,7 +85,7 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
             {activeTab === 'attendance' ? (
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Employee ID
+                  Profile ID
                 </label>
                 <input
                   type="text"

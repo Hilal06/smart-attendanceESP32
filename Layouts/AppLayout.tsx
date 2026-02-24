@@ -15,7 +15,7 @@ interface AppLayoutProps {
 // Map current route to Page enum for Sidebar highlighting
 const getCurrentPage = (): Page => {
     const path = window.location.pathname;
-    if (path.includes('/employees')) return Page.EMPLOYEES;
+    if (path.includes('/profiles')) return Page.EMPLOYEES;
     if (path.includes('/announcements')) return Page.ANNOUNCEMENTS;
     if (path.includes('/profile')) return Page.PROFILE;
     if (path.includes('/requests')) return Page.REQUESTS;
@@ -32,7 +32,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, userRole, settin
         // Navigate using Inertia
         switch (page) {
             case Page.DASHBOARD: router.visit('/'); break;
-            case Page.EMPLOYEES: router.visit('/employees'); break;
+            case Page.EMPLOYEES: router.visit('/profiles'); break;
             case Page.ANNOUNCEMENTS: router.visit('/announcements'); break;
             case Page.PROFILE: router.visit('/profile'); break;
             case Page.REQUESTS: router.visit('/requests'); break;

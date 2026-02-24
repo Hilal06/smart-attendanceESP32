@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Setting;
-use App\Models\Employee;
+use App\Models\Profile;
 use App\Models\Attendance;
 use App\Models\Announcement;
-use App\Models\EmployeeRequest;
+use App\Models\ProfileRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -33,39 +33,121 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function authenticate(Request $request)
+    public function registerPage()
     {
-        $role = $request->input('role');
-
-        if ($role === 'admin') {
-            $credentials = $request->validate([
-                'email' => ['required', 'email'],
-                'password' => ['required'],
-            ]);
-
-            if (\Illuminate\Support\Facades\Auth::attempt($credentials)) {
-                $request->session()->regenerate();
-                session(['userRole' => 'admin', 'userId' => 'admin']); // Keep session consistent for now
-                return to_route('dashboard');
-            }
-
-            return back()->withErrors([
-                'email' => 'The provided credentials do not match our records.',
-            ])->onlyInput('email');
+        if (session('userRole')) {
+            return redirect()->route('dashboard');
         }
+        $settings = Setting::first();
+        return Inertia::render('Register', [
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null,
+        ]);
+    }
 
-        // Employee Login
-        $id = $request->input('id');
-        $employee = Employee::find($id);
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required', 'string', 'email', 'max:255',
+                \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
+                    return $query->where('role', $request->role);
+                })
+            ],
+            'password' => [
+                'required', 
+                'string', 
+                'confirmed', 
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
+            ],
+            'role' => 'required|in:student,teacher',
+            'department' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'institutional_id' => 'nullable|string|max:20',
+        ]);
 
-        if ($employee) {
-            session(['userRole' => 'attendance', 'userId' => $id]);
+        $user = null;
+        $profileId = (string) rand(100000, 999999);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, &$user, $profileId) {
+            $user = \App\Models\User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+                'role' => $validated['role'],
+            ]);
+            
+            // Assign Spatie Role
+            $user->assignRole(strtolower($validated['role']));
+
+            \App\Models\Profile::create([
+                'id' => $profileId,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => ucfirst($user->role),
+                'department' => $validated['department'] ?? 'General',
+                'phone_number' => $validated['phone_number'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'student_id' => $user->role === 'student' ? ($validated['institutional_id'] ?? null) : null,
+                'teacher_id' => $user->role === 'teacher' ? ($validated['institutional_id'] ?? null) : null,
+                'join_date' => now()->format('Y-m-d'),
+                'status' => 'Active',
+            ]);
+        });
+
+        if ($user) {
+            \Illuminate\Support\Facades\Auth::login($user);
+            $request->session()->regenerate();
+            session(['userRole' => $user->role, 'userId' => $profileId]);
+
             return redirect()->route('dashboard');
         }
 
-        return back()->withErrors([
-            'id' => 'Employee ID not found.',
+        return back()->withErrors(['message' => 'Registration failed.']);
+    }
+
+    public function authenticate(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+            'role' => ['required', 'string'],
         ]);
+
+        if (\Illuminate\Support\Facades\Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            $user = \Illuminate\Support\Facades\Auth::user();
+            
+            // Map legacy user (user ID 1) or 'super_admin' to 'admin'
+            $frontendRole = $user->role;
+            if ($user->id === 1 || $user->role === 'super_admin') {
+                $frontendRole = 'admin';
+            }
+
+            $profile = \App\Models\Profile::where('user_id', $user->id)->first();
+            // Fallback to legacy behavior if no profile record is linked
+            $userId = $profile ? $profile->id : 'admin';
+
+            session(['userRole' => $frontendRole, 'userId' => $userId]);
+            
+            return to_route('dashboard');
+        }
+
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
@@ -88,14 +170,14 @@ class AttendanceController extends Controller
         $hasToday = Attendance::where('date', $today)->exists();
 
         if (!$hasToday) {
-            $employees = Employee::where('status', '!=', 'Terminated')->get();
+            $profiles = Profile::where('status', '!=', 'Terminated')->get();
             $insertData = [];
-            foreach ($employees as $emp) {
+            foreach ($profiles as $emp) {
                 if (rand(1, 100) <= 15) {
                     $status = rand(0, 1) ? 'Absent' : 'On Leave';
                     $insertData[] = [
                         'id' => $emp->id . '-' . $today,
-                        'employee_id' => $emp->id,
+                        'profile_id' => $emp->id,
                         'date' => $today,
                         'check_in' => null,
                         'check_out' => null,
@@ -115,7 +197,7 @@ class AttendanceController extends Controller
 
                 $insertData[] = [
                     'id' => $emp->id . '-' . $today,
-                    'employee_id' => $emp->id,
+                    'profile_id' => $emp->id,
                     'date' => $today,
                     'check_in' => $checkIn,
                     'check_out' => $checkOut,
@@ -130,17 +212,30 @@ class AttendanceController extends Controller
         }
 
         // Performance Optimization: 
-        // 1. Only fetch active employees with necessary fields
+        // 1. Only fetch active profiles with necessary fields
         // 2. Only fetch attendance for the last 40 days (enough for Month view + buffer)
         $msgDateLimit = now()->setTimezone('Asia/Jakarta')->subDays(40)->format('Y-m-d');
         
-        $employees = Employee::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
-                     ->get(); // Could be paginated if list is huge, but dashboard chart needs filtering by employee
+        $userRole = session('userRole');
+        $userProfileId = session('profileId');
+
+        $profilesQuery = Profile::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status');
+        
+        if ($userRole === 'teacher') {
+            $profilesQuery->whereRaw('LOWER(role) = ?', ['student']);
+        } elseif ($userRole === 'student') {
+            $profilesQuery->where('id', $userProfileId);
+        }
+        
+        $profiles = $profilesQuery->get();
+        // Pluck IDs to easily filter attendances
+        $profileIds = $profiles->pluck('id')->toArray();
 
         $attendances = Attendance::where('date', '>=', $msgDateLimit)
+                       ->whereIn('profile_id', $profileIds)
                        ->orderBy('date', 'desc')
                        ->orderBy('check_in', 'desc')
-                       ->select('id', 'employee_id', 'date', 'check_in', 'check_out', 'status')
+                       ->select('id', 'profile_id', 'date', 'check_in', 'check_out', 'status')
                        ->get();
 
         return Inertia::render('Dashboard', [
@@ -152,7 +247,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule, // Cast in model handles array
                 'language' => $settings->language,
             ] : null,
-            'employees' => $employees->map(function($emp) {
+            'profiles' => $profiles->map(function($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -170,7 +265,7 @@ class AttendanceController extends Controller
             'attendance' => $attendances->map(function($att) {
                 return [
                     'id' => $att->id,
-                    'employeeId' => $att->employee_id,
+                    'profileId' => $att->profile_id,
                     'date' => $att->date,
                     'checkIn' => $att->check_in,
                     'checkOut' => $att->check_out,
@@ -181,11 +276,17 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function employees()
+    public function profiles()
     {
+        if (session('userRole') !== 'admin') {
+            return redirect('/')->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $settings = Setting::first();
-        $employees = Employee::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')->get();
-        return Inertia::render('Employees', [
+        $profiles = Profile::with('user')->whereRaw('LOWER(role) != ?', ['student'])
+              ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
+              ->get();
+        return Inertia::render('Profiles', [
             'userRole' => session('userRole'),
             'settings' => $settings ? [
                 'companyName' => $settings->company_name,
@@ -194,7 +295,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule,
                 'language' => $settings->language,
             ] : null,
-            'employees' => $employees->map(function($emp) {
+            'profiles' => $profiles->map(function($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -206,6 +307,44 @@ class AttendanceController extends Controller
                     'phoneNumber' => $emp->phone_number,
                     'address' => $emp->address,
                     'status' => $emp->status,
+                    'canChangePassword' => $emp->user ? $emp->user->can_change_password : false,
+                ];
+            })
+        ]);
+    }
+
+    public function students()
+    {
+        if (!in_array(session('userRole'), ['admin', 'teacher'])) {
+            return redirect('/')->withErrors(['message' => 'Unauthorized action.']);
+        }
+
+        $settings = Setting::first();
+        $profiles = Profile::with('user')->whereRaw('LOWER(role) = ?', ['student'])
+              ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
+              ->get();
+        return Inertia::render('Students', [
+            'userRole' => session('userRole'),
+            'settings' => $settings ? [
+                'companyName' => $settings->company_name,
+                'companyLogo' => $settings->company_logo,
+                'lateThresholdMinutes' => $settings->late_threshold_minutes,
+                'weeklySchedule' => $settings->weekly_schedule,
+                'language' => $settings->language,
+            ] : null,
+            'profiles' => $profiles->map(function($emp) {
+                return [
+                    'id' => $emp->id,
+                    'name' => $emp->name,
+                    'role' => $emp->role,
+                    'department' => $emp->department,
+                    'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
+                    'email' => $emp->email,
+                    'joinDate' => $emp->join_date,
+                    'phoneNumber' => $emp->phone_number,
+                    'address' => $emp->address,
+                    'status' => $emp->status,
+                    'canChangePassword' => $emp->user ? $emp->user->can_change_password : false,
                 ];
             })
         ]);
@@ -260,90 +399,209 @@ class AttendanceController extends Controller
         return back()->with('message', 'Settings updated successfully');
     }
 
-    public function storeEmployee(Request $request)
+    public function storeProfile(Request $request)
     {
-        if (session('userRole') !== 'admin') {
+        $userRole = session('userRole');
+        if (!in_array($userRole, ['admin', 'teacher'])) {
             return back()->withErrors(['message' => 'Unauthorized action.']);
         }
 
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'role' => 'required|string',
+            'email' => [
+                'required', 'string', 'email', 'max:255',
+                \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
+                    return $query->where('role', $request->role);
+                })
+            ],
+            'department' => 'nullable|string|max:255',
+            'joinDate' => 'nullable|date',
+            'phoneNumber' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'status' => 'nullable|string',
+            'student_id' => 'nullable|string|max:20',
+            'teacher_id' => 'nullable|string|max:20',
+            'avatar' => 'nullable|image|max:2048', // 2MB max
+            'face_data' => 'nullable|file|max:5120', // 5MB max
+        ]);
+
+        if ($userRole === 'teacher' && strtolower($validated['role']) !== 'student') {
+            return back()->withErrors(['message' => 'Teachers can only manage student profiles.']);
+        }
+
         $data = $request->all();
-        if (isset($data['joinDate'])) $data['join_date'] = $data['joinDate'];
-        if (isset($data['phoneNumber'])) $data['phone_number'] = $data['phoneNumber'];
+        if (isset($validated['joinDate'])) $data['join_date'] = $validated['joinDate'];
+        if (isset($validated['phoneNumber'])) $data['phone_number'] = $validated['phoneNumber'];
         
         if (empty($data['id'])) {
             $data['id'] = (string) rand(100000, 999999);
         }
 
-        // Handle Avatar Upload
-        if ($request->hasFile('avatar')) {
-            $file = $request->file('avatar');
-            // Save as ID.extension (e.g. 123456.jpg)
-            $filename = $data['id'] . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('avatars', $filename, 'public');
-            $data['avatar'] = Storage::url($path);
-        }
-        Employee::create($data);
+        \Illuminate\Support\Facades\DB::transaction(function () use (&$data, $validated, $request) {
+            $user = \App\Models\User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => \Illuminate\Support\Facades\Hash::make('password123'), // Default password
+                'role' => $validated['role'],
+            ]);
 
-        // Handle Face Data Upload
+            // Assign Spatie Role
+            $user->assignRole(strtolower($validated['role']));
+
+            $data['user_id'] = $user->id;
+
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+                $filename = $data['id'] . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('avatars', $filename, 'public');
+                $data['avatar'] = \Illuminate\Support\Facades\Storage::url($path);
+            }
+
+            Profile::create($data);
+        });
+
+        // Handle Face Data Upload outside DB transaction since it calls external API
         if ($request->hasFile('face_data')) {
             $this->registerFaceData($data['id'], $request->file('face_data'));
         }
 
-        return back();
+        return back()->with('message', 'Profile created successfully with default password "password123".');
     }
 
-    public function updateEmployee(Request $request, $id)
+    public function updateProfile(Request $request, $id)
     {
-        if (session('userRole') !== 'admin') {
+        $userRole = session('userRole');
+        if (!in_array($userRole, ['admin', 'teacher'])) {
             return back()->withErrors(['message' => 'Unauthorized action.']);
         }
 
-        $employee = Employee::find($id);
-        if ($employee) {
-            $data = $request->all();
-            if (isset($data['joinDate'])) $data['join_date'] = $data['joinDate'];
-            if (isset($data['phoneNumber'])) $data['phone_number'] = $data['phoneNumber'];
+        $profile = Profile::with('user')->find($id);
+        if ($profile) {
+            if ($userRole === 'teacher' && strtolower($profile->role) !== 'student') {
+                return back()->withErrors(['message' => 'Teachers can only manage student profiles.']);
+            }
 
-            // Handle Avatar Upload
-            if ($request->hasFile('avatar')) {
-                // Delete old avatar if it exists
-                if ($employee->avatar && str_contains($employee->avatar, '/storage/')) {
-                    $oldPath = str_replace('/storage/', '', $employee->avatar);
-                    Storage::disk('public')->delete($oldPath);
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'role' => 'required|string',
+                'email' => [
+                    'required', 'string', 'email', 'max:255',
+                    \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
+                        return $query->where('role', $request->role);
+                    })->ignore($profile->user_id)
+                ],
+                'department' => 'nullable|string|max:255',
+                'joinDate' => 'nullable|date',
+                'phoneNumber' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'status' => 'nullable|string',
+                'student_id' => 'nullable|string|max:20',
+                'teacher_id' => 'nullable|string|max:20',
+                'avatar' => 'nullable|image|max:2048',
+                'face_data' => 'nullable|file|max:5120',
+            ]);
+
+            if ($userRole === 'teacher' && strtolower($validated['role']) !== 'student') {
+                return back()->withErrors(['message' => 'Teachers cannot change a student into another role.']);
+            }
+
+            $data = $request->all();
+            if (isset($validated['joinDate'])) $data['join_date'] = $validated['joinDate'];
+            if (isset($validated['phoneNumber'])) $data['phone_number'] = $validated['phoneNumber'];
+
+            \Illuminate\Support\Facades\DB::transaction(function () use (&$data, $profile, $validated, $request) {
+                if ($profile->user) {
+                    $profile->user->update([
+                        'name' => $validated['name'],
+                        'email' => $validated['email'],
+                        'role' => $validated['role'],
+                    ]);
+
+                    // Sync Spatie Role
+                    $profile->user->syncRoles([strtolower($validated['role'])]);
                 }
 
-                $file = $request->file('avatar');
-                // Save as ID.extension
-                $filename = $employee->id . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('avatars', $filename, 'public');
-                $data['avatar'] = Storage::url($path);
-            }
+                if ($request->hasFile('avatar')) {
+                    if ($profile->avatar && str_contains($profile->avatar, '/storage/')) {
+                        $oldPath = str_replace('/storage/', '', $profile->avatar);
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                    }
+                    $file = $request->file('avatar');
+                    $filename = $profile->id . '.' . $file->getClientOriginalExtension();
+                    $path = $file->storeAs('avatars', $filename, 'public');
+                    $data['avatar'] = \Illuminate\Support\Facades\Storage::url($path);
+                }
 
-            $employee->update($data);
+                $profile->update($data);
+            });
 
-            // Handle Face Data Upload
             if ($request->hasFile('face_data')) {
-                $this->registerFaceData($employee->id, $request->file('face_data'));
+                $this->registerFaceData($profile->id, $request->file('face_data'));
             }
         }
-        return back();
+        return back()->with('message', 'Profile updated successfully.');
     }
 
-    public function deleteEmployee($id)
+    public function togglePasswordPermission($id)
     {
-        if (session('userRole') !== 'admin') {
+        $userRole = session('userRole');
+        if (!in_array($userRole, ['admin', 'teacher'])) {
             return back()->withErrors(['message' => 'Unauthorized action.']);
         }
 
-        Employee::destroy($id);
-        return back();
+        $profile = Profile::with('user')->find($id);
+        
+        if (!$profile || !$profile->user) {
+            return back()->withErrors(['message' => 'Profile or associated user not found.']);
+        }
+
+        if ($userRole === 'teacher' && strtolower($profile->role) !== 'student') {
+            return back()->withErrors(['message' => 'Teachers can only manage student permissions.']);
+        }
+
+        $profile->user->can_change_password = !$profile->user->can_change_password;
+        $profile->user->save();
+
+        return back()->with('message', 'Password permission updated successfully.');
+    }
+
+    public function deleteProfile($id)
+    {
+        $userRole = session('userRole');
+        if (!in_array($userRole, ['admin', 'teacher'])) {
+            return back()->withErrors(['message' => 'Unauthorized action.']);
+        }
+
+        $profile = Profile::find($id);
+        if ($profile) {
+            if ($userRole === 'teacher' && strtolower($profile->role) !== 'student') {
+                return back()->withErrors(['message' => 'Teachers can only delete student profiles.']);
+            }
+
+            \Illuminate\Support\Facades\DB::transaction(function () use ($profile) {
+                if ($profile->avatar && str_contains($profile->avatar, '/storage/')) {
+                    $oldPath = str_replace('/storage/', '', $profile->avatar);
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                }
+                
+                $userId = $profile->user_id;
+                $profile->delete();
+                
+                if ($userId) {
+                    \App\Models\User::destroy($userId);
+                }
+            });
+        }
+
+        return back()->with('message', 'Profile deleted successfully.');
     }
 
     public function reports()
     {
         $settings = Setting::first();
-        $attendances = Attendance::select('id', 'employee_id', 'date', 'check_in', 'check_out', 'status')->get();
-        $employees = Employee::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')->get();
+        $attendances = Attendance::select('id', 'profile_id', 'date', 'check_in', 'check_out', 'status')->get();
+        $profiles = Profile::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')->get();
 
         return Inertia::render('Reports', [
             'userRole' => session('userRole'),
@@ -357,14 +615,14 @@ class AttendanceController extends Controller
             'attendance' => $attendances->map(function($att) {
                 return [
                     'id' => $att->id,
-                    'employeeId' => $att->employee_id,
+                    'profileId' => $att->profile_id,
                     'date' => $att->date,
                     'checkIn' => $att->check_in,
                     'checkOut' => $att->check_out,
                     'status' => $att->status,
                 ];
             }),
-            'employees' => $employees->map(function($emp) {
+            'profiles' => $profiles->map(function($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -461,7 +719,14 @@ class AttendanceController extends Controller
             return back()->withErrors(['message' => 'Unauthorized action.']);
         }
 
-        $data = $request->all();
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'type' => 'required|string|max:50',
+            'date' => 'required|date',
+        ]);
+
+        $data = $validated;
         if (!isset($data['id'])) {
             $data['id'] = (string)time();
         }
@@ -477,7 +742,13 @@ class AttendanceController extends Controller
 
         $announcement = Announcement::find($id);
         if ($announcement) {
-            $announcement->update($request->all());
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'type' => 'required|string|max:50',
+                'date' => 'required|date',
+            ]);
+            $announcement->update($validated);
         }
         return back();
     }
@@ -494,11 +765,23 @@ class AttendanceController extends Controller
 
     public function requests()
     {
+        if (!in_array(session('userRole'), ['admin', 'teacher'])) {
+            return redirect('/')->withErrors(['message' => 'Unauthorized action.']);
+        }
+
         $settings = Setting::first();
         
-        $requests = EmployeeRequest::with('employee')->orderBy('date', 'desc')->get()->map(function($req) {
+        $query = ProfileRequest::with('profile')->orderBy('date', 'desc');
+        
+        if (session('userRole') === 'teacher') {
+            $query->whereHas('profile', function($q) {
+                $q->whereRaw('LOWER(role) = ?', ['student']);
+            });
+        }
+        
+        $requests = $query->get()->map(function($req) {
              // Map snake_case to camelCase for frontend
-             $req->employeeId = $req->employee_id;
+             $req->profileId = $req->profile_id;
              return $req;
         });
 
@@ -515,7 +798,7 @@ class AttendanceController extends Controller
                 'language' => $settings->language,
             ] : null,
             'requests' => $requests,
-            'employees' => Employee::all()->map(function($emp) {
+            'profiles' => (session('userRole') === 'teacher' ? Profile::whereRaw('LOWER(role) = ?', ['student'])->get() : Profile::all())->map(function($emp) {
                  return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -534,45 +817,55 @@ class AttendanceController extends Controller
 
     public function storeRequest(Request $request)
     {
-        $data = $request->all();
-        if (!isset($data['id'])) {
-            $data['id'] = (string)time();
-        }
-        
-        // Handle frontend camelCase to backend snake_case
-        if (isset($data['employeeId'])) {
-            $data['employee_id'] = $data['employeeId'];
-        }
+        $validated = $request->validate([
+            'profileId' => 'required|string|exists:profiles,id',
+            'description' => 'required|string',
+            'date' => 'required|date',
+        ]);
 
-        if (isset($data['date'])) {
-            $data['date'] = Carbon::parse($data['date'])->setTimezone('Asia/Jakarta');
-        }
+        $data = $validated;
+        $data['id'] = (string)time();
+        $data['profile_id'] = $data['profileId'];
+        $data['date'] = Carbon::parse($data['date'])->setTimezone('Asia/Jakarta');
+        $data['status'] = 'Pending';
 
-        EmployeeRequest::create($data);
+        ProfileRequest::create($data);
         return back();
     }
 
     public function updateRequest(Request $request, $id)
     {
-        if (session('userRole') !== 'admin') {
+        if (!in_array(session('userRole'), ['admin', 'teacher'])) {
             return back()->withErrors(['message' => 'Unauthorized action.']);
         }
 
-        $req = EmployeeRequest::find($id);
+        $req = ProfileRequest::with('profile')->find($id);
         if ($req) {
+            if (session('userRole') === 'teacher' && strtolower($req->profile->role) !== 'student') {
+                return back()->withErrors(['message' => 'Teachers can only manage student requests.']);
+            }
+            $validated = $request->validate([
+                'status' => 'required|string|in:Pending,Approved,Rejected',
+            ]);
             // Frontend sends status updates
-            $req->update($request->only('status'));
+            $req->update($validated);
         }
         return back();
     }
 
     public function deleteRequest($id)
     {
-        if (session('userRole') !== 'admin') {
+        if (!in_array(session('userRole'), ['admin', 'teacher'])) {
             return back()->withErrors(['message' => 'Unauthorized action.']);
         }
 
-        EmployeeRequest::destroy($id);
+        $req = ProfileRequest::with('profile')->find($id);
+        if ($req) {
+            if (session('userRole') === 'teacher' && strtolower($req->profile->role) !== 'student') {
+                return back()->withErrors(['message' => 'Teachers can only delete student requests.']);
+            }
+            $req->delete();
+        }
         return back();
     }
 
@@ -581,49 +874,80 @@ class AttendanceController extends Controller
         $settings = Setting::first();
         $userId = session('userId');
         
-        $employee = null;
-        if ($userId) {
-            $employee = Employee::find($userId);
-        }
-        
-        if (!$employee) {
-            $employee = Employee::first();
-        }
-        
-        $requests = [];
-        if ($employee) {
-             $requests = EmployeeRequest::where('employee_id', $employee->id)->get()->map(function($req) {
-                $req->employeeId = $req->employee_id;
-                return $req;
-            });
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user) {
+            return redirect('/login');
         }
 
-        // Transform Employee for Profile
-        $transformedEmployee = $employee ? [
-            'id' => $employee->id,
-            'name' => $employee->name,
-            'role' => $employee->role,
-            'department' => $employee->department,
-            'avatar' => $employee->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($employee->name) . '&background=random',
-            'email' => $employee->email,
-            'joinDate' => $employee->join_date,
-            'phoneNumber' => $employee->phone_number,
-            'address' => $employee->address,
-            'status' => $employee->status,
-        ] : null;
+        $userProfiles = Profile::where('user_id', $user->id)->get();
+        $profileIds = $userProfiles->pluck('id')->toArray();
+        $requests = ProfileRequest::whereIn('profile_id', $profileIds)->get();
+
+        $primaryProfile = $userProfiles->first();
+        $profileData = null;
+        if ($primaryProfile) {
+            $profileData = [
+                'id' => $primaryProfile->id,
+                'name' => $primaryProfile->name,
+                'role' => $primaryProfile->role,
+                'department' => $primaryProfile->department,
+                'avatar' => $primaryProfile->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($primaryProfile->name) . '&background=random',
+                'email' => $primaryProfile->email,
+                'joinDate' => $primaryProfile->join_date,
+                'phoneNumber' => $primaryProfile->phone_number,
+                'address' => $primaryProfile->address,
+                'status' => $primaryProfile->status,
+                'canChangePassword' => $user->can_change_password,
+            ];
+        }
 
         return Inertia::render('Profile', [
             'userRole' => session('userRole'),
-            'settings' => $settings ? [
-                'companyName' => $settings->company_name,
-                'companyLogo' => $settings->company_logo,
-                'lateThresholdMinutes' => $settings->late_threshold_minutes,
-                'weeklySchedule' => $settings->weekly_schedule,
-                'language' => $settings->language,
-            ] : null,
-            'employee' => $transformedEmployee,
-            'requests' => $requests
+            'settings' => Setting::first(),
+            'profile' => $profileData,
+            'requests' => $requests->map(function($req) {
+                return [
+                    'id' => $req->id,
+                    'profileId' => $req->profile_id,
+                    'description' => $req->description,
+                    'date' => $req->date,
+                    'status' => $req->status,
+                ];
+            })
         ]);
+    }
+
+    public function updateProfilePassword(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        if (!$user) {
+            return back()->withErrors(['message' => 'User not found.']);
+        }
+
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (strtolower($user->role) === 'student' && !$user->can_change_password) {
+            return back()->withErrors(['message' => 'You do not have permission to change your password.']);
+        }
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'The provided password does not match your current password.']);
+        }
+
+        /** @var \App\Models\User $user */
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+        
+        if (strtolower($user->role) === 'student') {
+            $user->can_change_password = false;
+        }
+        
+        $user->save();
+
+        return back()->with('message', 'Password updated successfully.');
     }
 
     // --- API Methods for ESP32 ---
@@ -631,15 +955,15 @@ class AttendanceController extends Controller
     public function storeAttendanceApi(Request $request)
     {
         $request->validate([
-            'employee_id' => 'required|exists:employees,id',
+            'profile_id' => 'required|exists:profiles,id',
         ]);
 
-        $employeeId = $request->input('employee_id');
+        $profileId = $request->input('profile_id');
         $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
         $now = now()->setTimezone('Asia/Jakarta');
         $timeString = $now->format('H:i');
 
-        $attendanceId = $employeeId . '-' . $today;
+        $attendanceId = $profileId . '-' . $today;
         $attendance = Attendance::find($attendanceId);
 
         if ($attendance) {
@@ -665,7 +989,7 @@ class AttendanceController extends Controller
 
             $attendance = Attendance::create([
                 'id' => $attendanceId,
-                'employee_id' => $employeeId,
+                'profile_id' => $profileId,
                 'date' => $today,
                 'check_in' => $timeString,
                 'check_out' => null,
@@ -701,7 +1025,7 @@ class AttendanceController extends Controller
         ]);
     }
 
-    private function registerFaceData($employeeId, $file)
+    private function registerFaceData($profileId, $file)
     {
         try {
             $microserviceUrl = config('services.python_service.url', 'http://127.0.0.1:5000');
@@ -709,7 +1033,7 @@ class AttendanceController extends Controller
             $response = \Illuminate\Support\Facades\Http::timeout(10)->attach(
                 'file', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
             )->post($microserviceUrl . '/register_face', [
-                'employee_id' => $employeeId,
+                'profile_id' => $profileId,
             ]);
             
             if (!$response->successful()) {

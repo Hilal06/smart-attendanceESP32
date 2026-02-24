@@ -4,14 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeRequest extends Model
+class ProfileRequest extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
         'id',
-        'employee_id',
+        'profile_id',
         'description',
         'date',
         'status',
@@ -21,8 +21,8 @@ class EmployeeRequest extends Model
         'date' => 'datetime',
     ];
 
-    public function employee()
+    public function profile()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Profile::class);
     }
 }

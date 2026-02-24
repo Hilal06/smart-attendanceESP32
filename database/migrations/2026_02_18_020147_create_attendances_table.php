@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->string('employee_id');
+            $table->string('profile_id');
             $table->date('date');
             $table->string('check_in')->nullable();
             $table->string('check_out')->nullable();
             $table->string('status');
             $table->timestamps();
 
-            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+            $table->foreign('profile_id')->references('id')->on('profiles')->onDelete('cascade');
         });
     }
 

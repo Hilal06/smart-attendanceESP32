@@ -1,20 +1,20 @@
 import React from 'react';
 import { Head, router } from '@inertiajs/react';
 import { AppLayout } from '../Layouts/AppLayout';
-import { ProfileRequest, Employee, UserRole, Settings } from '../types';
+import { ProfileRequest, Profile, UserRole, Settings } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { Inbox, CheckCircle, Trash2, Calendar, Clock, AlertCircle } from 'lucide-react';
 
 interface RequestsProps {
   requests: ProfileRequest[];
-  employees: Employee[];
+  profiles: Profile[];
   settings: Settings;
   userRole: UserRole;
 }
 
-export default function Requests({ requests, employees, settings, userRole }: RequestsProps) {
+export default function Requests({ requests, profiles, settings, userRole }: RequestsProps) {
   const t = TRANSLATIONS[settings.language];
-  const getEmployee = (id: string) => employees.find(e => e.id === id);
+  const getProfile = (id: string) => profiles.find(e => e.id === id);
   const isId = t.language === 'id';
 
   const onResolve = (id: string) => {
@@ -46,7 +46,7 @@ export default function Requests({ requests, employees, settings, userRole }: Re
               <table className="min-w-full divide-y divide-slate-100">
                 <thead className="bg-slate-50/50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{t.employee}</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{t.profile}</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{t.requestDetails}</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{t.date}</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
@@ -55,18 +55,18 @@ export default function Requests({ requests, employees, settings, userRole }: Re
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {requests.map((request) => {
-                    const emp = getEmployee(request.employeeId);
+                    const emp = getProfile(request.profileId);
                     return (
                       <tr key={request.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <img
-                              src={emp?.avatar || `https://ui-avatars.com/api/?name=${request.employeeId}`}
+                              src={emp?.avatar || `https://ui-avatars.com/api/?name=${request.profileId}`}
                               alt=""
                               className="h-8 w-8 rounded-full object-cover ring-2 ring-white border border-slate-100"
                             />
                             <div className="ml-3">
-                              <div className="text-sm font-medium text-slate-900">{emp?.name || request.employeeId}</div>
+                              <div className="text-sm font-medium text-slate-900">{emp?.name || request.profileId}</div>
                               <div className="text-xs text-slate-500 flex items-center gap-1">
                                 {emp?.role || 'Unknown Role'}
                               </div>

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { AppLayout } from '../Layouts/AppLayout';
-import { Employee, ProfileRequest, Settings, UserRole } from '../types';
+import { Profile, ProfileRequest, Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { Mail, Phone, MapPin, Briefcase, Calendar, Shield, Send, X, AlertCircle, Clock, CheckCircle, ChevronLeft, ChevronRight, FileText, Loader2 } from 'lucide-react';
 
 interface ProfileProps {
-  employee: Employee | undefined;
+  profile: Profile | undefined;
   requests?: ProfileRequest[];
   settings: Settings;
   userRole: UserRole;
   flash?: { success?: string; error?: string };
 }
 
-export default function Profile({ employee, requests = [], settings, userRole }: ProfileProps) {
+export default function Profile({ profile, requests = [], settings, userRole }: ProfileProps) {
   const t = TRANSLATIONS[settings.language];
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [requestDescription, setRequestDescription] = useState('');
@@ -22,13 +22,13 @@ export default function Profile({ employee, requests = [], settings, userRole }:
   const [isProcessing, setIsProcessing] = useState(false);
   const ITEMS_PER_PAGE = 3;
 
-  if (!employee) {
+  if (!profile) {
     return (
       <AppLayout userRole={userRole} settings={settings} t={t}>
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm">
           <AlertCircle className="h-12 w-12 text-slate-300 mb-4" />
-          <h3 className="text-xl font-bold text-slate-900">{t.language === 'id' ? 'Profil Karyawan Tidak Ditemukan' : 'Employee Profile Not Found'}</h3>
-          <p className="text-slate-500 mt-2">{t.language === 'id' ? 'Silakan masuk dengan ID Karyawan yang valid.' : 'Please log in with a valid Employee ID to view your profile.'}</p>
+          <h3 className="text-xl font-bold text-slate-900">{t.language === 'id' ? 'Profil Karyawan Tidak Ditemukan' : 'Profile Profile Not Found'}</h3>
+          <p className="text-slate-500 mt-2">{t.language === 'id' ? 'Silakan masuk dengan ID Karyawan yang valid.' : 'Please log in with a valid Profile ID to view your profile.'}</p>
         </div>
       </AppLayout>
     );
@@ -68,13 +68,13 @@ export default function Profile({ employee, requests = [], settings, userRole }:
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="h-32 bg-indigo-600"></div>
               <div className="px-6 pb-6 text-center">
-                <div className="-mt-16 flex justify-center"><img src={employee.avatar} alt={employee.name} className="h-32 w-32 rounded-full border-4 border-white object-cover shadow-sm" /></div>
-                <h3 className="mt-4 text-xl font-bold text-slate-900">{employee.name}</h3><p className="text-slate-500 font-medium">{employee.role}</p>
+                <div className="-mt-16 flex justify-center"><img src={profile.avatar} alt={profile.name} className="h-32 w-32 rounded-full border-4 border-white object-cover shadow-sm" /></div>
+                <h3 className="mt-4 text-xl font-bold text-slate-900">{profile.name}</h3><p className="text-slate-500 font-medium">{profile.role}</p>
               </div>
             </div>
             <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">{t.language === 'id' ? 'Statistik Cepat' : 'Quick Stats'}</h4>
-              <div className="space-y-4 text-sm"><div className="flex justify-between"><span>ID</span><span className="font-bold">{employee.id}</span></div><div className="flex justify-between"><span>{t.department}</span><span className="font-bold">{employee.department}</span></div><div className="flex justify-between"><span>{t.joinDate}</span><span className="font-bold">{new Date(employee.joinDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })}</span></div></div>
+              <div className="space-y-4 text-sm"><div className="flex justify-between"><span>ID</span><span className="font-bold">{profile.id}</span></div><div className="flex justify-between"><span>{t.department}</span><span className="font-bold">{profile.department}</span></div><div className="flex justify-between"><span>{t.joinDate}</span><span className="font-bold">{new Date(profile.joinDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })}</span></div></div>
             </div>
           </div>
 
@@ -82,18 +82,18 @@ export default function Profile({ employee, requests = [], settings, userRole }:
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b bg-slate-50/50 font-bold">{t.personalContact}</div>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
-                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center mb-1"><Mail className="h-3 w-3 mr-1" />{t.emailAddress}</p><p className="font-medium">{employee.email}</p></div>
-                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center mb-1"><Phone className="h-3 w-3 mr-1" />{t.phoneNumber}</p><p className="font-medium">{employee.phoneNumber || '-'}</p></div>
-                <div className="md:col-span-2"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center mb-1"><MapPin className="h-3 w-3 mr-1" />{t.address}</p><p className="font-medium leading-relaxed">{employee.address || '-'}</p></div>
+                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center mb-1"><Mail className="h-3 w-3 mr-1" />{t.emailAddress}</p><p className="font-medium">{profile.email}</p></div>
+                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center mb-1"><Phone className="h-3 w-3 mr-1" />{t.phoneNumber}</p><p className="font-medium">{profile.phoneNumber || '-'}</p></div>
+                <div className="md:col-span-2"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center mb-1"><MapPin className="h-3 w-3 mr-1" />{t.address}</p><p className="font-medium leading-relaxed">{profile.address || '-'}</p></div>
               </div>
             </div>
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b bg-slate-50/50 font-bold">{t.employmentInfo}</div>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
-                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t.position}</p><p className="font-medium">{employee.role}</p></div>
+                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t.position}</p><p className="font-medium">{profile.role}</p></div>
                 <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t.accessRole}</p><p className="font-medium">{t.standardUser}</p></div>
-                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t.joinDate}</p><p className="font-medium">{new Date(employee.joinDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })}</p></div>
-                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p><p className="font-bold text-emerald-600">{employee.status === 'Active' ? t.active : t.onLeave}</p></div>
+                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t.joinDate}</p><p className="font-medium">{new Date(profile.joinDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })}</p></div>
+                <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p><p className="font-bold text-emerald-600">{profile.status === 'Active' ? t.active : t.onLeave}</p></div>
               </div>
             </div>
             <div className="rounded-xl bg-amber-50 p-4 border border-amber-100 flex gap-3 text-sm text-amber-800"><AlertCircle className="h-5 w-5 shrink-0" /><p>{t.infoPolicy}</p></div>

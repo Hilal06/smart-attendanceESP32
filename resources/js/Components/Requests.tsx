@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { Transition } from '@headlessui/react';
-import { ProfileRequest, Employee } from '../types';
+import { ProfileRequest, Profile } from '../types';
 import { Inbox, CheckCircle, Trash2, Calendar, Clock, AlertCircle, Search, CheckCircle2 } from 'lucide-react';
 
 interface RequestsProps {
   requests: ProfileRequest[];
-  employees: Employee[];
+  profiles: Profile[];
   onResolve: (id: string) => void;
   onDelete: (id: string) => void;
   t: any;
 }
 
-export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [], onResolve, onDelete, t }) => {
-  const getEmployee = (id: string) => employees.find(e => e.id === id);
+export const Requests: React.FC<RequestsProps> = ({ requests = [], profiles = [], onResolve, onDelete, t }) => {
+  const getProfile = (id: string) => profiles.find(e => e.id === id);
   const isId = t.dashboard === 'Dasbor'; // Simple locale detection based on translation
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,9 +28,9 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
     if (filterStatus !== 'All' && req.status !== filterStatus) return false;
 
     if (searchQuery) {
-      const emp = getEmployee(req.employeeId);
+      const emp = getProfile(req.profileId);
       const searchLower = searchQuery.toLowerCase();
-      const nameMatch = emp?.name.toLowerCase().includes(searchLower) || req.employeeId.toLowerCase().includes(searchLower);
+      const nameMatch = emp?.name.toLowerCase().includes(searchLower) || req.profileId.toLowerCase().includes(searchLower);
       const descMatch = req.description.toLowerCase().includes(searchLower);
       if (!nameMatch && !descMatch) return false;
     }
@@ -115,7 +115,7 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
             <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
               <thead className="bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.employee}</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.profile}</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.requestDetails}</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.date}</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
@@ -124,18 +124,18 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], employees = [
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 transition-colors">
                 {filteredRequests.map((request) => {
-                  const emp = getEmployee(request.employeeId);
+                  const emp = getProfile(request.profileId);
                   return (
                     <tr key={request.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
-                            src={emp?.avatar || `https://ui-avatars.com/api/?name=${request.employeeId}`}
+                            src={emp?.avatar || `https://ui-avatars.com/api/?name=${request.profileId}`}
                             alt=""
                             className="h-8 w-8 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 border border-slate-100 dark:border-slate-800"
                           />
                           <div className="ml-3">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white">{emp?.name || request.employeeId}</div>
+                            <div className="text-sm font-medium text-slate-900 dark:text-white">{emp?.name || request.profileId}</div>
                             <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                               {emp?.role || 'Unknown Role'}
                             </div>

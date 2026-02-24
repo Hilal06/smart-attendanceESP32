@@ -11,15 +11,15 @@ class Attendance extends Model
 
     protected $fillable = [
         'id',
-        'employee_id',
+        'profile_id',
         'date',
         'check_in',
         'check_out',
         'status',
     ];
 
-    public function employee()
+    public function profile()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Profile::class);
     }
 }

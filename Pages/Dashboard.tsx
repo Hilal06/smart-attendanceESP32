@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { AppLayout } from '../Layouts/AppLayout';
-import { Employee, AttendanceRecord, AttendanceStatus, Announcement, Settings, UserRole } from '../types';
+import { Profile, AttendanceRecord, AttendanceStatus, Announcement, Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { Users, Clock, AlertTriangle, CheckCircle, Bell, Clock as ClockIcon, SortDesc, CalendarDays, CalendarRange, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DashboardProps {
-  employees: Employee[];
+  profiles: Profile[];
   attendance: AttendanceRecord[];
   announcements: Announcement[];
   settings: Settings;
@@ -17,7 +17,7 @@ interface DashboardProps {
 type TimeRange = 'Weekly' | 'Monthly' | 'Yearly';
 type AnnouncementSort = 'Latest' | 'Priority';
 
-export default function Dashboard({ employees, attendance, announcements, settings, userRole }: DashboardProps) {
+export default function Dashboard({ profiles, attendance, announcements, settings, userRole }: DashboardProps) {
   const t = TRANSLATIONS[settings.language];
   const [timeRange, setTimeRange] = useState<TimeRange>('Weekly');
   const [announcementSort, setAnnouncementSort] = useState<AnnouncementSort>('Latest');
@@ -56,7 +56,7 @@ export default function Dashboard({ employees, attendance, announcements, settin
 
   const chartData = useMemo(() => {
     if (timeRange === 'Yearly') {
-      const scale = Math.max(1, employees.length);
+      const scale = Math.max(1, profiles.length);
       return [
         { name: 'Jan', Present: Math.floor(scale * 18), Late: Math.floor(scale * 2), Absent: Math.floor(scale * 1) },
         { name: 'Feb', Present: Math.floor(scale * 19), Late: Math.floor(scale * 1), Absent: Math.floor(scale * 1) },
@@ -86,7 +86,7 @@ export default function Dashboard({ employees, attendance, announcements, settin
       }
     });
     return Object.values(days);
-  }, [attendance, timeRange, employees.length, t.language]);
+  }, [attendance, timeRange, profiles.length, t.language]);
 
   const StatCard = ({ title, value, icon: Icon, color, bg }: any) => (
     <div className="rounded-xl bg-white p-3 shadow-sm border border-slate-100 flex items-center gap-3">
@@ -132,7 +132,7 @@ export default function Dashboard({ employees, attendance, announcements, settin
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <div className="lg:col-span-3 space-y-6">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard title={t.team} value={employees.length} icon={Users} color="text-blue-600" bg="bg-blue-50" />
+              <StatCard title={t.team} value={profiles.length} icon={Users} color="text-blue-600" bg="bg-blue-50" />
               <StatCard title={t.present} value={todaysStats.present} icon={CheckCircle} color="text-emerald-600" bg="bg-emerald-50" />
               <StatCard title={t.late} value={todaysStats.late} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
               <StatCard title={t.absent} value={todaysStats.absent} icon={AlertTriangle} color="text-rose-600" bg="bg-rose-50" />
@@ -176,7 +176,7 @@ export default function Dashboard({ employees, attendance, announcements, settin
                   <tbody className="divide-y divide-slate-100 bg-white">
                     {paginatedTodaysRecords.length > 0 ? (
                       paginatedTodaysRecords.map((record) => {
-                        const emp = employees.find(e => e.id === record.employeeId);
+                        const emp = profiles.find(e => e.id === record.profileId);
                         return (
                           <tr key={record.id} className="hover:bg-slate-50 transition-colors">
                             <td className="px-6 py-3">

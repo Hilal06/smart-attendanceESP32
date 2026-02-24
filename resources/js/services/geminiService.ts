@@ -1,10 +1,10 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { AttendanceRecord, Employee } from "../types";
+import { AttendanceRecord, Profile } from "../types";
 
 export const generateAttendanceInsights = async (
   attendance: AttendanceRecord[],
-  employees: Employee[]
+  profiles: Profile[]
 ): Promise<string> => {
   try {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -19,7 +19,7 @@ export const generateAttendanceInsights = async (
     // Prepare data summary for the AI to consume less tokens but get better context
     const dataSummary = {
       totalRecords: attendance.length,
-      employees: employees.map(e => ({ id: e.id, name: e.name, role: e.role })),
+      profiles: profiles.map(e => ({ id: e.id, name: e.name, role: e.role })),
       recordsSample: attendance.slice(0, 50), // Send a sample to avoid token limits in this demo
       summaryStats: {
         late: attendance.filter(a => a.status === 'Late').length,
@@ -33,7 +33,7 @@ export const generateAttendanceInsights = async (
       
       Focus on:
       1. Attendance trends (lateness, absence).
-      2. Specific employee patterns if noticeable.
+      2. Specific profile patterns if noticeable.
       3. Operational efficiency based on check-in times.
 
       Data: ${JSON.stringify(dataSummary)}
@@ -57,8 +57,8 @@ export const generateAttendanceInsights = async (
   }
 };
 
-export const generateEmployeePerformanceSummary = async (
-  employee: Employee,
+export const generateProfilePerformanceSummary = async (
+  profile: Profile,
   attendanceRecords: AttendanceRecord[]
 ): Promise<string> => {
   try {
@@ -71,15 +71,15 @@ export const generateEmployeePerformanceSummary = async (
     // Initialize the official Google Gen AI SDK
     const ai = new GoogleGenAI({ apiKey });
 
-    // Filter attendance for just this employee to ensure accurate data is sent
-    const empRecords = attendanceRecords.filter(a => a.employeeId === employee.id);
+    // Filter attendance for just this profile to ensure accurate data is sent
+    const empRecords = attendanceRecords.filter(a => a.profileId === profile.id);
 
     // Prepare a concise summary for the AI
     const dataSummary = {
-      employeeName: employee.name,
-      role: employee.role,
-      department: employee.department,
-      joinDate: employee.joinDate,
+      profileName: profile.name,
+      role: profile.role,
+      department: profile.department,
+      joinDate: profile.joinDate,
       totalRecords: empRecords.length,
       statusCounts: {
         present: empRecords.filter(a => a.status === 'Present').length,
@@ -89,12 +89,12 @@ export const generateEmployeePerformanceSummary = async (
     };
 
     const prompt = `
-      You are an HR Analytics Assistant. Analyze the following individual attendance summary for an employee named ${employee.name}.
+      You are an HR Analytics Assistant. Analyze the following individual attendance summary for an profile named ${profile.name}.
       Write a brief, professional performance summary regarding their punctuality and attendance reliability.
       
       Focus on:
       1. Their overall attendance trend based on the ratio of Present, Late, and Absent days (if any data is available).
-      2. 1 constructive suggestion or positive reinforcement for the employee based *only* on the data provided.
+      2. 1 constructive suggestion or positive reinforcement for the profile based *only* on the data provided.
       3. Keep the tone encouraging but professional.
 
       Data: ${JSON.stringify(dataSummary)}

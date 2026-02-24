@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import AppLayout from '../Layouts/AppLayout';
-import { EmployeeList } from '../Components/EmployeeList';
-import { Employee, Settings, UserRole } from '../types';
+import { ProfileList } from '../Components/ProfileList';
+import { Profile, Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
 
 interface Props {
   userRole: UserRole;
   settings: Settings;
-  employees: Employee[];
+  profiles: Profile[];
 }
 
-export default function Employees({ userRole, settings, employees }: Props) {
+export default function Profiles({ userRole, settings, profiles }: Props) {
   const t = TRANSLATIONS[settings.language || 'en'];
   const { errors } = usePage().props;
   const [processing, setProcessing] = useState(false);
 
-  const handleAdd = (emp: Employee, avatarFile?: File, faceDataFile?: File) => {
+  const handleAdd = (emp: Profile, avatarFile?: File, faceDataFile?: File) => {
     setProcessing(true);
     const data: any = { ...emp };
     if (avatarFile) {
@@ -26,7 +26,7 @@ export default function Employees({ userRole, settings, employees }: Props) {
       data.face_data = faceDataFile;
     }
 
-    router.post('/employees', data, {
+    router.post('/profiles', data, {
       forceFormData: !!avatarFile || !!faceDataFile,
       onFinish: () => setProcessing(false),
       onError: () => {
@@ -38,7 +38,7 @@ export default function Employees({ userRole, settings, employees }: Props) {
     });
   };
 
-  const handleEdit = (emp: Employee, avatarFile?: File, faceDataFile?: File) => {
+  const handleEdit = (emp: Profile, avatarFile?: File, faceDataFile?: File) => {
     setProcessing(true);
     const data: any = { ...emp };
 
@@ -52,7 +52,7 @@ export default function Employees({ userRole, settings, employees }: Props) {
 
     if (avatarFile || faceDataFile) {
       data._method = 'put';
-      router.post(`/employees/${emp.id}`, data, {
+      router.post(`/profiles/${emp.id}`, data, {
         forceFormData: true,
         onFinish: () => setProcessing(false),
         onError: () => {
@@ -61,7 +61,7 @@ export default function Employees({ userRole, settings, employees }: Props) {
       });
     } else {
       const data: any = { ...emp };
-      router.put(`/employees/${emp.id}`, data, {
+      router.put(`/profiles/${emp.id}`, data, {
         onFinish: () => setProcessing(false),
         onError: () => {
           // Server errors passed back to component
@@ -72,7 +72,7 @@ export default function Employees({ userRole, settings, employees }: Props) {
 
   const handleDelete = (id: string) => {
     setProcessing(true);
-    router.delete(`/employees/${id}`, {
+    router.delete(`/profiles/${id}`, {
       onFinish: () => setProcessing(false),
       onError: (err: any) => {
         // Custom delete error message if needed
@@ -82,11 +82,11 @@ export default function Employees({ userRole, settings, employees }: Props) {
 
   return (
     <AppLayout userRole={userRole} settings={settings}>
-      <EmployeeList
-        employees={employees}
-        onAddEmployee={handleAdd}
-        onEditEmployee={handleEdit}
-        onDeleteEmployee={handleDelete}
+      <ProfileList
+        profiles={profiles}
+        onAddProfile={handleAdd}
+        onEditProfile={handleEdit}
+        onDeleteProfile={handleDelete}
         t={t}
         isProcessing={processing}
         externalErrors={errors as Record<string, string>}

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Head } from '@inertiajs/react';
 import { AppLayout } from '../Layouts/AppLayout';
-import { Employee, AttendanceRecord, AttendanceStatus, Settings, UserRole } from '../types';
+import { Profile, AttendanceRecord, AttendanceStatus, Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Sparkles, Loader2, FileText, Filter, ChevronLeft, ChevronRight, CalendarDays, CalendarRange, Calendar } from 'lucide-react';
@@ -9,12 +9,12 @@ import { generateAttendanceInsights } from '../services/geminiService';
 
 interface ReportsProps {
   attendance: AttendanceRecord[];
-  employees: Employee[];
+  profiles: Profile[];
   settings: Settings;
   userRole: UserRole;
 }
 
-export default function Reports({ attendance, employees, settings, userRole }: ReportsProps) {
+export default function Reports({ attendance, profiles, settings, userRole }: ReportsProps) {
   const t = TRANSLATIONS[settings.language];
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiInsights, setAiInsights] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export default function Reports({ attendance, employees, settings, userRole }: R
   const handleGenerateInsights = async () => {
     setLoadingAI(true);
     try {
-      const insights = await generateAttendanceInsights(attendance, employees);
+      const insights = await generateAttendanceInsights(attendance, profiles);
       setAiInsights(insights);
     } catch (e) {
       console.error(e);
@@ -37,14 +37,14 @@ export default function Reports({ attendance, employees, settings, userRole }: R
   };
 
   const handleExportCSV = () => {
-    const headers = [t.date, 'ID', t.employee, t.department, t.position, 'Status', t.checkIn, t.checkOut];
+    const headers = [t.date, 'ID', t.profile, t.department, t.position, 'Status', t.checkIn, t.checkOut];
     const csvRows = [headers.join(',')];
 
     attendance.forEach(record => {
-      const emp = employees.find(e => e.id === record.employeeId);
+      const emp = profiles.find(e => e.id === record.profileId);
       const row = [
         record.date,
-        record.employeeId,
+        record.profileId,
         `"${emp?.name || 'Unknown'}"`,
         `"${emp?.department || ''}"`,
         `"${emp?.role || ''}"`,
@@ -168,7 +168,7 @@ export default function Reports({ attendance, employees, settings, userRole }: R
   const totalPages = Math.ceil(filteredAttendance.length / ITEMS_PER_PAGE);
   const paginatedData = filteredAttendance.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const getEmployee = (id: string) => employees.find(e => e.id === id);
+  const getProfile = (id: string) => profiles.find(e => e.id === id);
 
   return (
     <AppLayout userRole={userRole} settings={settings} t={t}>
@@ -294,7 +294,7 @@ export default function Reports({ attendance, employees, settings, userRole }: R
               <thead className="bg-slate-50">
                 <tr>
                   <th className="px-6 py-3 text-left font-medium uppercase text-slate-500">{t.date}</th>
-                  <th className="px-6 py-3 text-left font-medium uppercase text-slate-500">{t.employee}</th>
+                  <th className="px-6 py-3 text-left font-medium uppercase text-slate-500">{t.profile}</th>
                   <th className="px-6 py-3 text-left font-medium uppercase text-slate-500">{t.department}</th>
                   <th className="px-6 py-3 text-left font-medium uppercase text-slate-500">Status</th>
                   <th className="px-6 py-3 text-left font-medium uppercase text-slate-500">{t.checkIn}</th>
@@ -303,7 +303,7 @@ export default function Reports({ attendance, employees, settings, userRole }: R
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {paginatedData.map((record) => {
-                  const emp = getEmployee(record.employeeId);
+                  const emp = getProfile(record.profileId);
                   return (
                     <tr key={record.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4 text-slate-500">{record.date}</td>

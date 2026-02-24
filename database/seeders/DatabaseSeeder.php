@@ -22,8 +22,13 @@ class DatabaseSeeder extends Seeder
                'name' => 'Admin User',
                'email' => 'admin@smartattend.com',
                'password' => bcrypt('password'),
+               'role' => 'super_admin',
             ]);
         }
+
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+        ]);
 
         $path = storage_path('app/db.json');
         if (!file_exists($path)) {
@@ -45,12 +50,28 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Employees
-        if (isset($data['employees'])) {
-            foreach ($data['employees'] as $emp) {
+        // Profiles
+        if (isset($data['profiles'])) {
+            foreach ($data['profiles'] as $emp) {
                 try {
-                    \App\Models\Employee::create([
+                    $roleLabel = strtolower($emp['role'] ?? 'student');
+                    if (!in_array($roleLabel, ['super_admin', 'teacher', 'student'])) {
+                        $roleLabel = 'student';
+                    }
+
+                    $user = \App\Models\User::firstOrCreate(
+                        ['email' => $emp['email']],
+                        [
+                            'name' => $emp['name'],
+                            'password' => bcrypt('12345678'),
+                            'role' => $roleLabel,
+                        ]
+                    );
+                    $user->assignRole($roleLabel === 'super_admin' ? 'admin' : $roleLabel);
+
+                    \App\Models\Profile::create([
                         'id' => $emp['id'],
+                        'user_id' => $user->id,
                         'name' => $emp['name'],
                         'role' => $emp['role'],
                         'department' => $emp['department'],
@@ -62,7 +83,7 @@ class DatabaseSeeder extends Seeder
                         'status' => $emp['status'] ?? 'Active',
                     ]);
                 } catch (\Exception $e) {
-                    $this->command->warn("Skipping employee {$emp['id']}: " . $e->getMessage());
+                    $this->command->warn("Skipping profile {$emp['id']}: " . $e->getMessage());
                 }
             }
         }
@@ -88,10 +109,10 @@ class DatabaseSeeder extends Seeder
         if (isset($data['attendance'])) {
             foreach ($data['attendance'] as $att) {
                 try {
-                    if (\App\Models\Employee::where('id', $att['employeeId'])->exists()) {
+                    if (\App\Models\Profile::where('id', $att['employeeId'])->exists()) {
                         \App\Models\Attendance::create([
                             'id' => $att['id'],
-                            'employee_id' => $att['employeeId'],
+                            'profile_id' => $att['employeeId'],
                             'date' => $att['date'],
                             'check_in' => $att['checkIn'] ?? null,
                             'check_out' => $att['checkOut'] ?? null,
@@ -108,10 +129,10 @@ class DatabaseSeeder extends Seeder
         if (isset($data['requests'])) {
             foreach ($data['requests'] as $req) {
                  try {
-                     if (\App\Models\Employee::where('id', $req['employeeId'])->exists()) {
-                        \App\Models\EmployeeRequest::create([
+                     if (\App\Models\Profile::where('id', $req['employeeId'])->exists()) {
+                        \App\Models\ProfileRequest::create([
                             'id' => $req['id'],
-                            'employee_id' => $req['employeeId'],
+                            'profile_id' => $req['employeeId'],
                             'description' => $req['description'],
                             'date' => \Carbon\Carbon::parse($req['date']),
                             'status' => $req['status'],
@@ -121,6 +142,58 @@ class DatabaseSeeder extends Seeder
                     $this->command->warn("Skipping request {$req['id']}: " . $e->getMessage());
                  }
             }
+        }
+
+        // Dummy Teachers
+        for ($i = 1; $i <= 6; $i++) {
+            $user = \App\Models\User::firstOrCreate(
+                ['email' => "teacher$i@smartattend.com"],
+                [
+                    'name' => "Teacher $i",
+                    'password' => bcrypt('12345678'),
+                    'role' => 'teacher',
+                ]
+            );
+            $user->assignRole('teacher');
+
+            \App\Models\Profile::firstOrCreate(
+                ['email' => "teacher$i@smartattend.com"],
+                [
+                    'id' => "TCH" . str_pad($i, 3, '0', STR_PAD_LEFT),
+                    'user_id' => $user->id,
+                    'name' => "Teacher $i",
+                    'role' => 'Teacher',
+                    'department' => 'Academics',
+                    'join_date' => now()->format('Y-m-d'),
+                    'status' => 'Active',
+                ]
+            );
+        }
+
+        // Dummy Students
+        for ($i = 1; $i <= 5; $i++) {
+            $user = \App\Models\User::firstOrCreate(
+                ['email' => "student$i@smartattend.com"],
+                [
+                    'name' => "Student $i",
+                    'password' => bcrypt('12345678'),
+                    'role' => 'student',
+                ]
+            );
+            $user->assignRole('student');
+
+            \App\Models\Profile::firstOrCreate(
+                ['email' => "student$i@smartattend.com"],
+                [
+                    'id' => "STU" . str_pad($i, 3, '0', STR_PAD_LEFT),
+                    'user_id' => $user->id,
+                    'name' => "Student $i",
+                    'role' => 'Student',
+                    'department' => 'General',
+                    'join_date' => now()->format('Y-m-d'),
+                    'status' => 'Active',
+                ]
+            );
         }
     }
 }

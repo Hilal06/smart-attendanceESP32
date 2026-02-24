@@ -1,21 +1,22 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Employee, AttendanceRecord, AttendanceStatus, Announcement, Page } from '../types';
+import { Profile, AttendanceRecord, AttendanceStatus, Announcement, Page } from '../types';
 import { Users, Clock, AlertTriangle, CheckCircle, Bell, Filter, SortDesc, CalendarDays, CalendarRange, Calendar, ChevronLeft, ChevronRight, Server, Search, Sun, Moon, Sunrise, Sunset } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { router } from '@inertiajs/react';
 
 interface DashboardProps {
-  employees: Employee[];
+  profiles: Profile[];
   attendance: AttendanceRecord[];
   announcements: Announcement[];
   t: any;
+  userRole?: string;
 }
 
 type TimeRange = 'Today' | 'Weekly' | 'Monthly' | 'Yearly';
 type AnnouncementSort = 'Latest' | 'Priority';
 type StatusFilter = 'All' | AttendanceStatus.PRESENT | AttendanceStatus.LATE | AttendanceStatus.ABSENT;
 
-export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, announcements, t }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, announcements, t, userRole }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('Today');
   const [announcementSort, setAnnouncementSort] = useState<AnnouncementSort>('Latest');
   const [systemStatus, setSystemStatus] = useState<any>(null);
@@ -93,7 +94,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       records = records.filter(r => {
-        const emp = employees.find(e => e.id === r.employeeId);
+        const emp = profiles.find(e => e.id === r.profileId);
         return emp?.name.toLowerCase().includes(query) || emp?.id.toLowerCase().includes(query);
       });
     }
@@ -104,7 +105,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
       const timeB = new Date(`${b.date}T${b.checkIn || '00:00'}`).getTime();
       return timeB - timeA;
     });
-  }, [filteredRecordsByTime, activeStatusFilter, searchQuery, employees]);
+  }, [filteredRecordsByTime, activeStatusFilter, searchQuery, profiles]);
 
   const sortedAnnouncements = useMemo(() => {
     const list = [...announcements];
@@ -120,7 +121,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
 
   const chartData = useMemo(() => {
     if (timeRange === 'Yearly') {
-      const scale = Math.max(1, employees.length);
+      const scale = Math.max(1, profiles.length);
       return [
         { name: 'Jan', Present: Math.floor(scale * 18), Late: Math.floor(scale * 2), Absent: Math.floor(scale * 1) },
         { name: 'Feb', Present: Math.floor(scale * 19), Late: Math.floor(scale * 1), Absent: Math.floor(scale * 1) },
@@ -156,7 +157,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
     }
 
     return Object.values(days);
-  }, [attendance, timeRange, employees.length, t.language]);
+  }, [attendance, timeRange, profiles.length, t.language]);
 
   const StatCard = ({ title, value, icon: Icon, color, bg, statusKey }: any) => {
     const isActive = activeStatusFilter === statusKey;
@@ -224,8 +225,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
         <div className="xl:col-span-3 space-y-6">
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard title={t.team} value={employees.length} icon={Users} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50" statusKey="All" />
+          <div className={`grid gap-4 ${userRole === 'student' ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2 lg:grid-cols-4'}`}>
+            {userRole !== 'student' && (
+              <StatCard title={userRole === 'teacher' ? t.students : t.team} value={profiles.length} icon={Users} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50" statusKey="All" />
+            )}
             <StatCard title={t.present} value={activeStats.present} icon={CheckCircle} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50" statusKey={AttendanceStatus.PRESENT} />
             <StatCard title={t.late} value={activeStats.late} icon={Clock} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50" statusKey={AttendanceStatus.LATE} />
             <StatCard title={t.absent} value={activeStats.absent} icon={AlertTriangle} color="text-rose-600 dark:text-rose-400" bg="bg-rose-50" statusKey={AttendanceStatus.ABSENT} />
@@ -311,7 +314,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
               <ul className="space-y-2.5">
                 {tableRecords.length > 0 ? (
                   tableRecords.map((record) => {
-                    const emp = employees.find(e => e.id === record.employeeId);
+                    const emp = profiles.find(e => e.id === record.profileId);
                     return (
                       <li key={record.id} className="relative overflow-hidden p-3 sm:p-4 bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between group">
                         <div className="flex items-center gap-3.5 z-10">
@@ -415,14 +418,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ employees, attendance, ann
                   >
                     {/* Priority Accent Line */}
                     <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.priority === 'Urgent' ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]' :
-                        item.priority === 'High' ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]' :
-                          'bg-indigo-400'
+                      item.priority === 'High' ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]' :
+                        'bg-indigo-400'
                       }`}></div>
 
                     <div className="flex items-center justify-between mb-2.5 pl-2">
                       <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${item.priority === 'Urgent' ? 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' :
-                          item.priority === 'High' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
-                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                        item.priority === 'High' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                         }`}>
                         {item.priority === 'Urgent' ? t.priorityUrgent : item.priority === 'High' ? t.priorityHigh : t.priorityNormal}
                       </span>

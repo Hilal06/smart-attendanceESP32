@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Employee extends Model
+class Profile extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
@@ -20,5 +20,12 @@ class Employee extends Model
         'phone_number',
         'address',
         'status',
+        'student_id',
+        'teacher_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { UserRole, Settings } from '../types';
 import { LayoutDashboard, Users, BarChart3, Settings as SettingsIcon, LogOut, UserCircle, Inbox, Megaphone } from 'lucide-react';
+import Can from './Can';
 
 interface SidebarProps {
   userRole: UserRole;
@@ -26,13 +27,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const currentPath = url.endsWith('/') && url.length > 1 ? url.slice(0, -1) : url;
 
   const navItems = [
-    { href: '/', label: t.dashboard, icon: LayoutDashboard, roles: ['admin', 'attendance'] },
-    { href: '/announcements', label: t.announcements, icon: Megaphone, roles: ['admin', 'attendance'] },
-    { href: '/profile', label: t.profile, icon: UserCircle, roles: ['attendance'] },
-    { href: '/requests', label: t.requests, icon: Inbox, roles: ['admin'] },
-    { href: '/employees', label: t.employees, icon: Users, roles: ['admin'] },
-    { href: '/reports', label: t.reports, icon: BarChart3, roles: ['admin'] },
-    { href: '/settings', label: t.settings, icon: SettingsIcon, roles: ['admin'] },
+    { href: '/', label: t.dashboard, icon: LayoutDashboard, roles: ['admin', 'attendance', 'teacher', 'student'] },
+    { href: '/announcements', label: t.announcements, icon: Megaphone, roles: ['admin', 'attendance', 'teacher', 'student'] },
+    { href: '/profile', label: t.profile, icon: UserCircle, roles: ['attendance', 'teacher', 'student'] },
+    { href: '/requests', label: t.requests, icon: Inbox, roles: ['admin', 'teacher'] },
+    { href: '/profiles', label: t.profiles, icon: Users, roles: ['admin'], permission: 'manage users' },
+    { href: '/students', label: t.students, icon: Users, roles: ['admin', 'teacher'] },
+    { href: '/reports', label: t.reports, icon: BarChart3, roles: ['admin'], permission: 'view all reports' },
+    { href: '/settings', label: t.settings, icon: SettingsIcon, roles: ['admin'], permission: 'manage settings' },
   ].filter(item => item.roles.includes(userRole));
 
   return (
@@ -64,21 +66,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 : currentPath.startsWith(item.href);
 
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileOpen(false)}
-                  className={`group relative flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 overflow-hidden ${isActive
-                    ? 'bg-indigo-900/40 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                    }`}
-                >
-                  {/* Active Indicator Line */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-full transition-transform duration-300 origin-left ${isActive ? 'scale-x-100' : 'scale-x-0'}`} />
+                <Can key={item.href} permission={item.permission}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setIsMobileOpen(false)}
+                    className={`group relative flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 overflow-hidden ${isActive
+                      ? 'bg-indigo-900/40 text-white'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                      }`}
+                  >
+                    {/* Active Indicator Line */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-full transition-transform duration-300 origin-left ${isActive ? 'scale-x-100' : 'scale-x-0'}`} />
 
-                  <Icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-all duration-300 ${isActive ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
+                    <Icon className={`mr-3 h-5 w-5 flex-shrink-0 transition-all duration-300 ${isActive ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                    <span className="relative z-10">{item.label}</span>
+                  </Link>
+                </Can>
               );
             })}
           </nav>
@@ -94,8 +97,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )}
               </div>
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-sm font-bold text-slate-200 truncate" title={auth?.user?.name || (userRole === 'admin' ? 'Administrator' : 'Employee')}>
-                  {auth?.user?.name || (userRole === 'admin' ? 'Administrator' : 'Employee')}
+                <span className="text-sm font-bold text-slate-200 truncate" title={auth?.user?.name || (userRole === 'admin' ? 'Administrator' : 'Profile')}>
+                  {auth?.user?.name || (userRole === 'admin' ? 'Administrator' : 'Profile')}
                 </span>
                 <span className="text-xs text-slate-500 truncate capitalize" title={auth?.user?.role ? `${auth.user.role} Access` : `${userRole} Access`}>
                   {auth?.user?.role ? auth.user.role : `${userRole} Access`}

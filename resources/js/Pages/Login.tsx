@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import { UserRole, Settings } from '../types';
+import { Head, useForm, Link } from '@inertiajs/react';
+import { Settings } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { UserCheck, ShieldCheck, ArrowRight, Fingerprint, Loader2, Hash, Mail, Lock, Sun, Moon } from 'lucide-react';
+import { ArrowRight, Fingerprint, Loader2, Mail, Lock, Sun, Moon, UserCircle } from 'lucide-react';
 
 interface LoginProps {
   settings: Settings;
@@ -11,10 +11,8 @@ interface LoginProps {
 }
 
 export default function Login({ settings, status, canResetPassword }: LoginProps) {
-  // Fallback to 'en' if settings or language is missing (e.g. initial load error)
   const t = settings ? TRANSLATIONS[settings.language] : TRANSLATIONS['en'];
 
-  const [activeTab, setActiveTab] = useState<UserRole>('attendance');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
@@ -38,24 +36,15 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
   };
 
   const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
-    role: 'attendance',
-    id: '',         // For attendance login
-    email: '',      // For admin login
-    password: '',   // For admin login
+    email: '',
+    password: '',
+    role: 'student',
     remember: false,
   });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
-
-    if (activeTab === 'attendance' && !data.id.trim()) {
-      // We can set manual error if needed, or rely on backend validation
-      // But for better UX, let's let backend handle validation or do simple check
-    }
-
-    // transform role to activeTab before submit
-    data.role = activeTab;
 
     post('/login', {
       onFinish: () => reset('password'),
@@ -101,121 +90,77 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-cyan-500 dark:from-indigo-400 dark:to-cyan-400 bg-clip-text text-transparent mb-2 tracking-tight">
             {settings?.companyName || 'SmartAttend'}
           </h1>
-          <p className="text-sm text-slate-400 font-medium tracking-wide uppercase">Secure Attendance Portal</p>
-        </div>
-
-        {/* Modern Segmented Control */}
-        <div className="px-8 pb-4">
-          <div className="relative flex rounded-xl bg-slate-200/80 dark:bg-slate-950/50 p-1 backdrop-blur-sm border border-slate-300/50 dark:border-slate-800/50">
-            {/* Sliding Highlight Pill */}
-            <div
-              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-white dark:bg-slate-800 shadow-sm transition-transform duration-300 ease-spring ${activeTab === 'attendance' ? 'translate-x-0' : 'translate-x-full border border-slate-700/50 dark:border-slate-700'}`}
-              style={{ left: activeTab === 'attendance' ? '4px' : '0px' }} // Account for padding
-            />
-
-            <button
-              onClick={() => { setActiveTab('attendance'); clearErrors(); setData('role', 'attendance'); }}
-              className={`relative z-10 flex-1 py-2.5 text-sm font-semibold transition-colors duration-300 ${activeTab === 'attendance'
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <UserCheck className="h-4 w-4" />
-                {t.attendanceMode}
-              </div>
-            </button>
-            <button
-              onClick={() => { setActiveTab('admin'); clearErrors(); setData('role', 'admin'); }}
-              className={`relative z-10 flex-1 py-2.5 text-sm font-semibold transition-colors duration-300 ${activeTab === 'admin'
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <ShieldCheck className="h-4 w-4" />
-                {t.adminPortal}
-              </div>
-            </button>
-          </div>
+          <p className="text-sm text-slate-400 font-medium tracking-wide uppercase">Secure Portal</p>
         </div>
 
         <div className="px-8 pb-8 pt-4">
           <form onSubmit={handleLogin} className="space-y-5">
-            {activeTab === 'attendance' ? (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Employee ID
+                  Email Address
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Hash className="h-5 w-5 text-slate-400" />
+                    <Mail className="h-5 w-5 text-slate-400" />
                   </div>
                   <input
-                    type="text"
-                    value={data.id}
-                    onChange={(e) => setData('id', e.target.value)}
-                    placeholder="Enter your ID (e.g., 123456)"
+                    type="email"
+                    value={data.email}
+                    onChange={(e) => setData('email', e.target.value)}
+                    placeholder="user@smartattend.com"
                     className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                    required
                   />
                 </div>
-                {errors.id ? (
-                  <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.id}</div>
-                ) : (
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                    Use your 6-digit Employee ID.
-                  </p>
-                )}
+                {errors.email && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.email}</div>}
               </div>
-            ) : (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-slate-400" />
-                    </div>
-                    <input
-                      type="email"
-                      value={data.email}
-                      onChange={(e) => setData('email', e.target.value)}
-                      placeholder="admin@smartattend.com"
-                      className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
-                    />
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-slate-400" />
                   </div>
-                  {errors.email && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.email}</div>}
+                  <input
+                    type="password"
+                    value={data.password}
+                    onChange={(e) => setData('password', e.target.value)}
+                    placeholder="••••••••"
+                    className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                    required
+                  />
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-slate-400" />
-                    </div>
-                    <input
-                      type="password"
-                      value={data.password}
-                      onChange={(e) => setData('password', e.target.value)}
-                      placeholder="••••••••"
-                      className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
-                    />
-                  </div>
-                  {errors.password && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.password}</div>}
-                </div>
+                {errors.password && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.password}</div>}
               </div>
-            )}
 
-            {errors.role && (
-              <div className="rounded-lg bg-rose-50 dark:bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">
-                {errors.role}
+              {/* Role Selection */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Account Role
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <UserCircle className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <select
+                    value={data.role}
+                    onChange={(e) => setData('role', e.target.value)}
+                    className="block w-full appearance-none pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                    required
+                  >
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="super_admin">Administrator</option>
+                  </select>
+                </div>
+                {errors.role && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.role}</div>}
               </div>
-            )}
+            </div>
 
             {status && (
-              <div className="mb-4 font-medium text-sm text-green-600">
+              <div className="mb-4 font-medium text-sm text-emerald-600">
                 {status}
               </div>
             )}
@@ -227,10 +172,20 @@ export default function Login({ settings, status, canResetPassword }: LoginProps
             >
               <div className="flex w-full items-center justify-center rounded-[10px] bg-slate-900/0 py-3 transition-colors group-hover:bg-slate-900/10">
                 {processing ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : null}
-                {activeTab === 'attendance' ? t.enterDashboard : t.loginAsAdmin}
+                Welcome Back
                 <ArrowRight className={`ml-2 h-5 w-5 transition-transform ${processing ? '' : 'group-hover:translate-x-1'}`} />
               </div>
             </button>
+
+            <div className="text-center mt-6">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                New to the platform?{' '}
+                <Link href="/register" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                  Create an account
+                </Link>
+              </p>
+            </div>
+
           </form>
         </div>
       </div>

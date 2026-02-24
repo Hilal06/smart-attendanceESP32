@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { Employee, ProfileRequest } from '../types';
-import { Mail, Phone, MapPin, Briefcase, Calendar, Shield, Send, X, AlertCircle, Clock, CheckCircle, ChevronLeft, ChevronRight, FileText, Search, Loader2 } from 'lucide-react';
+import { Profile as ProfileType, ProfileRequest } from '../types';
+import { Mail, Phone, MapPin, Briefcase, Calendar, Shield, Send, X, AlertCircle, Clock, CheckCircle, ChevronLeft, ChevronRight, FileText, Search, Loader2, Lock } from 'lucide-react';
+import { router } from '@inertiajs/react';
 
 interface ProfileProps {
-  employee: Employee | undefined;
+  profile: ProfileType | undefined;
   requests?: ProfileRequest[];
   onRequestUpdate: (description: string) => void;
   t: any;
+  externalErrors?: Record<string, string>;
 }
 
-export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onRequestUpdate, t }) => {
+export const Profile: React.FC<ProfileProps> = ({ profile, requests = [], onRequestUpdate, t, externalErrors = {} }) => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', new_password_confirmation: '' });
   const [requestDescription, setRequestDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,12 +22,12 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
   const [isProcessing, setIsProcessing] = useState(false);
   const ITEMS_PER_PAGE = 3;
 
-  if (!employee) {
+  if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors duration-200">
         <AlertCircle className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.language === 'id' ? 'Profil Karyawan Tidak Ditemukan' : 'Employee Profile Not Found'}</h3>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">{t.language === 'id' ? 'Silakan masuk dengan ID Karyawan yang valid.' : 'Please log in with a valid Employee ID to view your profile.'}</p>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.language === 'id' ? 'Profil Karyawan Tidak Ditemukan' : 'Profile Profile Not Found'}</h3>
+        <p className="text-slate-500 dark:text-slate-400 mt-2">{t.language === 'id' ? 'Silakan masuk dengan ID Karyawan yang valid.' : 'Please log in with a valid Profile ID to view your profile.'}</p>
       </div>
     );
   }
@@ -44,6 +48,21 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
         setIsProcessing(false);
       }
     }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    router.post('/profile/password', passwordForm, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setIsPasswordModalOpen(false);
+        setPasswordForm({ current_password: '', new_password: '', new_password_confirmation: '' });
+        setIsProcessing(false);
+      },
+      onError: () => setIsProcessing(false),
+      onFinish: () => setIsProcessing(false)
+    });
   };
 
   // Filter and sort requests
@@ -68,9 +87,16 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{t.profile}</h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1">{t.language === 'id' ? 'Lihat informasi pribadi dan pekerjaan Anda.' : 'View your personal and employment information.'}</p>
         </div>
-        <button onClick={() => setIsRequestModalOpen(true)} className="flex items-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-          <Send className="mr-2 h-4 w-4" />{t.requestUpdate}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          {!(profile.role.toLowerCase() === 'student' && !profile.canChangePassword) && (
+            <button onClick={() => setIsPasswordModalOpen(true)} className="flex items-center rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-5 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 hover:-translate-y-0.5 transition-all">
+              <Lock className="mr-2 h-4 w-4" />{t.language === 'id' ? 'Ubah Sandi' : 'Change Password'}
+            </button>
+          )}
+          <button onClick={() => setIsRequestModalOpen(true)} className="flex items-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            <Send className="mr-2 h-4 w-4" />{t.requestUpdate}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -82,11 +108,11 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
             <div className="px-6 pb-8 text-center relative">
               <div className="-mt-16 flex justify-center mb-4">
                 <div className="rounded-full p-1.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-lg transition-transform duration-300 group-hover:scale-105">
-                  <img src={employee.avatar} alt={employee.name} className="h-28 w-28 rounded-full border-2 border-slate-100 dark:border-slate-800 object-cover shadow-sm transition-colors duration-200" />
+                  <img src={profile.avatar} alt={profile.name} className="h-28 w-28 rounded-full border-2 border-slate-100 dark:border-slate-800 object-cover shadow-sm transition-colors duration-200" />
                 </div>
               </div>
-              <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">{employee.name}</h3>
-              <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">{employee.role}</p>
+              <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">{profile.name}</h3>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">{profile.role}</p>
             </div>
           </div>
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-800 shadow-sm transition-all duration-300 hover:shadow-md">
@@ -95,13 +121,13 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
             </h4>
             <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
               <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400">ID</span><span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">{employee.id}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400">ID</span><span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">{profile.id}</span>
               </div>
               <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400">{t.department}</span><span className="font-bold text-slate-900 dark:text-white">{employee.department}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400">{t.department}</span><span className="font-bold text-slate-900 dark:text-white">{profile.department}</span>
               </div>
               <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400">{t.joinDate}</span><span className="font-bold text-slate-900 dark:text-white">{new Date(employee.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400">{t.joinDate}</span><span className="font-bold text-slate-900 dark:text-white">{new Date(profile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</span>
               </div>
             </div>
           </div>
@@ -113,15 +139,15 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm relative">
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-blue-50/80 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Mail className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.emailAddress}</p><p className="font-medium text-slate-900 dark:text-slate-200">{employee.email}</p></div>
+                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.emailAddress}</p><p className="font-medium text-slate-900 dark:text-slate-200">{profile.email}</p></div>
               </div>
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-emerald-50/80 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Phone className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.phoneNumber}</p><p className="font-medium text-slate-900 dark:text-slate-200">{employee.phoneNumber || '-'}</p></div>
+                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.phoneNumber}</p><p className="font-medium text-slate-900 dark:text-slate-200">{profile.phoneNumber || '-'}</p></div>
               </div>
               <div className="md:col-span-2 flex gap-4 items-start group">
                 <div className="p-3 bg-amber-50/80 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><MapPin className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.address}</p><p className="font-medium leading-relaxed text-slate-900 dark:text-slate-200 max-w-xl">{employee.address || '-'}</p></div>
+                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.address}</p><p className="font-medium leading-relaxed text-slate-900 dark:text-slate-200 max-w-xl">{profile.address || '-'}</p></div>
               </div>
             </div>
           </div>
@@ -131,7 +157,7 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-700 dark:text-slate-300">
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-indigo-50/80 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Briefcase className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.position}</p><p className="font-bold text-slate-900 dark:text-slate-100">{employee.role}</p></div>
+                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.position}</p><p className="font-bold text-slate-900 dark:text-slate-100">{profile.role}</p></div>
               </div>
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-rose-50/80 dark:bg-rose-900/30 rounded-xl text-rose-600 dark:text-rose-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Shield className="h-5 w-5" /></div>
@@ -139,14 +165,14 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
               </div>
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-teal-50/80 dark:bg-teal-900/30 rounded-xl text-teal-600 dark:text-teal-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Calendar className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.joinDate}</p><p className="font-bold text-slate-900 dark:text-slate-100">{new Date(employee.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p></div>
+                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.joinDate}</p><p className="font-bold text-slate-900 dark:text-slate-100">{new Date(profile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p></div>
               </div>
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-sky-50/80 dark:bg-sky-900/30 rounded-xl text-sky-600 dark:text-sky-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><CheckCircle className="h-5 w-5" /></div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Status</p>
-                  <p className={`font-bold inline-flex px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider ${employee.status === 'Active' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'}`}>
-                    {employee.status === 'Active' ? t.active : t.onLeave}
+                  <p className={`font-bold inline-flex px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider ${profile.status === 'Active' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'}`}>
+                    {profile.status === 'Active' ? t.active : t.onLeave}
                   </p>
                 </div>
               </div>
@@ -322,6 +348,75 @@ export const Profile: React.FC<ProfileProps> = ({ employee, requests = [], onReq
           </div>
         </div>
       )}
+
+      {/* Change Password Modal */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-all duration-300">
+          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-800 flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 transition-colors backdrop-blur-xl">
+            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 px-6 py-5 shrink-0 rounded-t-2xl z-10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">{t.language === 'id' ? 'Ubah Kata Sandi' : 'Change Password'}</h3>
+              </div>
+              <button
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 transition-all focus:outline-none"
+                disabled={isProcessing}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form id="password-form" onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Kata Sandi Saat Ini' : 'Current Password'} <span className="text-rose-500">*</span></label>
+                <input
+                  required
+                  type="password"
+                  value={passwordForm.current_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                  disabled={isProcessing}
+                  className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${externalErrors['current_password'] ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                />
+                {externalErrors['current_password'] && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {externalErrors['current_password']}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Kata Sandi Baru' : 'New Password'} <span className="text-rose-500">*</span></label>
+                <input
+                  required
+                  type="password"
+                  value={passwordForm.new_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                  disabled={isProcessing}
+                  className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${externalErrors['new_password'] ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                />
+                {externalErrors['new_password'] && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {externalErrors['new_password']}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Konfirmasi Kata Sandi Baru' : 'Confirm New Password'} <span className="text-rose-500">*</span></label>
+                <input
+                  required
+                  type="password"
+                  value={passwordForm.new_password_confirmation}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password_confirmation: e.target.value })}
+                  disabled={isProcessing}
+                  className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                />
+              </div>
+            </form>
+
+            <div className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 px-6 py-4 shrink-0 rounded-b-2xl z-10 flex justify-end space-x-3">
+              <button type="button" onClick={() => setIsPasswordModalOpen(false)} disabled={isProcessing} className="rounded-xl border border-slate-300 dark:border-slate-700 px-5 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm disabled:opacity-50 transition-all">{t.cancel}</button>
+              <button type="submit" form="password-form" disabled={isProcessing} className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-2 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all">
+                {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.language === 'id' ? 'Menyimpan...' : 'Saving...'}</> : (t.language === 'id' ? 'Perbarui Sandi' : 'Update Password')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

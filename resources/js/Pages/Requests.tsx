@@ -2,17 +2,17 @@ import React from 'react';
 import { router } from '@inertiajs/react';
 import AppLayout from '../Layouts/AppLayout';
 import { Requests as RequestsContent } from '../Components/Requests';
-import { ProfileRequest, Employee, Settings, UserRole } from '../types';
+import { ProfileRequest, Profile, Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
 
 interface Props {
   userRole: UserRole;
   settings: Settings;
   requests: ProfileRequest[];
-  employees: Employee[];
+  profiles: Profile[];
 }
 
-export default function Requests({ userRole, settings, requests, employees }: Props) {
+export default function Requests({ userRole, settings, requests, profiles }: Props) {
   const t = TRANSLATIONS[settings.language || 'en'];
 
   const handleResolve = (id: string) => {
@@ -27,7 +27,7 @@ export default function Requests({ userRole, settings, requests, employees }: Pr
     <AppLayout userRole={userRole} settings={settings}>
       <RequestsContent 
         requests={requests}
-        employees={employees}
+        profiles={profiles}
         onResolve={handleResolve}
         onDelete={handleDelete}
         t={t} 
