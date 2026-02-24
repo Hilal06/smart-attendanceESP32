@@ -55,15 +55,18 @@ class AttendanceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
-                'required', 'string', 'email', 'max:255',
+                'required',
+                'string',
+                'email',
+                'max:255',
                 \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
                     return $query->where('role', $request->role);
                 })
             ],
             'password' => [
-                'required', 
-                'string', 
-                'confirmed', 
+                'required',
+                'string',
+                'confirmed',
                 \Illuminate\Validation\Rules\Password::min(8)
                     ->letters()
                     ->mixedCase()
@@ -87,7 +90,7 @@ class AttendanceController extends Controller
                 'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
                 'role' => $validated['role'],
             ]);
-            
+
             // Assign Spatie Role
             $user->assignRole(strtolower($validated['role']));
 
@@ -129,7 +132,7 @@ class AttendanceController extends Controller
         if (\Illuminate\Support\Facades\Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $user = \Illuminate\Support\Facades\Auth::user();
-            
+
             // Map legacy user (user ID 1) or 'super_admin' to 'admin'
             $frontendRole = $user->role;
             if ($user->id === 1 || $user->role === 'super_admin') {
@@ -141,7 +144,7 @@ class AttendanceController extends Controller
             $userId = $profile ? $profile->id : 'admin';
 
             session(['userRole' => $frontendRole, 'userId' => $userId]);
-            
+
             return to_route('dashboard');
         }
 
@@ -164,7 +167,7 @@ class AttendanceController extends Controller
     public function dashboard()
     {
         $settings = Setting::first();
-        
+
         // Auto-seed: If no attendance records exist for TODAY, generate them.
         $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
         $hasToday = Attendance::where('date', $today)->exists();
@@ -188,7 +191,7 @@ class AttendanceController extends Controller
                     continue;
                 }
 
-                $isLate = rand(1, 100) <= 20; 
+                $isLate = rand(1, 100) <= 20;
                 $status = $isLate ? 'Late' : 'Present';
                 $hour = $isLate ? 9 : 8;
                 $minute = $isLate ? rand(15, 45) : rand(45, 59);
@@ -215,28 +218,28 @@ class AttendanceController extends Controller
         // 1. Only fetch active profiles with necessary fields
         // 2. Only fetch attendance for the last 40 days (enough for Month view + buffer)
         $msgDateLimit = now()->setTimezone('Asia/Jakarta')->subDays(40)->format('Y-m-d');
-        
+
         $userRole = session('userRole');
         $userProfileId = session('profileId');
 
         $profilesQuery = Profile::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status');
-        
+
         if ($userRole === 'teacher') {
             $profilesQuery->whereRaw('LOWER(role) = ?', ['student']);
         } elseif ($userRole === 'student') {
             $profilesQuery->where('id', $userProfileId);
         }
-        
+
         $profiles = $profilesQuery->get();
         // Pluck IDs to easily filter attendances
         $profileIds = $profiles->pluck('id')->toArray();
 
         $attendances = Attendance::where('date', '>=', $msgDateLimit)
-                       ->whereIn('profile_id', $profileIds)
-                       ->orderBy('date', 'desc')
-                       ->orderBy('check_in', 'desc')
-                       ->select('id', 'profile_id', 'date', 'check_in', 'check_out', 'status')
-                       ->get();
+            ->whereIn('profile_id', $profileIds)
+            ->orderBy('date', 'desc')
+            ->orderBy('check_in', 'desc')
+            ->select('id', 'profile_id', 'date', 'check_in', 'check_out', 'status')
+            ->get();
 
         return Inertia::render('Dashboard', [
             'userRole' => session('userRole'),
@@ -247,7 +250,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule, // Cast in model handles array
                 'language' => $settings->language,
             ] : null,
-            'profiles' => $profiles->map(function($emp) {
+            'profiles' => $profiles->map(function ($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -262,7 +265,7 @@ class AttendanceController extends Controller
                     'status' => $emp->status,
                 ];
             }),
-            'attendance' => $attendances->map(function($att) {
+            'attendance' => $attendances->map(function ($att) {
                 return [
                     'id' => $att->id,
                     'profileId' => $att->profile_id,
@@ -284,8 +287,8 @@ class AttendanceController extends Controller
 
         $settings = Setting::first();
         $profiles = Profile::with('user')->whereRaw('LOWER(role) != ?', ['student'])
-              ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
-              ->get();
+            ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
+            ->get();
         return Inertia::render('Profiles', [
             'userRole' => session('userRole'),
             'settings' => $settings ? [
@@ -295,7 +298,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule,
                 'language' => $settings->language,
             ] : null,
-            'profiles' => $profiles->map(function($emp) {
+            'profiles' => $profiles->map(function ($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -321,8 +324,8 @@ class AttendanceController extends Controller
 
         $settings = Setting::first();
         $profiles = Profile::with('user')->whereRaw('LOWER(role) = ?', ['student'])
-              ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
-              ->get();
+            ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
+            ->get();
         return Inertia::render('Students', [
             'userRole' => session('userRole'),
             'settings' => $settings ? [
@@ -332,7 +335,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule,
                 'language' => $settings->language,
             ] : null,
-            'profiles' => $profiles->map(function($emp) {
+            'profiles' => $profiles->map(function ($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -359,14 +362,18 @@ class AttendanceController extends Controller
         $data = $request->all();
         // Map camelCase to snake_case
         $updateData = [];
-        if (isset($data['companyName'])) $updateData['company_name'] = $data['companyName'];
-        if (isset($data['lateThresholdMinutes'])) $updateData['late_threshold_minutes'] = $data['lateThresholdMinutes'];
-        if (isset($data['weeklySchedule'])) $updateData['weekly_schedule'] = $data['weeklySchedule'];
-        if (isset($data['language'])) $updateData['language'] = $data['language'];
+        if (isset($data['companyName']))
+            $updateData['company_name'] = $data['companyName'];
+        if (isset($data['lateThresholdMinutes']))
+            $updateData['late_threshold_minutes'] = $data['lateThresholdMinutes'];
+        if (isset($data['weeklySchedule']))
+            $updateData['weekly_schedule'] = $data['weeklySchedule'];
+        if (isset($data['language']))
+            $updateData['language'] = $data['language'];
 
         if (array_key_exists('companyLogo', $data)) {
             $logoData = $data['companyLogo'];
-            
+
             if (empty($logoData)) {
                 $updateData['company_logo'] = null;
             } else {
@@ -384,8 +391,8 @@ class AttendanceController extends Controller
                         }
                     }
                 } else {
-                     // It might be already a URL
-                     $updateData['company_logo'] = $logoData;
+                    // It might be already a URL
+                    $updateData['company_logo'] = $logoData;
                 }
             }
         }
@@ -410,7 +417,10 @@ class AttendanceController extends Controller
             'name' => 'required|string|max:255',
             'role' => 'required|string',
             'email' => [
-                'required', 'string', 'email', 'max:255',
+                'required',
+                'string',
+                'email',
+                'max:255',
                 \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
                     return $query->where('role', $request->role);
                 })
@@ -431,9 +441,11 @@ class AttendanceController extends Controller
         }
 
         $data = $request->all();
-        if (isset($validated['joinDate'])) $data['join_date'] = $validated['joinDate'];
-        if (isset($validated['phoneNumber'])) $data['phone_number'] = $validated['phoneNumber'];
-        
+        if (isset($validated['joinDate']))
+            $data['join_date'] = $validated['joinDate'];
+        if (isset($validated['phoneNumber']))
+            $data['phone_number'] = $validated['phoneNumber'];
+
         if (empty($data['id'])) {
             $data['id'] = (string) rand(100000, 999999);
         }
@@ -486,7 +498,10 @@ class AttendanceController extends Controller
                 'name' => 'required|string|max:255',
                 'role' => 'required|string',
                 'email' => [
-                    'required', 'string', 'email', 'max:255',
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
                     \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
                         return $query->where('role', $request->role);
                     })->ignore($profile->user_id)
@@ -507,8 +522,10 @@ class AttendanceController extends Controller
             }
 
             $data = $request->all();
-            if (isset($validated['joinDate'])) $data['join_date'] = $validated['joinDate'];
-            if (isset($validated['phoneNumber'])) $data['phone_number'] = $validated['phoneNumber'];
+            if (isset($validated['joinDate']))
+                $data['join_date'] = $validated['joinDate'];
+            if (isset($validated['phoneNumber']))
+                $data['phone_number'] = $validated['phoneNumber'];
 
             \Illuminate\Support\Facades\DB::transaction(function () use (&$data, $profile, $validated, $request) {
                 if ($profile->user) {
@@ -551,7 +568,7 @@ class AttendanceController extends Controller
         }
 
         $profile = Profile::with('user')->find($id);
-        
+
         if (!$profile || !$profile->user) {
             return back()->withErrors(['message' => 'Profile or associated user not found.']);
         }
@@ -584,10 +601,10 @@ class AttendanceController extends Controller
                     $oldPath = str_replace('/storage/', '', $profile->avatar);
                     \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
                 }
-                
+
                 $userId = $profile->user_id;
                 $profile->delete();
-                
+
                 if ($userId) {
                     \App\Models\User::destroy($userId);
                 }
@@ -612,7 +629,7 @@ class AttendanceController extends Controller
                 'weeklySchedule' => $settings->weekly_schedule,
                 'language' => $settings->language,
             ] : null,
-            'attendance' => $attendances->map(function($att) {
+            'attendance' => $attendances->map(function ($att) {
                 return [
                     'id' => $att->id,
                     'profileId' => $att->profile_id,
@@ -622,7 +639,7 @@ class AttendanceController extends Controller
                     'status' => $att->status,
                 ];
             }),
-            'profiles' => $profiles->map(function($emp) {
+            'profiles' => $profiles->map(function ($emp) {
                 return [
                     'id' => $emp->id,
                     'name' => $emp->name,
@@ -721,14 +738,14 @@ class AttendanceController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'type' => 'required|string|max:50',
+            'content' => 'required|string',
+            'priority' => 'required|string|max:50',
             'date' => 'required|date',
         ]);
 
         $data = $validated;
         if (!isset($data['id'])) {
-            $data['id'] = (string)time();
+            $data['id'] = (string) time();
         }
         Announcement::create($data);
         return back();
@@ -744,8 +761,8 @@ class AttendanceController extends Controller
         if ($announcement) {
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'type' => 'required|string|max:50',
+                'content' => 'required|string',
+                'priority' => 'required|string|max:50',
                 'date' => 'required|date',
             ]);
             $announcement->update($validated);
@@ -770,19 +787,19 @@ class AttendanceController extends Controller
         }
 
         $settings = Setting::first();
-        
+
         $query = ProfileRequest::with('profile')->orderBy('date', 'desc');
-        
+
         if (session('userRole') === 'teacher') {
-            $query->whereHas('profile', function($q) {
+            $query->whereHas('profile', function ($q) {
                 $q->whereRaw('LOWER(role) = ?', ['student']);
             });
         }
-        
-        $requests = $query->get()->map(function($req) {
-             // Map snake_case to camelCase for frontend
-             $req->profileId = $req->profile_id;
-             return $req;
+
+        $requests = $query->get()->map(function ($req) {
+            // Map snake_case to camelCase for frontend
+            $req->profileId = $req->profile_id;
+            return $req;
         });
 
         // Ensure array if null? get() returns Collection. map() returns Collection.
@@ -798,8 +815,8 @@ class AttendanceController extends Controller
                 'language' => $settings->language,
             ] : null,
             'requests' => $requests,
-            'profiles' => (session('userRole') === 'teacher' ? Profile::whereRaw('LOWER(role) = ?', ['student'])->get() : Profile::all())->map(function($emp) {
-                 return [
+            'profiles' => (session('userRole') === 'teacher' ? Profile::whereRaw('LOWER(role) = ?', ['student'])->get() : Profile::all())->map(function ($emp) {
+                return [
                     'id' => $emp->id,
                     'name' => $emp->name,
                     'role' => $emp->role, // Used in requests view to show role?
@@ -810,7 +827,7 @@ class AttendanceController extends Controller
                     'status' => $emp->status,
                     'avatar' => $emp->avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=random',
                     'email' => $emp->email,
-                 ];
+                ];
             })
         ]);
     }
@@ -824,7 +841,7 @@ class AttendanceController extends Controller
         ]);
 
         $data = $validated;
-        $data['id'] = (string)time();
+        $data['id'] = (string) time();
         $data['profile_id'] = $data['profileId'];
         $data['date'] = Carbon::parse($data['date'])->setTimezone('Asia/Jakarta');
         $data['status'] = 'Pending';
@@ -873,7 +890,7 @@ class AttendanceController extends Controller
     {
         $settings = Setting::first();
         $userId = session('userId');
-        
+
         $user = \Illuminate\Support\Facades\Auth::user();
         if (!$user) {
             return redirect('/login');
@@ -905,7 +922,7 @@ class AttendanceController extends Controller
             'userRole' => session('userRole'),
             'settings' => Setting::first(),
             'profile' => $profileData,
-            'requests' => $requests->map(function($req) {
+            'requests' => $requests->map(function ($req) {
                 return [
                     'id' => $req->id,
                     'profileId' => $req->profile_id,
@@ -940,11 +957,11 @@ class AttendanceController extends Controller
 
         /** @var \App\Models\User $user */
         $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
-        
+
         if (strtolower($user->role) === 'student') {
             $user->can_change_password = false;
         }
-        
+
         $user->save();
 
         return back()->with('message', 'Password updated successfully.');
@@ -1010,14 +1027,14 @@ class AttendanceController extends Controller
         try {
             $microserviceUrl = config('services.python_service.url', 'http://127.0.0.1:5000');
             $response = \Illuminate\Support\Facades\Http::timeout(3)->get($microserviceUrl . '/health');
-            
+
             if ($response->successful()) {
                 return response()->json($response->json());
             }
         } catch (\Exception $e) {
             // Silently catch the exception to return offline status
         }
-        
+
         return response()->json([
             'status' => 'offline',
             'face_rec_available' => false,
@@ -1029,13 +1046,15 @@ class AttendanceController extends Controller
     {
         try {
             $microserviceUrl = config('services.python_service.url', 'http://127.0.0.1:5000');
-            
+
             $response = \Illuminate\Support\Facades\Http::timeout(10)->attach(
-                'file', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
             )->post($microserviceUrl . '/register_face', [
-                'profile_id' => $profileId,
-            ]);
-            
+                        'profile_id' => $profileId,
+                    ]);
+
             if (!$response->successful()) {
                 \Illuminate\Support\Facades\Log::error('Failed to register face data: ' . $response->body());
             }

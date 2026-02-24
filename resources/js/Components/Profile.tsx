@@ -120,14 +120,17 @@ export const Profile: React.FC<ProfileProps> = ({ profile, requests = [], onRequ
               <Clock className="h-3 w-3" /> {t.language === 'id' ? 'Statistik Cepat' : 'Quick Stats'}
             </h4>
             <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
-              <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400">ID</span><span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">{profile.id}</span>
+              <div className="flex justify-between items-start p-2 gap-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <span className="font-medium text-slate-500 dark:text-slate-400 shrink-0 mt-0.5">ID</span>
+                <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md text-right break-words">{profile.id}</span>
               </div>
-              <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400">{t.department}</span><span className="font-bold text-slate-900 dark:text-white">{profile.department}</span>
+              <div className="flex justify-between items-start p-2 gap-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <span className="font-medium text-slate-500 dark:text-slate-400 shrink-0 mt-0.5">{t.department}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-right break-words">{profile.department}</span>
               </div>
-              <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400">{t.joinDate}</span><span className="font-bold text-slate-900 dark:text-white">{new Date(profile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+              <div className="flex justify-between items-start p-2 gap-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <span className="font-medium text-slate-500 dark:text-slate-400 shrink-0 mt-0.5">{t.joinDate}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-right break-words">{new Date(profile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</span>
               </div>
             </div>
           </div>

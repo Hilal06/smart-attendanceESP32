@@ -4,6 +4,8 @@ import { Settings } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { UserPlus, ArrowRight, Fingerprint, Loader2, Mail, Lock, Sun, Moon, User, Briefcase, Phone, MapPin, CheckCircle2, XCircle } from 'lucide-react';
 import zxcvbn from 'zxcvbn';
+import { RoleSelector } from '../Components/Register/RoleSelector';
+import { PasswordStrengthInput } from '../Components/Register/PasswordStrengthInput';
 
 interface RegisterProps {
     settings: Settings;
@@ -163,32 +165,7 @@ export default function Register({ settings }: RegisterProps) {
                     <form onSubmit={handleRegister} className="space-y-5">
 
                         {/* Role Selection */}
-                        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <button
-                                type="button"
-                                onClick={() => setData('role', 'student')}
-                                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 ${data.role === 'student'
-                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                                    : 'border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 hover:border-emerald-300 dark:hover:border-emerald-700'
-                                    }`}
-                            >
-                                <User className="h-6 w-6 mb-2" />
-                                <span className="text-sm font-bold">Student</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setData('role', 'teacher')}
-                                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 ${data.role === 'teacher'
-                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                                    : 'border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 hover:border-emerald-300 dark:hover:border-emerald-700'
-                                    }`}
-                            >
-                                <Briefcase className="h-6 w-6 mb-2" />
-                                <span className="text-sm font-bold">Teacher</span>
-                            </button>
-                        </div>
-                        {errors.role && <div className="text-sm text-rose-600 dark:text-rose-400">{errors.role}</div>}
+                        <RoleSelector role={data.role} setData={setData} error={errors.role} />
 
                         {/* Institutional ID (Dynamic) */}
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -313,110 +290,25 @@ export default function Register({ settings }: RegisterProps) {
                                 {errors.address && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.address}</div>}
                             </div>
 
-                            {/* Password */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Password
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="password"
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        placeholder="••••••••"
-                                        className={`block w-full pl-10 pr-10 rounded-xl border p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all shadow-sm ${data.password && passwordScore < 2
-                                                ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20 bg-rose-50/30 dark:bg-rose-900/10'
-                                                : data.password && passwordScore >= 2
-                                                    ? 'border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-900/10'
-                                                    : 'border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 focus:border-indigo-500 focus:ring-indigo-500/20'
-                                            }`}
-                                        required
-                                    />
-                                    {data.password && (
-                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                            {passwordScore >= 2 ? (
-                                                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                                            ) : (
-                                                <XCircle className="h-5 w-5 text-rose-500" />
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Password Strength UI */}
-                                {data.password && (
-                                    <div className="mt-2 text-xs animate-in fade-in slide-in-from-top-1">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="font-semibold text-slate-600 dark:text-slate-400">
-                                                {getPasswordLabel()}
-                                            </span>
-                                        </div>
-                                        <div className="flex gap-1 h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                            {[...Array(4)].map((_, i) => (
-                                                <div
-                                                    key={i}
-                                                    className={`h-full flex-1 transition-all duration-300 ${i <= passwordScore && passwordScore > 0 ? getPasswordColor() : 'bg-transparent'}`}
-                                                />
-                                            ))}
-                                        </div>
-                                        {passwordFeedback && (
-                                            <p className="mt-1 text-slate-500 dark:text-slate-400">{passwordFeedback}</p>
-                                        )}
-                                        {data.password.length > 0 && data.password.length < 8 && (
-                                            <p className="mt-1 text-rose-500">Password must be at least 8 characters.</p>
-                                        )}
-                                    </div>
-                                )}
-                                {errors.password && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.password}</div>}
-                            </div>
-
-                            {/* Confirm Password */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Confirm Password
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="password"
-                                        value={data.password_confirmation}
-                                        onChange={(e) => setData('password_confirmation', e.target.value)}
-                                        placeholder="••••••••"
-                                        className={`block w-full pl-10 pr-10 rounded-xl border p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all shadow-sm ${passwordsMatch === false
-                                                ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20 bg-rose-50/30 dark:bg-rose-900/10'
-                                                : passwordsMatch === true
-                                                    ? 'border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-900/10'
-                                                    : 'border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 focus:border-indigo-500 focus:ring-indigo-500/20'
-                                            }`}
-                                        required
-                                    />
-                                    {data.password_confirmation && (
-                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                            {passwordsMatch ? (
-                                                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                                            ) : (
-                                                <XCircle className="h-5 w-5 text-rose-500" />
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                {passwordsMatch === false && (
-                                    <p className="mt-2 text-xs text-rose-500 animate-in fade-in">Passwords do not match.</p>
-                                )}
-                            </div>
+                            {/* Passwords */}
+                            <PasswordStrengthInput
+                                data={data}
+                                setData={setData}
+                                errors={errors}
+                                passwordScore={passwordScore}
+                                passwordFeedback={passwordFeedback}
+                                passwordsMatch={passwordsMatch}
+                                getPasswordLabel={getPasswordLabel}
+                                getPasswordColor={getPasswordColor}
+                            />
                         </div>
 
                         <button
                             type="submit"
                             disabled={processing || !isFormValid}
                             className={`group relative flex w-full items-center justify-center rounded-xl p-0.5 font-bold text-white transition-all mt-8 ${isFormValid
-                                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]'
-                                    : 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
+                                ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                                : 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
                                 }`}
                         >
                             <div className={`flex w-full items-center justify-center rounded-[10px] py-3 transition-colors ${isFormValid ? 'bg-slate-900/0 group-hover:bg-slate-900/10' : 'bg-transparent'}`}>
