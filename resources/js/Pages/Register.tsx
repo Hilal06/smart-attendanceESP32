@@ -5,7 +5,8 @@ import { TRANSLATIONS } from '../constants';
 import { UserPlus, ArrowRight, Fingerprint, Loader2, Mail, Lock, Sun, Moon, User, Briefcase, Phone, MapPin, CheckCircle2, XCircle } from 'lucide-react';
 import zxcvbn from 'zxcvbn';
 import { RoleSelector } from '../Components/Register/RoleSelector';
-import { PasswordStrengthInput } from '../Components/Register/PasswordStrengthInput';
+
+const PasswordStrengthInput = React.lazy(() => import('../Components/Register/PasswordStrengthInput').then(module => ({ default: module.PasswordStrengthInput })));
 
 interface RegisterProps {
     settings: Settings;
@@ -291,16 +292,25 @@ export default function Register({ settings }: RegisterProps) {
                             </div>
 
                             {/* Passwords */}
-                            <PasswordStrengthInput
-                                data={data}
-                                setData={setData}
-                                errors={errors}
-                                passwordScore={passwordScore}
-                                passwordFeedback={passwordFeedback}
-                                passwordsMatch={passwordsMatch}
-                                getPasswordLabel={getPasswordLabel}
-                                getPasswordColor={getPasswordColor}
-                            />
+                            <React.Suspense fallback={
+                                <div className="md:col-span-2 p-4 text-center text-slate-500">
+                                    <Loader2 className="animate-spin inline mr-2 h-4 w-4" />
+                                    Loading secure password input...
+                                </div>
+                            }>
+                                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <PasswordStrengthInput
+                                        data={data}
+                                        setData={setData}
+                                        errors={errors}
+                                        passwordScore={passwordScore}
+                                        passwordFeedback={passwordFeedback}
+                                        passwordsMatch={passwordsMatch}
+                                        getPasswordLabel={getPasswordLabel}
+                                        getPasswordColor={getPasswordColor}
+                                    />
+                                </div>
+                            </React.Suspense>
                         </div>
 
                         <button

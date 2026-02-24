@@ -11,7 +11,7 @@ import { ThemeProvider } from './Components/ThemeProvider';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx')),
+    resolve: (name) => resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx', { eager: false })),
     setup({ el, App, props }) {
         const root = createRoot(el);
         root.render(
