@@ -17,8 +17,9 @@ Route::middleware([CheckUserSession::class])->group(function () {
     Route::get('/', [AttendanceController::class, 'dashboard'])->name('dashboard');
 
     // Profiles (Employees/Staff)
-    Route::middleware(['permission:manage users'])->group(function () {
-        Route::get('/profiles', [AttendanceController::class, 'profiles'])->name('profiles');
+    Route::get('/profiles', [AttendanceController::class, 'profiles'])->middleware('permission:manage users')->name('profiles');
+
+    Route::middleware(['permission:manage users|manage students'])->group(function () {
         Route::post('/profiles', [AttendanceController::class, 'storeProfile'])->name('profiles.store');
         Route::put('/profiles/{id}', [AttendanceController::class, 'updateProfile'])->name('profiles.update');
         Route::delete('/profiles/{id}', [AttendanceController::class, 'deleteProfile'])->name('profiles.destroy');

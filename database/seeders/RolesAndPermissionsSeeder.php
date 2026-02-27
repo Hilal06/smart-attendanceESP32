@@ -26,6 +26,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'approve requests',
             'view own attendance',
             'submit requests',
+            'manage students',
         ];
 
         foreach ($permissions as $permission) {
@@ -46,6 +47,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'approve requests',
             'view own attendance',
             'submit requests',
+            'manage students',
         ]);
 
         // 3. Student Role

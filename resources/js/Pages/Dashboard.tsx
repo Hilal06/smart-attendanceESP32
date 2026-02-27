@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function Dashboard({ userRole, settings, profiles, attendance, announcements }: Props) {
-  const t = TRANSLATIONS[settings.language || 'en'];
+  const t = TRANSLATIONS[settings?.language || 'en'];
 
   return (
     <AppLayout userRole={userRole} settings={settings}>

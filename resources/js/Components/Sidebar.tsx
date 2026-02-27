@@ -49,11 +49,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-slate-950 text-slate-300 border-r border-slate-800 transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
         <div className="flex h-full flex-col">
           <div className="flex h-16 shrink-0 items-center justify-start gap-3 border-b border-slate-800/50 px-6">
-            {settings.companyLogo && (
+            {settings?.companyLogo && (
               <img src={settings.companyLogo} alt={settings.companyName} className="h-8 w-8 object-contain rounded-lg border border-slate-700 bg-slate-900 p-0.5 shadow-sm" />
             )}
             <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent truncate flex-1 leading-none pt-1">
-              {settings.companyName || 'SmartAttend'}
+              {settings?.companyName || 'SmartAttend'}
             </h1>
           </div>
 

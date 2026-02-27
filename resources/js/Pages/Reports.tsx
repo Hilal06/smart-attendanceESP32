@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function Reports({ userRole, settings, attendance, profiles }: Props) {
-  const t = TRANSLATIONS[settings.language || 'en'];
+  const t = TRANSLATIONS[settings?.language || 'en'];
 
   return (
     <AppLayout userRole={userRole} settings={settings}>

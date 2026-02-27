@@ -14,7 +14,7 @@ interface Props {
 
 export default function Profile({ userRole, settings, profile, requests }: Props) {
   const { errors } = usePage().props;
-  const t = TRANSLATIONS[settings.language || 'en'];
+  const t = TRANSLATIONS[settings?.language || 'en'];
 
   const handleRequestUpdate = (description: string) => {
     const newRequest = {

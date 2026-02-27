@@ -19,8 +19,14 @@ interface SettingsProps {
 }
 
 export default function Settings({ settings, userRole, admin }: SettingsProps) {
-  const t = TRANSLATIONS[settings.language];
-  const [formData, setFormData] = useState<SettingsType>(settings);
+  const t = TRANSLATIONS[settings?.language || 'en'];
+  const [formData, setFormData] = useState<SettingsType>(settings || {
+    companyName: 'SmartAttend Inc',
+    companyLogo: '',
+    lateThresholdMinutes: 15,
+    language: 'en',
+    weeklySchedule: []
+  });
   const [saved, setSaved] = useState(false);
   const [adminSaved, setAdminSaved] = useState(false);
   const [showAdminConfirm, setShowAdminConfirm] = useState(false);

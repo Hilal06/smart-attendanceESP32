@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function Requests({ userRole, settings, requests, profiles }: Props) {
-  const t = TRANSLATIONS[settings.language || 'en'];
+  const t = TRANSLATIONS[settings?.language || 'en'];
 
   const handleResolve = (id: string) => {
     router.put(`/requests/${id}`, { status: 'Resolved' });

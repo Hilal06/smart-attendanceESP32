@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function Students({ userRole, settings, profiles }: Props) {
-  const t = TRANSLATIONS[settings.language || 'en'];
+  const t = TRANSLATIONS[settings?.language || 'en'];
   const { errors } = usePage().props;
   const [processing, setProcessing] = useState(false);
 

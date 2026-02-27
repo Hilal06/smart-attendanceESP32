@@ -12,7 +12,7 @@ interface Props {
 
 export default function AppLayout({ children, userRole, settings }: Props) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const t = TRANSLATIONS[settings.language || 'en'];
+  const t = TRANSLATIONS[settings?.language || 'en'];
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200 overflow-hidden relative">
@@ -47,10 +47,10 @@ export default function AppLayout({ children, userRole, settings }: Props) {
               <Menu className="h-6 w-6" />
             </button>
             <div className="flex flex-1 justify-center items-center gap-2 px-4">
-              {settings.companyLogo && (
+              {settings?.companyLogo && (
                 <img src={settings.companyLogo} alt={settings.companyName} className="h-8 w-8 object-contain rounded border border-slate-100 dark:border-slate-800 bg-white p-0.5 shadow-sm" />
               )}
-              <span className="text-lg font-bold text-slate-900 dark:text-white truncate">{settings.companyName || 'SmartAttend'}</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white truncate">{settings?.companyName || 'SmartAttend'}</span>
             </div>
             <div className="w-6" />
           </header>

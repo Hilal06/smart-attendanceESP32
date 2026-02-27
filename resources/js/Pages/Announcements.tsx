@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function Announcements({ userRole, settings, announcements }: Props) {
-  const t = TRANSLATIONS[settings.language || 'en'];
+  const t = TRANSLATIONS[settings?.language || 'en'];
 
   const handleAdd = (announcement: Announcement) => {
     router.post('/announcements', announcement);

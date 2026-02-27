@@ -60,25 +60,48 @@ docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### First-Time Setup
-Once the containers are running, generate the key, link storage, and run migrations:
-```bash
-# Generate App Key
-docker compose -f docker-compose.prod.yml exec app php artisan key:generate
+Once the containers are running, generate the app key, link storage, and initialize the database:
 
-# Run Migrations
-docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+1. **Generate App Key**
+   ```bash
+   docker compose -f docker-compose.prod.yml exec app php artisan key:generate
+   ```
 
-# Create public storage link (for Face pictures/avatars)
-docker compose -f docker-compose.prod.yml exec app php artisan storage:link
-```
+2. **Run Migrations**
+   ```bash
+   docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+   ```
 
-## 3. Architecture Note
+3. **Initialize Database Data (Roles, Permissions & Samples)**
+   Run the main seeder to create roles and initial project data:
+   ```bash
+   docker compose -f docker-compose.prod.yml exec app php artisan db:seed --force
+   ```
+
+4. **Create Storage Link**
+   Required for profile pictures and face data:
+   ```bash
+   docker compose -f docker-compose.prod.yml exec app php artisan storage:link
+   ```
+
+## 3. Default Credentials
+The `db:seed` command creates several default accounts for testing purposes:
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin@smartattend.com` | `password123` |
+| **Teacher** | `teacher1@smartattend.com` | `password123` |
+| **Student** | `student1@smartattend.com` | `password123` |
+
+*Note: You can use `teacher1` through `teacher6` and `student1` through `student20`.*
+
+## 4. Architecture Note
 - **App Container**: PHP-FPM, runs the Laravel backend.
 - **Webserver Container**: Nginx, serves the built React frontend assets and proxies Laravel requests.
 - **Python Service Container**: Runs the `face_recognition` models and coordinates images from ESP32.
 - **DB Container**: MariaDB/MySQL server.
 
-## 4. Updates
+## 5. Updates
 To update the application code later:
 ```bash
 git pull origin main

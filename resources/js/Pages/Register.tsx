@@ -13,7 +13,7 @@ interface RegisterProps {
 }
 
 export default function Register({ settings }: RegisterProps) {
-    const t = settings ? TRANSLATIONS[settings.language] : TRANSLATIONS['en'];
+    const t = settings ? TRANSLATIONS[settings?.language] : TRANSLATIONS['en'];
 
     const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -146,7 +146,7 @@ export default function Register({ settings }: RegisterProps) {
                 <div className="p-8 text-center pb-6">
                     {settings?.companyLogo ? (
                         <div className="mx-auto mb-6 flex h-24 w-auto max-w-[200px] items-center justify-center p-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 dark:border-slate-700/50">
-                            <img src={settings.companyLogo} alt={settings.companyName || 'Company Logo'} className="h-full w-full object-contain" />
+                            <img src={settings?.companyLogo} alt={settings?.companyName || 'Company Logo'} className="h-full w-full object-contain" />
                         </div>
                     ) : (
                         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg shadow-emerald-500/30 p-2">
