@@ -135,7 +135,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
             }`}
         >
           <Settings2 className="mr-2 h-4 w-4" />
-          General Options
+          {t.generalOptions}
         </button>
         <button
           onClick={() => setActiveTab('schedule')}
@@ -146,7 +146,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
             }`}
         >
           <Calendar className="mr-2 h-4 w-4" />
-          Weekly Schedule
+          {t.weeklySchedule}
         </button>
         {userRole === 'admin' && (
           <button
@@ -158,7 +158,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
               }`}
           >
             <Shield className="mr-2 h-4 w-4" />
-            Security & Admin
+            {t.securityAdmin}
           </button>
         )}
       </div>
@@ -203,6 +203,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
             showAdminConfirm={showAdminConfirm}
             setShowAdminConfirm={setShowAdminConfirm}
             confirmAdminSubmit={confirmAdminSubmit}
+            t={t}
           />
         )}
       </div>

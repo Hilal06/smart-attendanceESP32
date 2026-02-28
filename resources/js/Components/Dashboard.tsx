@@ -203,20 +203,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
           </div>
         </div>
 
-        <div className="inline-flex rounded-lg bg-slate-200/50 dark:bg-slate-900/50 p-1.5 transition-colors duration-200 border border-slate-200 dark:border-slate-800 shadow-inner">
+        <div className="inline-flex overflow-x-auto custom-scrollbar rounded-lg bg-slate-200/50 dark:bg-slate-900/50 p-1.5 transition-colors duration-200 border border-slate-200 dark:border-slate-800 shadow-inner w-full sm:w-auto">
           {(['Today', 'Weekly', 'Monthly', 'Yearly'] as TimeRange[]).map((range) => (
             <button
               key={range}
               onClick={() => { setTimeRange(range); setActiveStatusFilter('All'); setSearchQuery(''); }}
-              className={`flex items-center gap-2 rounded-md px-4 py-2 text-xs font-bold transition-all ${timeRange === range
+              className={`flex items-center whitespace-nowrap gap-2 rounded-md px-4 py-2 text-xs font-bold transition-all ${timeRange === range
                 ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-300/30 dark:hover:bg-slate-800/30'
                 }`}
             >
-              {range === 'Today' && <Clock className="h-4 w-4" />}
-              {range === 'Weekly' && <CalendarDays className="h-4 w-4" />}
-              {range === 'Monthly' && <CalendarRange className="h-4 w-4" />}
-              {range === 'Yearly' && <Calendar className="h-4 w-4" />}
+              {range === 'Today' && <Clock className="h-4 w-4 shrink-0" />}
+              {range === 'Weekly' && <CalendarDays className="h-4 w-4 shrink-0" />}
+              {range === 'Monthly' && <CalendarRange className="h-4 w-4 shrink-0" />}
+              {range === 'Yearly' && <Calendar className="h-4 w-4 shrink-0" />}
               {range === 'Today' ? (isId ? 'Hari Ini' : 'Today') : range === 'Weekly' ? t.weekly : range === 'Monthly' ? t.monthly : t.yearly}
             </button>
           ))}
@@ -265,8 +265,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} dx={-10} />
                   <Tooltip
                     cursor={{ fill: 'rgba(248, 250, 252, 0.4)' }}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', fontSize: '12px', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)' }}
-                    itemStyle={{ fontWeight: 600 }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', fontSize: '12px', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', color: '#1e293b' }}
+                    labelStyle={{ color: '#334155', fontWeight: 700 }}
+                    itemStyle={{ fontWeight: 600, color: '#475569' }}
                   />
                   <Bar dataKey="Present" fill="url(#colorPresentDash)" radius={[6, 6, 0, 0]} barSize={timeRange === 'Weekly' ? 28 : (timeRange === 'Yearly' ? 24 : 14)} />
                   <Bar dataKey="Late" fill="url(#colorLateDash)" radius={[6, 6, 0, 0]} barSize={timeRange === 'Weekly' ? 28 : (timeRange === 'Yearly' ? 24 : 14)} />

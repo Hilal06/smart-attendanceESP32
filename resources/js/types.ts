@@ -77,7 +77,7 @@ export interface ProfileRequest {
   profileId: string;
   description: string;
   date: string;
-  status: 'Pending' | 'Resolved';
+  status: 'Pending' | 'Approved' | 'Rejected';
 }
 
 export interface AuthUser {

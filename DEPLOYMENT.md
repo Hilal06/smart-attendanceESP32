@@ -108,3 +108,10 @@ git pull origin main
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
 ```
+
+## 6. Future Improvements (Roadmap)
+The following deployment and architecture upgrades are planned for future iterations to ensure enterprise-grade stability:
+- **Automated SSL/TLS (HTTPS)**: Integrate Let's Encrypt (Certbot) directly into the Docker Compose setup for automatic certificate generation and renewal.
+- **Automated Database Backups**: Add a cron-based container (e.g., `spack/mysql-backup`) to daily dump the MariaDB database to the `./storage/backups` directory.
+- **Docker Log Rotation**: Add logging limits (e.g., `max-size: 10m`, `max-file: 3`) to all containers in `docker-compose.prod.yml` to prevent disk space exhaustion.
+- **Python Service Proxy**: Secure the `face-recognition` service by moving it behind the Nginx reverse proxy (to benefit from SSL and potential basic auth), removing the direct `5000:5000` port exposure.

@@ -31,8 +31,22 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
+  // Default to grid on mobile (<= 768px), list on larger screens
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 768 ? 'grid' : 'list'
+  );
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+
+  // Auto-switch view on resize (optional, but good UX: if user hasn't explicitly clicked, but realistically just set once)
+  useEffect(() => {
+    const handleResize = () => {
+      // We only auto-switch if we cross the breakpoint, maybe too aggressive, so let's just use initial state above.
+      // But if requested, we could uncomment logic here.
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -560,7 +574,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredProfiles.map((profile) => (
+          {paginatedProfiles.map((profile) => (
             <div key={profile.id} className="group relative rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-md hover:bg-white/95 dark:hover:bg-slate-900/95 hover:border-indigo-200/50 dark:hover:border-indigo-900/50 transition-all duration-300">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-4">
@@ -668,11 +682,11 @@ export const ProfileList: React.FC<ProfileListProps> = ({
         <div className="rounded-xl border border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="min-w-full lg:min-w-full max-w-full divide-y divide-slate-200/50 dark:divide-slate-800/50">
-              <thead className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md transition-colors duration-300 sticky top-0 z-20 shadow-sm border-b border-white/20 dark:border-slate-800">
-                <tr className="flex items-center justify-between w-full">
+              <thead className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md transition-colors duration-300 sticky top-0 z-20 shadow-sm border-b border-white/20 dark:border-slate-800 flex flex-col">
+                <tr className="grid grid-cols-[2.5fr_1.2fr_1.2fr_120px_140px] items-center w-full px-6 border border-transparent">
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left hidden sm:flex flex-1 min-w-[200px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('name')}
                   >
                     <div className="flex items-center gap-2">
@@ -682,7 +696,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left hidden sm:flex flex-1 min-w-[150px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('role')}
                   >
                     <div className="flex items-center gap-2">
@@ -692,7 +706,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left hidden sm:flex flex-1 min-w-[150px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('department')}
                   >
                     <div className="flex items-center gap-2">
@@ -702,7 +716,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                   </th>
                   <th
                     scope="col"
-                    className="group px-6 py-3 text-left hidden sm:flex flex-shrink-0 min-w-[120px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                     onClick={() => handleSort('status')}
                   >
                     <div className="flex items-center gap-2">
@@ -710,16 +724,16 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                       <SortIcon column="status" />
                     </div>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right hidden sm:block flex-shrink-0 min-w-[120px] text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th scope="col" className="py-3 text-right hidden sm:block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {t.language === 'id' ? 'Aksi' : 'Actions'}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-transparent flex flex-col gap-2 mt-2 transition-colors duration-300 px-1 pb-1">
+              <tbody className="bg-transparent flex flex-col gap-2 mt-2 transition-colors duration-300 pb-1">
                 {paginatedProfiles.length > 0 ? (
                   paginatedProfiles.map((profile) => (
-                    <tr key={profile.id} className="relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between group">
-                      <td className="px-6 py-4 whitespace-nowrap min-w-[200px] flex-1 z-10">
+                    <tr key={profile.id} className="relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 grid grid-cols-[2.5fr_1.2fr_1.2fr_120px_140px] items-center w-full group px-6">
+                      <td className="py-4 whitespace-nowrap z-10">
                         <div className="flex items-center gap-4">
                           <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all duration-300" src={profile.avatar} alt="" />
                           <div>
@@ -728,14 +742,14 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap min-w-[150px] flex-1 z-10">
+                      <td className="py-4 whitespace-nowrap z-10">
                         <div className="text-sm font-semibold text-slate-900 dark:text-slate-300">{profile.role}</div>
                         <div className="text-xs text-slate-500 dark:text-slate-500 font-mono">ID: {profile.id}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap min-w-[150px] flex-1 z-10">
+                      <td className="py-4 whitespace-nowrap z-10">
                         <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{profile.department}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap min-w-[120px] flex-shrink-0 z-10">
+                      <td className="py-4 whitespace-nowrap z-10">
                         <span className={`inline-flex items-center justify-center min-w-[80px] rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider border ${profile.status === ProfileStatus.ACTIVE ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400 shadow-[0_0_15px_-3px_rgba(16,185,129,0.1)]' :
                           profile.status === ProfileStatus.ON_LEAVE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400 shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)]' :
                             'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400 shadow-[0_0_15px_-3px_rgba(244,63,94,0.1)]'
@@ -743,7 +757,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                           {getStatusLabel(profile.status)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex-shrink-0 z-10">
+                      <td className="py-4 whitespace-nowrap text-right text-sm font-medium z-10">
                         <div className="flex items-center justify-end gap-3">
                           {pageType === 'students' && (
                             <button
@@ -808,64 +822,42 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 sm:px-6 rounded-xl shadow-sm transition-colors duration-300 mt-6 overflow-hidden">
-          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between relative z-10">
-            <div>
-              <p className="text-sm text-slate-700 dark:text-slate-300">
-                {t.language === 'id' ? 'Menampilkan' : 'Showing'}{' '}
-                <span className="font-medium">{(currentPage - 1) * getItemsPerPage() + 1}</span>{' '}
-                {t.language === 'id' ? 'hingga' : 'to'}{' '}
-                <span className="font-medium">
-                  {Math.min(currentPage * getItemsPerPage(), filteredProfiles.length)}
-                </span>{' '}
-                {t.language === 'id' ? 'dari' : 'of'}{' '}
-                <span className="font-medium">{filteredProfiles.length}</span>{' '}
-                {t.language === 'id' ? 'hasil' : 'results'}
-              </p>
-            </div>
-            <div>
-              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
-                >
-                  <span className="sr-only">Previous</span>
-                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                </button>
-                <div className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 dark:text-white ring-1 ring-inset ring-slate-300 dark:ring-slate-600">
-                  {currentPage} / {totalPages}
-                </div>
-                <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
-                >
-                  <span className="sr-only">Next</span>
-                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                </button>
-              </nav>
-            </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-4 sm:px-6 rounded-xl shadow-sm transition-colors duration-300 mt-6 overflow-hidden gap-4">
+          <div className="w-full flex justify-center sm:justify-start sm:w-auto">
+            <p className="text-sm text-slate-700 dark:text-slate-300 text-center sm:text-left">
+              {t.language === 'id' ? 'Menampilkan' : 'Showing'}{' '}
+              <span className="font-medium">{(currentPage - 1) * getItemsPerPage() + 1}</span>{' '}
+              {t.language === 'id' ? 'hingga' : 'to'}{' '}
+              <span className="font-medium">
+                {Math.min(currentPage * getItemsPerPage(), filteredProfiles.length)}
+              </span>{' '}
+              {t.language === 'id' ? 'dari' : 'of'}{' '}
+              <span className="font-medium">{filteredProfiles.length}</span>{' '}
+              {t.language === 'id' ? 'hasil' : 'results'}
+            </p>
           </div>
-          {/* Mobile simplistic pagination */}
-          <div className="flex flex-1 justify-between sm:hidden">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" /> Previous
-            </button>
-            <span className="text-sm flex items-center text-slate-600 dark:text-slate-400 font-medium">
-              {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="relative inline-flex items-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
-            >
-              Next <ChevronRight className="ml-1 h-4 w-4" />
-            </button>
+          <div className="w-full sm:w-auto flex justify-center sm:justify-end">
+            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-l-md px-3 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              </button>
+              <div className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 dark:text-white ring-1 ring-inset ring-slate-300 dark:ring-slate-600 bg-white/50 dark:bg-slate-800/50">
+                {currentPage} / {totalPages}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center rounded-r-md px-3 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 focus:z-20 focus:outline-offset-0 disabled:opacity-50 transition-colors"
+                aria-label="Next"
+              >
+                <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </nav>
           </div>
         </div>
       )}

@@ -16,7 +16,11 @@ export default function Requests({ userRole, settings, requests, profiles }: Pro
   const t = TRANSLATIONS[settings?.language || 'en'];
 
   const handleResolve = (id: string) => {
-    router.put(`/requests/${id}`, { status: 'Resolved' });
+    router.put(`/requests/${id}`, { status: 'Approved' });
+  };
+
+  const handleReject = (id: string) => {
+    router.put(`/requests/${id}`, { status: 'Rejected' });
   };
 
   const handleDelete = (id: string) => {
@@ -25,12 +29,13 @@ export default function Requests({ userRole, settings, requests, profiles }: Pro
 
   return (
     <AppLayout userRole={userRole} settings={settings}>
-      <RequestsContent 
+      <RequestsContent
         requests={requests}
         profiles={profiles}
         onResolve={handleResolve}
+        onReject={handleReject}
         onDelete={handleDelete}
-        t={t} 
+        t={t}
       />
     </AppLayout>
   );

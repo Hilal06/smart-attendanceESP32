@@ -49,10 +49,10 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ formData, t, set
                     type="button"
                     onClick={copyMondayToWeekdays}
                     className="flex items-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                    title="Copy Monday's schedule to Tuesday-Friday"
+                    title={t.copyMonday || "Copy Monday's schedule to Tuesday-Friday"}
                 >
                     <Copy className="mr-2 h-4 w-4" />
-                    Copy Monday to Weekdays
+                    {t.copyMonday || 'Copy Monday to Weekdays'}
                 </button>
             </div>
 
@@ -60,9 +60,9 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ formData, t, set
                 <table className="min-w-full divide-y divide-slate-200/50 dark:divide-slate-700/50">
                     <thead className="bg-white/50 dark:bg-slate-800/50 transition-colors duration-300">
                         <tr>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Day</th>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Hours</th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t.day || 'Day'}</th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t.status || 'Status'}</th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">{t.hours || 'Hours'}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200/50 dark:divide-slate-700/50 transition-colors duration-300 bg-transparent">
@@ -80,9 +80,9 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ formData, t, set
                                                 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 ring-slate-200 dark:ring-slate-700'
                                             }`}
                                     >
-                                        <option value="Work Day">Work Day</option>
-                                        <option value="Holiday">Holiday</option>
-                                        <option value="Off Day">Off Day</option>
+                                        <option value="Work Day">{t.workDay || 'Work Day'}</option>
+                                        <option value="Holiday">{t.holiday || 'Holiday'}</option>
+                                        <option value="Off Day">{t.offDay || 'Off Day'}</option>
                                     </select>
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap hidden sm:flex items-center gap-2">

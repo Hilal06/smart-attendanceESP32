@@ -277,8 +277,9 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} interval={timeRange === 'Monthly' ? 2 : 0} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', fontSize: '13px', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}
-                  itemStyle={{ fontWeight: 600 }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', fontSize: '13px', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)', color: '#1e293b' }}
+                  labelStyle={{ color: '#334155', fontWeight: 700 }}
+                  itemStyle={{ fontWeight: 600, color: '#475569' }}
                 />
                 <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '16px', fontWeight: 500 }} />
                 <Bar dataKey="Present" name={t.present} stackId="a" fill="url(#colorPresent)" radius={[0, 0, 4, 4]} />
@@ -307,7 +308,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
                   >
                     {statusStats.data.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />))}
                   </Pie>
-                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', color: '#1e293b', backgroundColor: 'rgba(255,255,255,0.95)' }} itemStyle={{ color: '#475569' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -403,8 +404,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
                   const emp = getProfile(record.profileId);
                   return (
                     <tr key={record.id} className="group relative bg-white/60 dark:bg-slate-800/60 shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                      <td colSpan={0} className="p-0 z-0"><div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-l-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 scale-y-50 group-hover:scale-y-100"></div></td>
-                      <td className="px-6 py-4 rounded-l-2xl text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap relative z-10">{record.date}</td>
+                      <td className="px-6 py-4 rounded-l-2xl text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap relative z-10"><div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-l-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 scale-y-50 group-hover:scale-y-100 pointer-events-none"></div>{record.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap relative z-10"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover mr-4 ring-2 ring-white/50 dark:ring-slate-800/50 shadow-sm" src={emp?.avatar} alt="" /><div><p className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{emp?.name || 'Unknown'}</p><p className="text-xs font-medium text-slate-500 dark:text-slate-400">{emp?.role}</p></div></div></td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-400 text-sm font-medium relative z-10">{emp?.department || '-'}</td>
                       <td className="px-6 py-4 whitespace-nowrap relative z-10"><span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold shadow-sm border ${record.status === AttendanceStatus.PRESENT ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400' : record.status === AttendanceStatus.LATE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400' : record.status === AttendanceStatus.ABSENT ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400' : 'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-500/10 dark:border-slate-700/50 dark:text-slate-300'}`}>{record.status === AttendanceStatus.PRESENT ? t.present : record.status === AttendanceStatus.LATE ? t.late : record.status === AttendanceStatus.ABSENT ? t.absent : t.onLeave}</span></td>

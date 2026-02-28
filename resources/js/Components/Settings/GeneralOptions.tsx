@@ -154,7 +154,7 @@ export const GeneralOptions: React.FC<GeneralOptionsProps> = ({ formData, errors
                                     </button>
                                 )}
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Recommended size: 200x50px. Max 2MB.</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{t.recommendedSize || 'Recommended size: 200x50px. Max 2MB.'}</p>
                         </div>
                     </div>
                 </div>
@@ -176,7 +176,7 @@ export const GeneralOptions: React.FC<GeneralOptionsProps> = ({ formData, errors
                     {errors.lateThresholdMinutes ? (
                         <p className="mt-1 text-xs text-rose-500">{errors.lateThresholdMinutes}</p>
                     ) : (
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Grace period before marking as late.</p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t.gracePeriod || 'Grace period before marking as late.'}</p>
                     )}
                 </div>
             </div>

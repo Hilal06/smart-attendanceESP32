@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
 import { Transition } from '@headlessui/react';
 import { ProfileRequest, Profile } from '../types';
-import { Inbox, CheckCircle, Trash2, Calendar, Clock, AlertCircle, Search, CheckCircle2 } from 'lucide-react';
+import { Inbox, CheckCircle, Trash2, Calendar, Clock, AlertCircle, Search, CheckCircle2, XCircle } from 'lucide-react';
 
 interface RequestsProps {
   requests: ProfileRequest[];
   profiles: Profile[];
   onResolve: (id: string) => void;
+  onReject: (id: string) => void;
   onDelete: (id: string) => void;
   t: any;
 }
 
-export const Requests: React.FC<RequestsProps> = ({ requests = [], profiles = [], onResolve, onDelete, t }) => {
+export const Requests: React.FC<RequestsProps> = ({ requests = [], profiles = [], onResolve, onReject, onDelete, t }) => {
   const getProfile = (id: string) => profiles.find(e => e.id === id);
   const isId = t.dashboard === 'Dasbor'; // Simple locale detection based on translation
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Resolved'>('All');
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Approved' | 'Rejected'>('All');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
@@ -42,6 +43,10 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], profiles = []
     onResolve(id);
     setShowSuccessToast(true);
     setTimeout(() => setShowSuccessToast(false), 3000);
+  };
+
+  const handleRejectRequest = (id: string) => {
+    onReject(id);
   };
 
   const confirmDeleteRequest = () => {
@@ -74,17 +79,18 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], profiles = []
           </div>
 
           <div className="flex p-1 space-x-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-            {(['All', 'Pending', 'Resolved'] as const).map(status => (
+            {(['All', 'Pending', 'Approved', 'Rejected'] as const).map(status => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filterStatus === status
-                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
                   }`}
               >
                 {status === 'All' ? (isId ? 'Semua' : 'All') :
-                  status === 'Pending' ? t.pending : t.resolved}
+                  status === 'Pending' ? t.pending :
+                    status === 'Approved' ? t.approved : t.rejected}
               </button>
             ))}
           </div>
@@ -156,22 +162,33 @@ export const Requests: React.FC<RequestsProps> = ({ requests = [], profiles = []
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border transition-colors ${request.status === 'Pending'
                           ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/50'
-                          : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50'
+                          : request.status === 'Approved'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50'
+                            : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-800/50'
                           }`}>
-                          {request.status === 'Pending' ? <Clock className="mr-1 h-3 w-3" /> : <CheckCircle className="mr-1 h-3 w-3" />}
-                          {request.status === 'Pending' ? t.pending : t.resolved}
+                          {request.status === 'Pending' ? <Clock className="mr-1 h-3 w-3" /> : request.status === 'Approved' ? <CheckCircle className="mr-1 h-3 w-3" /> : <XCircle className="mr-1 h-3 w-3" />}
+                          {request.status === 'Pending' ? t.pending : request.status === 'Approved' ? t.approved : t.rejected}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
                           {request.status === 'Pending' && (
-                            <button
-                              onClick={() => handleResolveRequest(request.id)}
-                              className="p-1.5 rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100 dark:hover:border-emerald-800/50 transition-all"
-                              title={t.markResolved}
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleResolveRequest(request.id)}
+                                className="p-1.5 rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100 dark:hover:border-emerald-800/50 transition-all"
+                                title={t.markResolved}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleRejectRequest(request.id)}
+                                className="p-1.5 rounded-md text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 border border-transparent hover:border-rose-100 dark:hover:border-rose-800/50 transition-all"
+                                title={t.markRejected}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </button>
+                            </>
                           )}
                           <button
                             onClick={() => setDeleteConfirmId(request.id)}
