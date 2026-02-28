@@ -35,12 +35,13 @@ Designed for seamless integration with **ESP32-CAM** devices for contactless, fa
 
 | Component | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Backend** | **Laravel** | `12.x` | Core PHP framework, Web Routing, Authentication, and the backend API logic. |
-| **Frontend** | **React** | `19.x` | Modern component-based frontend framework powered by Vite. |
-| **Bridge** | **Inertia.js** | `2.x` | Bridges the Monolith gap allowing React views to be server-driven via Laravel. |
-| **UI Styling** | **Tailwind CSS** | `4.x` | The latest version of the utility-first CSS framework for rapid and modern styling. |
+| **Backend** | **Laravel** | `12.x` | Core PHP framework, API logic, and backend routing. |
+| **Frontend** | **React** | `19.2` | Modern component-based frontend framework powered by Vite. |
+| **Bridge** | **Inertia.js** | `2.3` | Bridges the Monolith gap allowing React views to be server-driven via Laravel. |
+| **UI Styling** | **Tailwind CSS** | `4.1` | The latest version of the utility-first CSS framework for rapid and modern styling. |
 | **Database** | **MySQL** | `8.0` | Secure and robust persistent relational storage mapping back to Laravel Eloquent models. |
 | **Recognition** | **Python (Flask)** | `3.10` | Face recognition microservice using `face_recognition` and OpenCV. |
+| **AI Insights**| **Google GenAI** | `1.42` | Generative AI integration for textual attendance analytics (`@google/genai`). |
 | **Container** | **Docker** | `27.x` | Containerization and orchestration for automated production-ready delivery. |
 
 ---
@@ -61,8 +62,9 @@ Docker is the recommended way to run SmartAttend as it seamlessly networks the P
 2.  **Configure .env Variables**
     Open `.env` and set:
     - `APP_ENV=production`
-    - `DB_HOST=db` (Crucial for Docker bridge networking)
+    - `DB_HOST=smart-attendance-db` (Crucial for Docker bridge networking)
     - `GEMINI_API_KEY=your_key_here` (If you want AI insights)
+    - `SYSTEM_API_KEY=your_secret_system_key` (For Python -> Laravel communication)
 
 3.  **Run Containers**
     This builds out Nginx, PHP-FPM, MySQL, and the Python microservice all at once.
@@ -84,31 +86,33 @@ Docker is the recommended way to run SmartAttend as it seamlessly networks the P
 
 **Prerequisites**: PHP 8.2+, Node.js 20+, MySQL, Python 3.10+ (with Visual C++ Build Tools on Windows).
 
-1.  **Install PHP & Node Dependencies**
+1.  **Clone & Configure Environment**
     ```bash
-    composer install
-    npm install
+    git clone https://github.com/hilal06/smart-attendanceESP32.git
+    cd smart-attendanceESP32
+    cp .env.example .env
     ```
 
-2.  **Configure Database**
-    Update `.env` with your local MySQL credentials (`DB_HOST=127.0.0.1`).
+2.  **Configure Database & Keys in `.env`**
+    Update `.env` with your local MySQL credentials (`DB_HOST=127.0.0.1`), and set `GEMINI_API_KEY` and `SYSTEM_API_KEY`.
 
-3.  **Run Migrations & Seed**
+3.  **Install & Setup Backend**
     ```bash
-    php artisan migrate --seed
-    php artisan storage:link
+    composer run setup
+    # This composer script automatically runs:
+    # composer install, key:generate, migrate --force, npm install, and npm run build.
     ```
+    *Alternatively, run `composer install` and `npm install` manually.*
 
 4.  **Start Services**
     ```bash
-    # Terminal 1 - Backend
-    php artisan serve
+    # Terminal 1 - Backend & Frontend (Local Dev Server)
+    composer run dev 
     
-    # Terminal 2 - Frontend
-    npm run dev
-    
-    # Terminal 3 - Face Recognition
+    # Terminal 2 - Face Recognition (Python Microservice)
     cd python_service
+    python -m venv venv
+    source venv/bin/activate # (Or venv\Scripts\activate on Windows)
     pip install -r requirements.txt
     python app.py
     ```
@@ -119,10 +123,10 @@ Docker is the recommended way to run SmartAttend as it seamlessly networks the P
 
 The system uses a dedicated Python microservice for heavy AI lifting.
 
-1.  **Enrollment**: Upload a photo in the 'face data' upload box when creating or editing a profile on the dashboard. This auto-saves to `/python_service/known_faces`.
+1.  **Enrollment**: Upload a photo in the 'face data' upload box when creating or editing a profile on the dashboard. This auto-saves to `/python_service/known_faces` and automatically triggers an encoder reload.
 2.  **ESP32 Action**: The ESP32-CAM captures an image on hardware trigger and POSTs it to the Python service.
-3.  **Matching**: The service uses Dlib HOG layers to compare the captured face with the uploaded avatars.
-4.  **Attendance**: If a match is found (e.g., ID `123456`), the Python service talks directly to the Laravel API securely via a generated system key to log the attendance.
+3.  **Matching**: The service uses Dlib HOG layers to compare the captured face with the uploaded datasets.
+4.  **Attendance**: If a match is found (e.g., ID `123456`), the Python service talks directly to the Laravel API securely via the `SYSTEM_API_KEY` to log the attendance.
 
 **Troubleshooting Hot-Reloads**:
 If you manually dump images into the `/known_faces` folder via FTP instead of the UI, they won't be recognized until you trigger an encoding reload:
