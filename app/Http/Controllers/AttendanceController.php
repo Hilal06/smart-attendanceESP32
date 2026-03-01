@@ -500,9 +500,13 @@ class AttendanceController extends Controller
             Profile::create($data);
         });
 
+        $faceRegistrationMessage = null;
         // Handle Face Data Upload outside DB transaction since it calls external API
         if ($request->hasFile('face_data')) {
-            $this->registerFaceData($data['id'], $request->file('face_data'));
+            $registrationResult = $this->registerFaceData($data['id'], $request->file('face_data'));
+            if (!$registrationResult['success']) {
+                $faceRegistrationMessage = $registrationResult['message'];
+            }
         }
 
         $msg = 'Profile created successfully';
@@ -511,6 +515,11 @@ class AttendanceController extends Controller
         } else {
             $msg .= '.';
         }
+
+        if ($faceRegistrationMessage) {
+            $msg .= ' However, face registration failed: ' . $faceRegistrationMessage;
+        }
+
         return back()->with('message', $msg);
     }
 
@@ -619,11 +628,21 @@ class AttendanceController extends Controller
                 $profile->update($data);
             });
 
+            $faceRegistrationMessage = null;
             if ($request->hasFile('face_data')) {
-                $this->registerFaceData($profile->id, $request->file('face_data'));
+                $registrationResult = $this->registerFaceData($profile->id, $request->file('face_data'));
+                if (!$registrationResult['success']) {
+                    $faceRegistrationMessage = $registrationResult['message'];
+                }
             }
+
+            $msg = 'Profile updated successfully.';
+            if ($faceRegistrationMessage) {
+                $msg .= ' However, face registration failed: ' . $faceRegistrationMessage;
+            }
+
+            return back()->with('message', $msg);
         }
-        return back()->with('message', 'Profile updated successfully.');
     }
 
     public function togglePasswordPermission($id)
@@ -1041,6 +1060,14 @@ class AttendanceController extends Controller
 
     public function storeAttendanceApi(Request $request)
     {
+        // Simple API Key Validation
+        $expectedKey = config('services.python_service.api_key', env('API_KEY', '1234567890'));
+        $providedKey = $request->header('X-API-KEY');
+
+        if ($providedKey !== $expectedKey) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized. Invalid API Key.'], 401);
+        }
+
         $request->validate([
             'profile_id' => 'required|exists:profiles,id',
         ]);
@@ -1125,11 +1152,17 @@ class AttendanceController extends Controller
                         'profile_id' => $profileId,
                     ]);
 
-            if (!$response->successful()) {
+            if ($response->successful()) {
+                return ['success' => true, 'message' => 'Face registered successfully.'];
+            } else {
                 \Illuminate\Support\Facades\Log::error('Failed to register face data: ' . $response->body());
+                $errorBody = json_decode($response->body(), true);
+                $errorMessage = isset($errorBody['message']) ? $errorBody['message'] : 'The face recognition service returned an error.';
+                return ['success' => false, 'message' => $errorMessage];
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Exception registering face data: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'The face recognition microservice is offline or unreachable.'];
         }
     }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Profile, ProfileStatus, AttendanceRecord } from '../types';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { generateProfilePerformanceSummary } from '../services/geminiService';
 import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter, Loader2, AlertTriangle, Upload, Camera, ChevronRight, ChevronLeft, CheckCircle2, User, LayoutGrid, List, ArrowUpDown, Lock, Unlock } from 'lucide-react';
 
@@ -45,6 +45,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
+  const { flash } = usePage().props as any;
 
   // Default to grid on mobile (<= 768px), list on larger screens
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
@@ -141,8 +142,12 @@ export const ProfileList: React.FC<ProfileListProps> = ({
   useEffect(() => {
     if (prevProcessing.current && !isProcessing && Object.keys(externalErrors).length === 0) {
       // Operation finished successfully
-      const successMsg = t.language === 'id' ? 'Operasi berhasil diselesaikan' : 'Operation completed successfully';
-      showToast(successMsg, 'success');
+      const defaultSuccessMsg = t.language === 'id' ? 'Operasi berhasil diselesaikan' : 'Operation completed successfully';
+      const successMsg = flash?.message || defaultSuccessMsg;
+
+      // If the message contains "failed", it's a partial success but warrants an error/warning toast
+      const isWarning = successMsg.toLowerCase().includes('failed');
+      showToast(successMsg, isWarning ? 'error' : 'success');
 
       setIsDeleteConfirmOpen(false);
       setIsFormModalOpen(false);

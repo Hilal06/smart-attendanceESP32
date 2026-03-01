@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 import numpy as np
 import requests
+import shutil
 
 # Optional: Face Recognition
 try:
@@ -178,6 +179,29 @@ def register_face():
             
             file.save(file_path)
             
+            # --- NEW: Verify face exists in the image ---
+            if FACE_RECOGNITION_AVAILABLE:
+                try:
+                    loaded_image = face_recognition.load_image_file(file_path)
+                    face_locations = face_recognition.face_locations(loaded_image)
+                    
+                    if len(face_locations) == 0:
+                        # No face found! Move to rejected_faces for debugging
+                        rejected_path = os.path.join(BASE_DIR, "rejected_faces", f"rejected_no_face_{profile_id}.jpg")
+                        shutil.copy2(file_path, rejected_path)
+                        os.remove(file_path)
+                        return jsonify({"status": "error", "message": "No face detected in the image. Please provide a clearer photo."}), 400
+                    elif len(face_locations) > 1:
+                        # Multiple faces found
+                        rejected_path = os.path.join(BASE_DIR, "rejected_faces", f"rejected_multi_face_{profile_id}.jpg")
+                        shutil.copy2(file_path, rejected_path)
+                        os.remove(file_path)
+                        return jsonify({"status": "error", "message": "Multiple faces detected. Please provide a photo with only one person."}), 400
+                except Exception as eval_e:
+                    os.remove(file_path)
+                    return jsonify({"status": "error", "message": f"Failed to process image for face detection: {eval_e}"}), 400
+            # --- END NEW ---
+
             # Reload known faces to include the new/updated one
             global known_face_encodings, known_face_names
             known_face_encodings = []

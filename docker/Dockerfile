@@ -42,6 +42,9 @@ COPY . /var/www
 COPY --from=vendor /app/vendor /var/www/vendor
 COPY --from=frontend /app/public/build /var/www/public/build
 
+# Increase PHP Upload Limits
+RUN echo "upload_max_filesize = 10M\npost_max_size = 10M" > /usr/local/etc/php/conf.d/uploads.ini
+
 # Permissions
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage /var/www/bootstrap/cache

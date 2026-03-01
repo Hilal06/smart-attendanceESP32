@@ -32,6 +32,8 @@ services:
       - "443:443"
     depends_on:
       - app
+    volumes:
+      - ./storage:/var/www/storage
     networks:
       - smart-attendance-network
 
@@ -63,8 +65,9 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./storage/app/public/avatars:/app/known_faces
+      - ./python_service/known_faces:/app/known_faces
       - ./python_service/uploads:/app/uploads
+      - ./python_service/rejected_faces:/app/rejected_faces
     networks:
       - smart-attendance-network
 
