@@ -23,6 +23,8 @@ class Profile extends Model
         'status',
         'student_id',
         'teacher_id',
+        'class',
+        'age',
     ];
 
     public function user()

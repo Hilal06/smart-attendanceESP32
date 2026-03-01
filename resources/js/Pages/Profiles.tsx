@@ -26,6 +26,13 @@ export default function Profiles({ userRole, settings, profiles }: Props) {
       data.face_data = faceDataFile;
     }
 
+    // Clean undefined values preventing FormData from sending "undefined" string
+    Object.keys(data).forEach(key => {
+      if (data[key] === undefined) {
+        delete data[key];
+      }
+    });
+
     router.post('/profiles', data, {
       forceFormData: !!avatarFile || !!faceDataFile,
       onFinish: () => setProcessing(false),
@@ -50,6 +57,13 @@ export default function Profiles({ userRole, settings, profiles }: Props) {
       data.face_data = faceDataFile;
     }
 
+    // Clean undefined values preventing FormData from sending "undefined" string
+    Object.keys(data).forEach(key => {
+      if (data[key] === undefined) {
+        delete data[key];
+      }
+    });
+
     if (avatarFile || faceDataFile) {
       data._method = 'put';
       router.post(`/profiles/${emp.id}`, data, {
@@ -60,7 +74,6 @@ export default function Profiles({ userRole, settings, profiles }: Props) {
         }
       });
     } else {
-      const data: any = { ...emp };
       router.put(`/profiles/${emp.id}`, data, {
         onFinish: () => setProcessing(false),
         onError: () => {

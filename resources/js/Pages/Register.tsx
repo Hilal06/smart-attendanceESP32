@@ -53,6 +53,8 @@ export default function Register({ settings }: RegisterProps) {
         phone_number: '',
         address: '',
         institutional_id: '',
+        class: '',
+        age: '',
     });
 
     // Real-time password validation
@@ -186,6 +188,49 @@ export default function Register({ settings }: RegisterProps) {
                                 />
                             </div>
                             {errors.institutional_id && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.institutional_id}</div>}
+                        </div>
+
+                        {data.role === 'student' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Class
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Briefcase className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={data.class}
+                                        onChange={(e) => setData('class', e.target.value.replace(/[^a-zA-Z0-9\s-]/g, ''))}
+                                        maxLength={20}
+                                        placeholder="e.g. 10A, CS101"
+                                        className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
+                                    />
+                                </div>
+                                {errors.class && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.class}</div>}
+                            </div>
+                        )}
+
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Age
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-slate-400" />
+                                </div>
+                                <input
+                                    type="number"
+                                    value={data.age}
+                                    onChange={(e) => setData('age', e.target.value)}
+                                    placeholder="e.g. 15, 30"
+                                    className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
+                                    min="0"
+                                    max="150"
+                                />
+                            </div>
+                            {errors.age && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.age}</div>}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-bottom-3 duration-400">

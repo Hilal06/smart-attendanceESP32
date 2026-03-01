@@ -19,6 +19,20 @@ type ToastType = 'success' | 'error';
 type ViewMode = 'grid' | 'list';
 type SortConfig = { key: keyof Profile; direction: 'asc' | 'desc' } | null;
 
+const AvatarWithSkeleton = ({ src, alt, className = '' }: { src: string, alt: string, className?: string }) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className={`relative overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0 ${!loaded ? 'animate-pulse' : ''} ${className}`}>
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+};
+
 export const ProfileList: React.FC<ProfileListProps> = ({
   profiles,
   onAddProfile,
@@ -83,11 +97,13 @@ export const ProfileList: React.FC<ProfileListProps> = ({
     department: '',
     email: '',
     phoneNumber: '',
-    address: '',
     avatar: '',
-    // Default to WIB date
     joinDate: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }),
     status: ProfileStatus.ACTIVE,
+    class: '',
+    age: undefined,
+    password: '',
+    password_confirmation: '',
   };
 
   const [formData, setFormData] = useState<Profile>(initialFormState);
@@ -226,6 +242,12 @@ export const ProfileList: React.FC<ProfileListProps> = ({
       error = `${t.position} ${t.errorRequired}`;
     } else if (name === 'department' && !value.trim()) {
       error = `${t.department} ${t.errorRequired}`;
+    } else if (name === 'password') {
+      if (!isEditMode && (!value || value.length < 8)) error = t.language === 'id' ? 'Kata sandi minimal 8 karakter' : 'Password must be at least 8 characters';
+      else if (isEditMode && value && value.length < 8) error = t.language === 'id' ? 'Kata sandi minimal 8 karakter' : 'Password must be at least 8 characters';
+    } else if (name === 'password_confirmation') {
+      if (!isEditMode && value !== formData.password) error = t.language === 'id' ? 'Konfirmasi kata sandi tidak cocok' : 'Password confirmation does not match';
+      else if (isEditMode && formData.password && value !== formData.password) error = t.language === 'id' ? 'Konfirmasi kata sandi tidak cocok' : 'Password confirmation does not match';
     }
 
     setErrors(prev => {
@@ -250,7 +272,11 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    let finalValue: any = value;
+    if (name === 'age') {
+      finalValue = value === '' ? undefined : parseInt(value, 10);
+    }
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
     if (errors[name]) {
       validateField(name, value);
     }
@@ -331,7 +357,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
   };
 
   const openAddModal = () => {
-    setFormData({ ...initialFormState, role: pageType === 'students' ? 'student' : '' });
+    setFormData({ ...initialFormState, role: pageType === 'students' ? 'student' : '', class: '', age: undefined });
     setAvatarFile(null);
     setFaceDataFile(null);
     setFaceDataPreview(null);
@@ -342,7 +368,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
   };
 
   const openEditModal = (profile: Profile) => {
-    setFormData({ ...profile });
+    setFormData({ ...profile, class: profile.class || '', age: profile.age || undefined });
     setAvatarFile(null);
     setFaceDataFile(null);
     setFaceDataPreview(null);
@@ -359,8 +385,10 @@ export const ProfileList: React.FC<ProfileListProps> = ({
     const emailValid = validateField('email', formData.email);
     const roleValid = validateField('role', formData.role);
     const deptValid = validateField('department', formData.department);
+    const passValid = validateField('password', formData.password || '');
+    const passConfValid = validateField('password_confirmation', formData.password_confirmation || '');
 
-    const isValid = idValid && nameValid && emailValid && roleValid && deptValid;
+    const isValid = idValid && nameValid && emailValid && roleValid && deptValid && passValid && passConfValid;
     if (!isValid) {
       setShakeModal(true);
       setTimeout(() => setShakeModal(false), 500);
@@ -577,11 +605,11 @@ export const ProfileList: React.FC<ProfileListProps> = ({
           {paginatedProfiles.map((profile) => (
             <div key={profile.id} className="group relative rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-md hover:bg-white/95 dark:hover:bg-slate-900/95 hover:border-indigo-200/50 dark:hover:border-indigo-900/50 transition-all duration-300">
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <img src={profile.avatar} alt={profile.name} className="h-12 w-12 rounded-full object-cover" />
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{profile.name}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{profile.role}</p>
+                <div className="flex items-center space-x-4 min-w-0">
+                  <AvatarWithSkeleton src={profile.avatar} alt={profile.name} className="h-12 w-12 rounded-full" />
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{profile.name}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{profile.role}</p>
                   </div>
                 </div>
 
@@ -641,13 +669,13 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                 <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">ID: {profile.id}</span>
               </div>
 
-              <div className="space-y-2 border-t border-slate-50 dark:border-slate-800/50 pt-4">
+              <div className="space-y-2 border-t border-slate-50 dark:border-slate-800/50 pt-4 min-w-0">
                 <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
-                  <Briefcase className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  <Briefcase className="mr-2 h-4 w-4 flex-shrink-0 text-slate-400 dark:text-slate-500" />
                   <span className="truncate">{profile.department}</span>
                 </div>
                 <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
-                  <Mail className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  <Mail className="mr-2 h-4 w-4 flex-shrink-0 text-slate-400 dark:text-slate-500" />
                   <span className="truncate">{profile.email}</span>
                 </div>
               </div>
@@ -733,12 +761,12 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                 {paginatedProfiles.length > 0 ? (
                   paginatedProfiles.map((profile) => (
                     <tr key={profile.id} className="relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 grid grid-cols-[2.5fr_1.2fr_1.2fr_120px_140px] items-center w-full group px-6">
-                      <td className="py-4 whitespace-nowrap z-10">
-                        <div className="flex items-center gap-4">
-                          <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all duration-300" src={profile.avatar} alt="" />
-                          <div>
-                            <div className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{profile.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{profile.email}</div>
+                      <td className="py-4 whitespace-nowrap z-10 min-w-0">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <AvatarWithSkeleton src={profile.avatar} alt={profile.name} className="h-10 w-10 rounded-full ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all duration-300" />
+                          <div className="min-w-0">
+                            <div className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{profile.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">{profile.email}</div>
                           </div>
                         </div>
                       </td>
@@ -966,6 +994,28 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                         <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{new Date(viewProfile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p>
                       </div>
                     </div>
+                    {viewProfile.role.toLowerCase() === 'student' && viewProfile.class && (
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
+                        <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
+                          <Briefcase className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Class</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewProfile.class}</p>
+                        </div>
+                      </div>
+                    )}
+                    {viewProfile.age && (
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors flex items-center gap-4">
+                        <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-slate-400 dark:text-slate-300">
+                          <User className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Age</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewProfile.age}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden flex flex-col">
@@ -1096,98 +1146,224 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">ID <span className="text-rose-500">*</span></label>
-                  <input
-                    required
-                    type="text"
-                    name="id"
-                    value={formData.id}
-                    onChange={handleInputChange}
-                    disabled={isEditMode || isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.id ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${isEditMode ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed' : ''}`}
-                  />
-                  {errors.id && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.id}</p>}
+              {/* Section 1: Basic Information */}
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
+                  {t.language === 'id' ? 'Informasi Dasar' : 'Basic Information'}
+                </h4>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">ID <span className="text-rose-500">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      name="id"
+                      value={formData.id}
+                      onChange={handleInputChange}
+                      disabled={isEditMode || isProcessing}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.id ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${isEditMode ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed' : ''}`}
+                    />
+                    {errors.id ? (
+                      <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.id}</p>
+                    ) : (
+                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{t.language === 'id' ? 'ID Unik untuk profil (Tidak dapat diubah)' : 'Unique ID for the profile (Immutable)'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.allStatus} <span className="text-rose-500">*</span></label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    >
+                      <option value={ProfileStatus.ACTIVE}>{t.active}</option>
+                      <option value={ProfileStatus.ON_LEAVE}>{t.onLeave}</option>
+                      <option value={ProfileStatus.TERMINATED}>{t.terminated}</option>
+                    </select>
+                    {statusWarning && <div className="mt-2 text-xs font-medium text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg border border-amber-100 dark:border-amber-800/50 flex gap-2"><AlertCircle className="h-3 w-3 shrink-0" /> {statusWarning}</div>}
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.fullName} <span className="text-rose-500">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.name ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    />
+                    {errors.name && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.name}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.position} <span className="text-rose-500">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                      disabled={isProcessing || pageType === 'students'}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.role ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${(isProcessing || pageType === 'students') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    />
+                    {errors.role ? (
+                      <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.role}</p>
+                    ) : (
+                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{t.language === 'id' ? 'Contoh: admin, teacher, student' : 'E.g., admin, teacher, student'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.department} <span className="text-rose-500">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      name="department"
+                      value={formData.department}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.department ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    />
+                    {errors.department && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.department}</p>}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.allStatus} <span className="text-rose-500">*</span></label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    disabled={isProcessing}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                  >
-                    <option value={ProfileStatus.ACTIVE}>{t.active}</option>
-                    <option value={ProfileStatus.ON_LEAVE}>{t.onLeave}</option>
-                    <option value={ProfileStatus.TERMINATED}>{t.terminated}</option>
-                  </select>
-                  {statusWarning && <div className="mt-2 text-xs font-medium text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg border border-amber-100 dark:border-amber-800/50 flex gap-2"><AlertCircle className="h-3 w-3 shrink-0" /> {statusWarning}</div>}
+              </div>
+
+              {/* Section 2: Contact Information */}
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
+                  {t.language === 'id' ? 'Informasi Kontak' : 'Contact Information'}
+                </h4>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.emailAddress} <span className="text-rose-500">*</span></label>
+                    <input
+                      required
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.email ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    />
+                    {errors.email && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.email}</p>}
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.address}</label>
+                    <textarea
+                      name="address"
+                      value={formData.address || ''}
+                      onChange={handleInputChange as any}
+                      disabled={isProcessing}
+                      rows={2}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.address ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    />
+                    {errors.address && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.address}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.phoneNumber}</label>
+                    <input
+                      type="text"
+                      name="phoneNumber"
+                      value={formData.phoneNumber || ''}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.phoneNumber ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    />
+                    {errors.phoneNumber && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.phoneNumber}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.joinDate} <span className="text-rose-500">*</span></label>
+                    <input
+                      required
+                      type="date"
+                      name="joinDate"
+                      value={formData.joinDate}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.fullName} <span className="text-rose-500">*</span></label>
-                  <input
-                    required
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    disabled={isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.name ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                  />
-                  {errors.name && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.name}</p>}
+              </div>
+
+              {/* Section 3: Additional Data */}
+              {(formData.role.toLowerCase() === 'student' || formData.role.toLowerCase() === 'teacher') && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
+                    {t.language === 'id' ? 'Info Tambahan' : 'Additional Info'}
+                  </h4>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {formData.role.toLowerCase() === 'student' && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Class</label>
+                        <input
+                          type="text"
+                          name="class"
+                          value={formData.class}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '');
+                            setFormData(prev => ({ ...prev, class: val }));
+                          }}
+                          maxLength={20}
+                          disabled={isProcessing}
+                          placeholder={t.language === 'id' ? 'MIsal: 10 IPA 1' : 'E.g., 10th Grade'}
+                          className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                        />
+                      </div>
+                    )}
+                    <div className={formData.role.toLowerCase() === 'student' ? '' : 'md:col-span-2'}>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Age</label>
+                      <input
+                        type="number"
+                        name="age"
+                        value={formData.age}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        min="0"
+                        max="150"
+                        className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.position} <span className="text-rose-500">*</span></label>
-                  <input
-                    required
-                    type="text"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    disabled={isProcessing || pageType === 'students'}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.role ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${(isProcessing || pageType === 'students') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  />
-                  {errors.role && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.role}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.department} <span className="text-rose-500">*</span></label>
-                  <input
-                    required
-                    type="text"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    disabled={isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.department ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                  />
-                  {errors.department && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.department}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.emailAddress} <span className="text-rose-500">*</span></label>
-                  <input
-                    required
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={isProcessing}
-                    className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.email ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                  />
-                  {errors.email && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.email}</p>}
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.joinDate} <span className="text-rose-500">*</span></label>
-                  <input
-                    required
-                    type="date"
-                    name="joinDate"
-                    value={formData.joinDate}
-                    onChange={handleInputChange}
-                    disabled={isProcessing}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                  />
+              )}
+
+              {/* Section 4: Authentication */}
+              <div className="mb-2">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
+                  {t.language === 'id' ? 'Autentikasi' : 'Authentication'}
+                </h4>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {t.language === 'id' ? 'Kata Sandi' : 'Password'} {isEditMode ? <span className="text-slate-400 font-normal text-xs ml-1">(Kosongkan jika tidak diubah)</span> : <span className="text-rose-500">*</span>}
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password || ''}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      placeholder={isEditMode ? (t.language === 'id' ? 'Biarkan kosong untuk profil ini' : 'Leave blank to keep current password') : ''}
+                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.password ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                    />
+                    {errors.password && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.password}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {t.language === 'id' ? 'Konfirmasi Sandi' : 'Confirm Password'} {isEditMode ? '' : <span className="text-rose-500">*</span>}
+                    </label>
+                    <input
+                      type="password"
+                      name="password_confirmation"
+                      value={formData.password_confirmation || ''}
+                      onChange={handleInputChange}
+                      disabled={isProcessing}
+                      className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 

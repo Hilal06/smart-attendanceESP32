@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Profile as ProfileType, ProfileRequest } from '../types';
-import { Mail, Phone, MapPin, Briefcase, Calendar, Shield, Send, X, AlertCircle, Clock, CheckCircle, ChevronLeft, ChevronRight, FileText, Search, Loader2, Lock } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Calendar, Shield, Send, X, AlertCircle, Clock, CheckCircle, ChevronLeft, ChevronRight, FileText, Search, Loader2, Lock, User } from 'lucide-react';
 import { router } from '@inertiajs/react';
 
 interface ProfileProps {
@@ -156,12 +156,27 @@ export const Profile: React.FC<ProfileProps> = ({ profile, requests = [], onRequ
           </div>
 
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-white/20 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-            <div className="px-6 py-4 border-b border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 font-bold text-slate-900 dark:text-white flex items-center"><Briefcase className="h-4 w-4 mr-2 text-indigo-500" />{t.employmentInfo}</div>
+            <div className="px-6 py-4 border-b border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 font-bold text-slate-900 dark:text-white flex items-center">
+              <Briefcase className="h-4 w-4 mr-2 text-indigo-500" />
+              {profile.role.toLowerCase() === 'student' ? 'Student Information' : t.employmentInfo}
+            </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-700 dark:text-slate-300">
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-indigo-50/80 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Briefcase className="h-5 w-5" /></div>
                 <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.position}</p><p className="font-bold text-slate-900 dark:text-slate-100">{profile.role}</p></div>
               </div>
+              {profile.role.toLowerCase() === 'student' && profile.class && (
+                <div className="flex gap-4 items-start group">
+                  <div className="p-3 bg-purple-50/80 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Briefcase className="h-5 w-5" /></div>
+                  <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Class</p><p className="font-bold text-slate-900 dark:text-slate-100">{profile.class}</p></div>
+                </div>
+              )}
+              {profile.age && (
+                <div className="flex gap-4 items-start group">
+                  <div className="p-3 bg-orange-50/80 dark:bg-orange-900/30 rounded-xl text-orange-600 dark:text-orange-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><User className="h-5 w-5" /></div>
+                  <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Age</p><p className="font-bold text-slate-900 dark:text-slate-100">{profile.age}</p></div>
+                </div>
+              )}
               <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-rose-50/80 dark:bg-rose-900/30 rounded-xl text-rose-600 dark:text-rose-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Shield className="h-5 w-5" /></div>
                 <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.accessRole}</p><p className="font-bold text-slate-900 dark:text-slate-100">{t.standardUser}</p></div>

@@ -35,6 +35,10 @@ export interface Profile {
   phoneNumber?: string;
   address?: string;
   status: ProfileStatus;
+  class?: string;
+  age?: number;
+  password?: string;
+  password_confirmation?: string;
   canChangePassword?: boolean;
 }
 

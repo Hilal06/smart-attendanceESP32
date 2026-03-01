@@ -78,6 +78,8 @@ class AttendanceController extends Controller
             'phone_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'institutional_id' => 'nullable|string|max:20',
+            'class' => 'nullable|string|max:100',
+            'age' => 'nullable|integer|min:0|max:150',
         ]);
 
         $user = null;
@@ -107,6 +109,8 @@ class AttendanceController extends Controller
                 'teacher_id' => $user->role === 'teacher' ? ($validated['institutional_id'] ?? null) : null,
                 'join_date' => now()->format('Y-m-d'),
                 'status' => 'Active',
+                'class' => $user->role === 'student' ? ($validated['class'] ?? null) : null,
+                'age' => $validated['age'] ?? null,
             ]);
         });
 
@@ -222,7 +226,7 @@ class AttendanceController extends Controller
         $userRole = session('userRole');
         $userProfileId = session('profileId');
 
-        $profilesQuery = Profile::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status');
+        $profilesQuery = Profile::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status', 'class', 'age');
 
         if ($userRole === 'teacher') {
             $profilesQuery->whereRaw('LOWER(role) = ?', ['student']);
@@ -263,6 +267,8 @@ class AttendanceController extends Controller
                     'phoneNumber' => null,
                     'address' => null,
                     'status' => $emp->status,
+                    'class' => $emp->class,
+                    'age' => $emp->age,
                 ];
             }),
             'attendance' => $attendances->map(function ($att) {
@@ -287,7 +293,7 @@ class AttendanceController extends Controller
 
         $settings = Setting::first();
         $profiles = Profile::with('user')->whereRaw('LOWER(role) != ?', ['student'])
-            ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
+            ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status', 'class', 'age')
             ->get();
         return Inertia::render('Profiles', [
             'userRole' => session('userRole'),
@@ -310,6 +316,8 @@ class AttendanceController extends Controller
                     'phoneNumber' => $emp->phone_number,
                     'address' => $emp->address,
                     'status' => $emp->status,
+                    'class' => $emp->class,
+                    'age' => $emp->age,
                     'canChangePassword' => $emp->user ? $emp->user->can_change_password : false,
                 ];
             })
@@ -324,7 +332,7 @@ class AttendanceController extends Controller
 
         $settings = Setting::first();
         $profiles = Profile::with('user')->whereRaw('LOWER(role) = ?', ['student'])
-            ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')
+            ->select('id', 'user_id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status', 'class', 'age')
             ->get();
         return Inertia::render('Students', [
             'userRole' => session('userRole'),
@@ -347,6 +355,8 @@ class AttendanceController extends Controller
                     'phoneNumber' => $emp->phone_number,
                     'address' => $emp->address,
                     'status' => $emp->status,
+                    'class' => $emp->class,
+                    'age' => $emp->age,
                     'canChangePassword' => $emp->user ? $emp->user->can_change_password : false,
                 ];
             })
@@ -413,7 +423,7 @@ class AttendanceController extends Controller
             return back()->withErrors(['message' => 'Unauthorized action.']);
         }
 
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'role' => 'required|string',
             'email' => [
@@ -432,9 +442,19 @@ class AttendanceController extends Controller
             'status' => 'nullable|string',
             'student_id' => 'nullable|string|max:20',
             'teacher_id' => 'nullable|string|max:20',
-            'avatar' => 'nullable|image|max:2048', // 2MB max
-            'face_data' => 'nullable|file|max:5120', // 5MB max
+            'class' => 'nullable|string|max:100',
+            'age' => 'nullable|integer|min:0|max:150',
+            'avatar' => 'nullable', // Allow either image upload or string URL backwards
+            'face_data' => 'nullable', // Allow empty or file
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
+
+        if ($validator->fails()) {
+            \Illuminate\Support\Facades\Log::error('Store Profile Validation Failed:', $validator->errors()->toArray());
+            return back()->withErrors($validator)->withInput();
+        }
+        $validated = $validator->validated();
+
 
         if ($userRole === 'teacher' && strtolower($validated['role']) !== 'student') {
             return back()->withErrors(['message' => 'Teachers can only manage student profiles.']);
@@ -446,16 +466,23 @@ class AttendanceController extends Controller
         if (isset($validated['phoneNumber']))
             $data['phone_number'] = $validated['phoneNumber'];
 
+        if (strtolower($validated['role']) !== 'student') {
+            $data['class'] = null; // Ensure class is only for students
+        }
+
         if (empty($data['id'])) {
             $data['id'] = (string) rand(100000, 999999);
         }
+
+        unset($data['password']);
+        unset($data['password_confirmation']);
 
         \Illuminate\Support\Facades\DB::transaction(function () use (&$data, $validated, $request) {
             $user = \App\Models\User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'password' => \Illuminate\Support\Facades\Hash::make('password123'), // Default password
-                'role' => $validated['role'],
+                'password' => \Illuminate\Support\Facades\Hash::make(!empty($validated['password']) ? $validated['password'] : 'password123'),
+                'role' => strtolower($validated['role']),
             ]);
 
             // Assign Spatie Role
@@ -478,7 +505,13 @@ class AttendanceController extends Controller
             $this->registerFaceData($data['id'], $request->file('face_data'));
         }
 
-        return back()->with('message', 'Profile created successfully with default password "password123".');
+        $msg = 'Profile created successfully';
+        if (empty($validated['password'])) {
+            $msg .= ' with default password "password123".';
+        } else {
+            $msg .= '.';
+        }
+        return back()->with('message', $msg);
     }
 
     public function updateProfile(Request $request, $id)
@@ -494,7 +527,7 @@ class AttendanceController extends Controller
                 return back()->withErrors(['message' => 'Teachers can only manage student profiles.']);
             }
 
-            $validated = $request->validate([
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'role' => 'required|string',
                 'email' => [
@@ -511,11 +544,31 @@ class AttendanceController extends Controller
                 'phoneNumber' => 'nullable|string|max:20',
                 'address' => 'nullable|string',
                 'status' => 'nullable|string',
-                'student_id' => 'nullable|string|max:20',
-                'teacher_id' => 'nullable|string|max:20',
-                'avatar' => 'nullable|image|max:2048',
-                'face_data' => 'nullable|file|max:5120',
+                'student_id' => [
+                    'nullable',
+                    'string',
+                    'max:20',
+                    \Illuminate\Validation\Rule::unique('profiles')->ignore($profile->id)
+                ],
+                'teacher_id' => [
+                    'nullable',
+                    'string',
+                    'max:20',
+                    \Illuminate\Validation\Rule::unique('profiles')->ignore($profile->id)
+                ],
+                'class' => 'nullable|string|max:100',
+                'age' => 'nullable|integer|min:0|max:150',
+                'avatar' => 'nullable',
+                'face_data' => 'nullable',
+                'password' => 'nullable|string|min:8|confirmed',
             ]);
+
+            if ($validator->fails()) {
+                \Illuminate\Support\Facades\Log::error('Update Profile Validation Failed:', $validator->errors()->toArray());
+                return back()->withErrors($validator)->withInput();
+            }
+            $validated = $validator->validated();
+
 
             if ($userRole === 'teacher' && strtolower($validated['role']) !== 'student') {
                 return back()->withErrors(['message' => 'Teachers cannot change a student into another role.']);
@@ -527,13 +580,26 @@ class AttendanceController extends Controller
             if (isset($validated['phoneNumber']))
                 $data['phone_number'] = $validated['phoneNumber'];
 
+            if (strtolower($validated['role']) !== 'student') {
+                $data['class'] = null;
+            }
+
+            unset($data['password']);
+            unset($data['password_confirmation']);
+
             \Illuminate\Support\Facades\DB::transaction(function () use (&$data, $profile, $validated, $request) {
                 if ($profile->user) {
-                    $profile->user->update([
+                    $updateData = [
                         'name' => $validated['name'],
                         'email' => $validated['email'],
-                        'role' => $validated['role'],
-                    ]);
+                        'role' => strtolower($validated['role']),
+                    ];
+                    
+                    if (!empty($validated['password'])) {
+                        $updateData['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+                    }
+                    
+                    $profile->user->update($updateData);
 
                     // Sync Spatie Role
                     $profile->user->syncRoles([strtolower($validated['role'])]);
@@ -618,7 +684,7 @@ class AttendanceController extends Controller
     {
         $settings = Setting::first();
         $attendances = Attendance::select('id', 'profile_id', 'date', 'check_in', 'check_out', 'status')->get();
-        $profiles = Profile::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status')->get();
+        $profiles = Profile::select('id', 'name', 'role', 'department', 'avatar', 'email', 'join_date', 'phone_number', 'address', 'status', 'class', 'age')->get();
 
         return Inertia::render('Reports', [
             'userRole' => session('userRole'),
@@ -652,6 +718,8 @@ class AttendanceController extends Controller
                     'phoneNumber' => null,
                     'address' => null,
                     'status' => $emp->status,
+                    'class' => $emp->class,
+                    'age' => $emp->age,
                 ];
             })
         ]);
@@ -914,6 +982,8 @@ class AttendanceController extends Controller
                 'phoneNumber' => $primaryProfile->phone_number,
                 'address' => $primaryProfile->address,
                 'status' => $primaryProfile->status,
+                'class' => $primaryProfile->class,
+                'age' => $primaryProfile->age,
                 'canChangePassword' => $user->can_change_password,
             ];
         }
