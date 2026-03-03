@@ -4,6 +4,8 @@
 /public/build
 /public/hot
 /public/storage
+/storage/app/public/avatars/*
+!/storage/app/public/avatars/.gitignore
 /storage/*.key
 .env
 .env.backup
@@ -36,6 +38,8 @@ phpunit.xml
 python_service/uploads/*
 python_service/known_faces/*
 !python_service/known_faces/.gitignore
+python_service/rejected_faces/*
+!python_service/rejected_faces/.gitignore
 python_service/__pycache__/
 python_service/*.pyc
 python_service/*.whl
