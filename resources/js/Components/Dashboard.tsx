@@ -169,8 +169,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
         onClick={() => isClickable && setActiveStatusFilter(isActive ? 'All' : statusKey)}
         className={`relative overflow-hidden w-full text-left rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 transition-all duration-300 ${isClickable ? 'hover:-translate-y-1 hover:shadow-lg cursor-pointer' : 'cursor-default'
           } ${isActive
-            ? 'bg-white/95 dark:bg-slate-800/90 backdrop-blur-xl border border-indigo-300 dark:border-indigo-500/50 ring-2 ring-indigo-500/30 shadow-[0_8px_30px_rgb(99,102,241,0.2)] dark:shadow-[0_8px_30px_rgb(99,102,241,0.15)] scale-[1.03] z-10'
-            : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/40 dark:border-slate-800 hover:bg-white/95 dark:hover:bg-slate-800/90 hover:border-indigo-200/50 dark:hover:border-slate-700/50 shadow-sm z-0'
+            ? 'bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-indigo-300 dark:border-indigo-500/50 ring-2 ring-indigo-500/30 shadow-[0_8px_30px_rgb(99,102,241,0.2)] dark:shadow-[0_8px_30px_rgb(99,102,241,0.15)] scale-[1.03] z-10'
+            : 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-white/40 dark:border-slate-800 hover:bg-white/95 dark:hover:bg-slate-800/95 hover:border-indigo-200/50 dark:hover:border-slate-700/50 shadow-sm z-0'
           }`}
       >
         <div className="min-w-0 z-10">
@@ -234,7 +234,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
             <StatCard title={t.absent} value={activeStats.absent} icon={AlertTriangle} color="text-rose-600 dark:text-rose-400" bg="bg-rose-50" statusKey={AttendanceStatus.ABSENT} />
           </div>
 
-          <div className="rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-sm border border-white/20 dark:border-slate-800 transition-colors duration-300">
+          <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-5 shadow-sm border border-slate-200/50 dark:border-slate-800 transition-colors duration-300">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
@@ -276,8 +276,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
             </div>
           </div>
 
-          <div className="rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border border-white/20 dark:border-slate-800 overflow-hidden transition-colors duration-300 flex flex-col h-[400px]">
-            <div className="p-4 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 shrink-0">
+          <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-sm border border-slate-200/50 dark:border-slate-800 overflow-hidden transition-colors duration-300 flex flex-col h-[400px]">
+            <div className="p-4 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/90 dark:bg-slate-900/90 shrink-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
@@ -317,7 +317,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
                   tableRecords.map((record) => {
                     const emp = profiles.find(e => e.id === record.profileId);
                     return (
-                      <li key={record.id} className="relative overflow-hidden p-3 sm:p-4 bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between group">
+                      <li key={record.id} className="relative overflow-hidden p-3 sm:p-4 bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between group">
                         <div className="flex items-center gap-3.5 z-10">
                           <img className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all duration-300" src={emp?.avatar} alt="" />
                           <div>
@@ -350,7 +350,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
         </div>
 
         <div className="space-y-6 flex flex-col lg:h-[calc(100vh-10rem)]">
-          <div className="rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-sm border border-white/20 dark:border-slate-800 transition-colors duration-300">
+          <div className="rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-5 shadow-sm border border-slate-200/50 dark:border-slate-800 transition-colors duration-300">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Server className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
@@ -385,7 +385,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-5 shadow-sm border border-white/20 dark:border-slate-800 flex-1 flex flex-col min-h-[400px] overflow-hidden transition-colors duration-300">
+          <div className="rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-5 shadow-sm border border-slate-200/50 dark:border-slate-800 flex-1 flex flex-col min-h-[400px] overflow-hidden transition-colors duration-300">
             <div className="flex items-center justify-between mb-5 shrink-0">
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />

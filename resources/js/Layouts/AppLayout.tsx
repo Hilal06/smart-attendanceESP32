@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../Components/Sidebar';
 import { Menu } from 'lucide-react';
 import { Settings, UserRole } from '../types';
 import { TRANSLATIONS } from '../constants';
+import { Toaster, toast } from 'sonner';
+import { usePage } from '@inertiajs/react';
 
 interface Props {
   children: React.ReactNode;
@@ -13,9 +15,20 @@ interface Props {
 export default function AppLayout({ children, userRole, settings }: Props) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const t = TRANSLATIONS[settings?.language || 'en'];
+  const { flash } = usePage<any>().props;
+
+  useEffect(() => {
+    if (flash?.message) {
+      toast.success(flash.message);
+    }
+    if (flash?.error) {
+      toast.error(flash.error);
+    }
+  }, [flash]);
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200 overflow-hidden relative">
+      <Toaster position="bottom-right" richColors />
       {/* Global Background Elements */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-indigo-400/10 dark:bg-indigo-600/10 blur-[100px]"></div>

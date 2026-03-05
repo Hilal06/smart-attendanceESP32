@@ -3,6 +3,7 @@ import { Profile, ProfileStatus, AttendanceRecord } from '../types';
 import { router, usePage } from '@inertiajs/react';
 import { generateProfilePerformanceSummary } from '../services/geminiService';
 import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter, Loader2, AlertTriangle, Upload, Camera, ChevronRight, ChevronLeft, CheckCircle2, User, LayoutGrid, List, ArrowUpDown, Lock, Unlock } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProfileListProps {
   profiles: Profile[];
@@ -85,10 +86,6 @@ export const ProfileList: React.FC<ProfileListProps> = ({
   const ITEMS_PER_PAGE_GRID = 9;
   const ITEMS_PER_PAGE_LIST = 10;
 
-  // Toast State
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-  const toastTimeoutRef = useRef<number | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialFormState: Profile = {
@@ -114,12 +111,6 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
   const faceDataInputRef = useRef<HTMLInputElement>(null);
 
-  const showToast = useCallback((message: string, type: ToastType = 'success') => {
-    if (toastTimeoutRef.current) window.clearTimeout(toastTimeoutRef.current);
-    setToast({ message, type });
-    toastTimeoutRef.current = window.setTimeout(() => setToast(null), 4000);
-  }, []);
-
   // Sync external errors and handle toast triggers
   useEffect(() => {
     if (Object.keys(externalErrors).length > 0) {
@@ -127,7 +118,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
       // If there's a specific general error or delete error, show it in a toast
       if (externalErrors['message'] || externalErrors['delete']) {
-        showToast(externalErrors['message'] || externalErrors['delete'] || 'An error occurred', 'error');
+        toast.error(externalErrors['message'] || externalErrors['delete'] || 'An error occurred');
       }
 
       // Trigger shake on form errors
@@ -136,7 +127,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
         setTimeout(() => setShakeModal(false), 500);
       }
     }
-  }, [externalErrors, isFormModalOpen, showToast]);
+  }, [externalErrors, isFormModalOpen]);
   // Handle successful completion of operations
   const prevProcessing = useRef(isProcessing);
   useEffect(() => {
@@ -147,14 +138,18 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
       // If the message contains "failed", it's a partial success but warrants an error/warning toast
       const isWarning = successMsg.toLowerCase().includes('failed');
-      showToast(successMsg, isWarning ? 'error' : 'success');
+      if (isWarning) {
+        toast.error(successMsg);
+      } else {
+        toast.success(successMsg);
+      }
 
       setIsDeleteConfirmOpen(false);
       setIsFormModalOpen(false);
       setIsSaveConfirmOpen(false);
     }
     prevProcessing.current = isProcessing;
-  }, [isProcessing, externalErrors, t.language, showToast]);
+  }, [isProcessing, externalErrors, t.language, flash?.message]);
 
   const handleGenerateAISummary = async (emp: Profile) => {
     setIsGeneratingSummary(true);
@@ -292,7 +287,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      showToast(t.language === 'id' ? 'Ukuran file terlalu besar (Maks 5MB)' : 'File size too large (Max 5MB)', 'error');
+      toast.error(t.language === 'id' ? 'Ukuran file terlalu besar (Maks 5MB)' : 'File size too large (Max 5MB)');
       return;
     }
 
@@ -336,7 +331,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
           }
         }, 'image/jpeg', 0.8);
 
-        showToast(t.language === 'id' ? 'Foto dioptimalkan dan diunggah' : 'Photo optimized and uploaded', 'success');
+        toast.success(t.language === 'id' ? 'Foto dioptimalkan dan diunggah' : 'Photo optimized and uploaded');
       };
       img.src = event.target?.result as string;
     };
@@ -348,7 +343,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      showToast(t.language === 'id' ? 'Ukuran file terlalu besar (Maks 5MB)' : 'File size too large (Max 5MB)', 'error');
+      toast.error(t.language === 'id' ? 'Ukuran file terlalu besar (Maks 5MB)' : 'File size too large (Max 5MB)');
       return;
     }
 
@@ -356,7 +351,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       setFaceDataPreview(event.target?.result as string);
-      showToast(t.language === 'id' ? 'Data wajah ditambahkan' : 'Face data added', 'success');
+      toast.success(t.language === 'id' ? 'Data wajah ditambahkan' : 'Face data added');
     };
     reader.readAsDataURL(file);
   };
@@ -397,7 +392,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
     if (!isValid) {
       setShakeModal(true);
       setTimeout(() => setShakeModal(false), 500);
-      showToast(t.language === 'id' ? 'Harap periksa form kembali' : 'Please check the form for errors', 'error');
+      toast.error(t.language === 'id' ? 'Harap periksa form kembali' : 'Please check the form for errors');
     }
     return isValid;
   };
@@ -505,18 +500,6 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
   return (
     <div className="space-y-6 relative">
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`fixed bottom-8 right-8 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border animate-in slide-in-from-right-full duration-300 ${toast.type === 'success' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-rose-600 text-white border-rose-500'
-          }`}>
-          {toast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-          <p className="text-sm font-semibold">{toast.message}</p>
-          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-75">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">

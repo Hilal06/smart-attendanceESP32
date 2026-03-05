@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { Settings } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { UserPlus, ArrowRight, Fingerprint, Loader2, Mail, Lock, Sun, Moon, User, Briefcase, Phone, MapPin, CheckCircle2, XCircle } from 'lucide-react';
+import { UserPlus, ArrowRight, Fingerprint, Loader2, Sun, Moon } from 'lucide-react';
 import zxcvbn from 'zxcvbn';
 import { RoleSelector } from '../Components/Register/RoleSelector';
+import { RegisterFormFields } from '../Components/Register/RegisterFormFields';
 
 const PasswordStrengthInput = React.lazy(() => import('../Components/Register/PasswordStrengthInput').then(module => ({ default: module.PasswordStrengthInput })));
 
@@ -170,193 +171,28 @@ export default function Register({ settings }: RegisterProps) {
                         {/* Role Selection */}
                         <RoleSelector role={data.role} setData={setData} error={errors.role} />
 
-                        {/* Institutional ID (Dynamic) */}
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                {data.role === 'student' ? 'Student ID' : 'Teacher ID'}
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Fingerprint className="h-5 w-5 text-slate-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    value={data.institutional_id}
-                                    onChange={(e) => setData('institutional_id', e.target.value)}
-                                    placeholder={data.role === 'student' ? 'STU-2026-001' : 'TCH-2026-001'}
-                                    className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
+                        <RegisterFormFields data={data} setData={setData} errors={errors} />
+
+                        {/* Passwords */}
+                        <React.Suspense fallback={
+                            <div className="md:col-span-2 p-4 text-center text-slate-500">
+                                <Loader2 className="animate-spin inline mr-2 h-4 w-4" />
+                                Loading secure password input...
+                            </div>
+                        }>
+                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <PasswordStrengthInput
+                                    data={data}
+                                    setData={setData}
+                                    errors={errors}
+                                    passwordScore={passwordScore}
+                                    passwordFeedback={passwordFeedback}
+                                    passwordsMatch={passwordsMatch}
+                                    getPasswordLabel={getPasswordLabel}
+                                    getPasswordColor={getPasswordColor}
                                 />
                             </div>
-                            {errors.institutional_id && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.institutional_id}</div>}
-                        </div>
-
-                        {data.role === 'student' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Class
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Briefcase className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={data.class}
-                                        onChange={(e) => setData('class', e.target.value.replace(/[^a-zA-Z0-9\s-]/g, ''))}
-                                        maxLength={20}
-                                        placeholder="e.g. 10A, CS101"
-                                        className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-                                    />
-                                </div>
-                                {errors.class && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.class}</div>}
-                            </div>
-                        )}
-
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                Age
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-slate-400" />
-                                </div>
-                                <input
-                                    type="number"
-                                    value={data.age}
-                                    onChange={(e) => setData('age', e.target.value)}
-                                    placeholder="e.g. 15, 30"
-                                    className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-                                    min="0"
-                                    max="150"
-                                />
-                            </div>
-                            {errors.age && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.age}</div>}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-bottom-3 duration-400">
-                            {/* Name */}
-                            <div className="md:col-span-2">
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Full Name
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <User className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="John Doe"
-                                        className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-                                        required
-                                    />
-                                </div>
-                                {errors.name && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.name}</div>}
-                            </div>
-
-                            {/* Email */}
-                            <div className="md:col-span-2">
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Email Address
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        placeholder="john@example.com"
-                                        className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-                                        required
-                                    />
-                                </div>
-                                {errors.email && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.email}</div>}
-                            </div>
-
-                            {/* Department */}
-                            <div className="md:col-span-2">
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Department/Class
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Briefcase className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={data.department}
-                                        onChange={(e) => setData('department', e.target.value)}
-                                        placeholder="Computer Science"
-                                        className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-                                    />
-                                </div>
-                                {errors.department && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.department}</div>}
-                            </div>
-
-                            {/* Phone Number */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Phone Number
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Phone className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="tel"
-                                        value={data.phone_number}
-                                        onChange={(e) => setData('phone_number', e.target.value)}
-                                        placeholder="+1 234 567 890"
-                                        className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-                                    />
-                                </div>
-                                {errors.phone_number && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.phone_number}</div>}
-                            </div>
-
-                            {/* Address */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Address
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <MapPin className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={data.address}
-                                        onChange={(e) => setData('address', e.target.value)}
-                                        placeholder="123 Main St"
-                                        className="block w-full pl-10 rounded-xl border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-                                    />
-                                </div>
-                                {errors.address && <div className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errors.address}</div>}
-                            </div>
-
-                            {/* Passwords */}
-                            <React.Suspense fallback={
-                                <div className="md:col-span-2 p-4 text-center text-slate-500">
-                                    <Loader2 className="animate-spin inline mr-2 h-4 w-4" />
-                                    Loading secure password input...
-                                </div>
-                            }>
-                                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <PasswordStrengthInput
-                                        data={data}
-                                        setData={setData}
-                                        errors={errors}
-                                        passwordScore={passwordScore}
-                                        passwordFeedback={passwordFeedback}
-                                        passwordsMatch={passwordsMatch}
-                                        getPasswordLabel={getPasswordLabel}
-                                        getPasswordColor={getPasswordColor}
-                                    />
-                                </div>
-                            </React.Suspense>
-                        </div>
+                        </React.Suspense>
 
                         <button
                             type="submit"
@@ -381,10 +217,9 @@ export default function Register({ settings }: RegisterProps) {
                                 </Link>
                             </p>
                         </div>
-
                     </form>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }

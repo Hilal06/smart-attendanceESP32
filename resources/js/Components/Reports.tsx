@@ -210,7 +210,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
       </div>
 
       {aiInsights && (
-        <div className="relative rounded-2xl bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-6 sm:p-8 border border-indigo-200/50 dark:border-indigo-500/30 shadow-[0_0_40px_-15px_rgba(99,102,241,0.3)] dark:shadow-[0_0_40px_-15px_rgba(99,102,241,0.15)] animate-in slide-in-from-top-4 fade-in duration-500 transition-all">
+        <div className="relative rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 sm:p-8 border border-indigo-200/50 dark:border-indigo-500/30 shadow-[0_0_40px_-15px_rgba(99,102,241,0.3)] dark:shadow-[0_0_40px_-15px_rgba(99,102,241,0.15)] animate-in slide-in-from-top-4 fade-in duration-500 transition-all">
           <button
             onClick={() => setAiInsights(null)}
             className="absolute top-4 right-4 p-2 text-indigo-400 hover:text-indigo-600 dark:text-indigo-500 dark:hover:text-indigo-300 hover:bg-indigo-100/50 dark:hover:bg-indigo-900/50 rounded-full transition-colors"
@@ -235,7 +235,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trend Chart */}
-        <div className="lg:col-span-2 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-800 transition-colors duration-300 flex flex-col">
+        <div className="lg:col-span-2 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-6 shadow-sm border border-white/20 dark:border-slate-800 transition-colors duration-300 flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shrink-0">
             <h3 className="font-semibold text-slate-900 dark:text-white">{t.attendanceTrend}</h3>
             <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 transition-colors">
@@ -244,7 +244,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
                   key={range}
                   onClick={() => setTimeRange(range)}
                   className={`flex items-center gap-2 rounded-md px-3 py-1 text-xs font-semibold transition-all ${timeRange === range
-                    ? 'bg-white/95 dark:bg-slate-600/90 shadow-sm border border-white/20 dark:border-slate-500 text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-white/95 dark:bg-slate-600/95 shadow-sm border border-white/20 dark:border-slate-500 text-indigo-600 dark:text-indigo-400'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                     }`}
                 >
@@ -291,7 +291,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
         </div>
 
         {/* Status Distribution */}
-        <div className="rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col transition-colors duration-300">
+        <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-6 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col transition-colors duration-300">
           <h3 className="mb-4 font-semibold text-slate-900 dark:text-white">{t.statusDistribution}</h3>
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="h-48 w-full">
@@ -344,8 +344,8 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
         </div>
       </div>
 
-      <div className="rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border border-white/20 dark:border-slate-800 overflow-hidden transition-colors duration-300">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-6 py-4 border-b border-white/20 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 transition-colors gap-4">
+      <div className="rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-sm border border-white/20 dark:border-slate-800 overflow-hidden transition-colors duration-300">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-6 py-4 border-b border-white/20 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 transition-colors gap-4">
           <div className="flex items-center">
             <FileText className="h-5 w-5 text-slate-500 dark:text-slate-400 mr-2" />
             <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
@@ -371,12 +371,12 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
                 placeholder={isId ? 'Cari nama atau ID...' : 'Search name or ID...'}
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="block w-full pl-9 pr-3 py-2 text-sm border border-white/20 dark:border-slate-800 rounded-lg bg-white/80 dark:bg-slate-950/80 backdrop-blur-md text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
+                className="block w-full pl-9 pr-3 py-2 text-sm border border-white/20 dark:border-slate-800 rounded-lg bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
               />
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto">
               <Filter className="h-4 w-4 text-slate-500 dark:text-slate-400 hidden sm:block" />
-              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="block w-full sm:w-auto rounded-lg border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md py-2 pl-3 pr-8 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-600 transition-colors shadow-sm">
+              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="block w-full sm:w-auto rounded-lg border-white/20 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm py-2 pl-3 pr-8 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-600 transition-colors shadow-sm">
                 <option value="All">{t.allStatus}</option>
                 <option value={AttendanceStatus.PRESENT}>{t.present}</option>
                 <option value={AttendanceStatus.LATE}>{t.late}</option>
@@ -435,7 +435,7 @@ export const Reports: React.FC<ReportsProps> = ({ attendance, profiles, t }) => 
             </tbody>
           </table>
         </div>
-        <div className="border-t border-white/20 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30 px-6 py-3 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300 rounded-b-xl">
+        <div className="border-t border-white/20 dark:border-slate-800 bg-white/90 dark:bg-slate-900/30 px-6 py-3 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300 rounded-b-xl">
           <div>{t.showing} <span className="font-medium text-slate-900 dark:text-slate-300">{filteredAttendance.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span> {t.to} <span className="font-medium text-slate-900 dark:text-slate-300">{Math.min(currentPage * ITEMS_PER_PAGE, filteredAttendance.length)}</span> {t.of} <span className="font-medium text-slate-900 dark:text-slate-300">{filteredAttendance.length}</span> {t.results}</div>
           <div className="flex gap-2"><button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1 rounded bg-white dark:bg-slate-900 border dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronLeft className="h-4 w-4" /></button><button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1 rounded bg-white dark:bg-slate-900 border dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronRight className="h-4 w-4" /></button></div>
         </div>
