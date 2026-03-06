@@ -97,9 +97,11 @@ The `db:seed` command creates several default accounts for testing purposes:
 
 ## 4. Architecture Note
 - **App Container**: PHP-FPM, runs the Laravel backend.
-- **Webserver Container**: Nginx, serves the built React frontend assets and proxies Laravel requests.
-- **Python Service Container**: Runs the `face_recognition` models and coordinates images from ESP32.
+- **Webserver Container**: Nginx, serves the built React frontend assets and proxies Laravel/Python service requests. The Python service is secured behind Nginx (port 80/443) rather than exposing port 5000 directly.
+- **Python Service Container**: Runs the `face_recognition` models and coordinates images from ESP32. It operates at high speeds using in-memory image processing and `.pkl` encoding caching.
 - **DB Container**: MariaDB/MySQL server.
+- **Logging**: All Docker containers use JSON-file logging with automatic log rotation (`max-size: 10m`, `max-file: 3`) to prevent disk exhaustion.
+- **Hardware Integration**: The associated ESP32-CAM script uses a hardware trigger mechanism to prevent network flooding and a disabled brownout detector for power stability.
 
 ## 5. Updates
 To update the application code later:
@@ -113,5 +115,3 @@ docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
 The following deployment and architecture upgrades are planned for future iterations to ensure enterprise-grade stability:
 - **Automated SSL/TLS (HTTPS)**: Integrate Let's Encrypt (Certbot) directly into the Docker Compose setup for automatic certificate generation and renewal.
 - **Automated Database Backups**: Add a cron-based container (e.g., `spack/mysql-backup`) to daily dump the MariaDB database to the `./storage/backups` directory.
-- **Docker Log Rotation**: Add logging limits (e.g., `max-size: 10m`, `max-file: 3`) to all containers in `docker-compose.prod.yml` to prevent disk space exhaustion.
-- **Python Service Proxy**: Secure the `face-recognition` service by moving it behind the Nginx reverse proxy (to benefit from SSL and potential basic auth), removing the direct `5000:5000` port exposure.

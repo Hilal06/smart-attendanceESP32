@@ -36,6 +36,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
 
   useEffect(() => {
     let isMounted = true;
+
     const fetchStatus = async () => {
       try {
         const response = await fetch('/api/system/status');
@@ -51,10 +52,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ profiles, attendance, anno
     };
 
     fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
+
+    // Auto-refresh the system status and the dashboard data
+    const intervalId = setInterval(() => {
+      fetchStatus();
+
+      // Silently reload only the dynamic props
+      router.reload({
+        only: ['attendance', 'profiles', 'announcements']
+      });
+
+    }, 15000); // Poll every 15 seconds
+
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      clearInterval(intervalId);
     };
   }, []);
 

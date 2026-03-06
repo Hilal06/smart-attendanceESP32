@@ -5,6 +5,11 @@ services:
       dockerfile: docker/Dockerfile
     container_name: smart-attendance-app
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - DB_CONNECTION=mysql
       - DB_HOST=db
@@ -27,6 +32,11 @@ services:
       dockerfile: docker/nginx/Dockerfile
     container_name: smart-attendance-nginx
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "80:80"
       - "443:443"
@@ -41,6 +51,11 @@ services:
     image: mariadb:10.6
     container_name: smart-attendance-db
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -59,11 +74,17 @@ services:
       dockerfile: Dockerfile
     container_name: smart-attendance-recognition
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - API_KEY=${API_KEY}
       - LARAVEL_API_URL=http://webserver/api/attendance
-    ports:
-      - "5000:5000"
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
     volumes:
       - ./python_service/known_faces:/app/known_faces
       - ./python_service/uploads:/app/uploads

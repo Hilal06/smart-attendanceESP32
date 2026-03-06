@@ -2,8 +2,11 @@ import os
 from flask import Flask, request, jsonify
 from datetime import datetime
 import numpy as np
-import requests
+import urllib.request
+import json
 import shutil
+import pickle
+import io
 
 # Optional: Face Recognition
 try:
@@ -37,14 +40,44 @@ known_face_encodings = []
 known_face_names = []
 
 def load_known_faces():
+    global known_face_encodings, known_face_names
     if not FACE_RECOGNITION_AVAILABLE:
         return
 
     print("Loading known faces...")
+    cache_file = os.path.join(KNOWN_FACES_DIR, "encodings_cache.pkl")
+    
     if not os.path.exists(KNOWN_FACES_DIR):
         os.makedirs(KNOWN_FACES_DIR)
         print(f"Created directory: {KNOWN_FACES_DIR} - Put profile images here!")
         return
+
+    # Check if cache exists and is newer than all images
+    use_cache = False
+    if os.path.exists(cache_file):
+        cache_mtime = os.path.getmtime(cache_file)
+        use_cache = True
+        for filename in os.listdir(KNOWN_FACES_DIR):
+            if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+                if os.path.getmtime(os.path.join(KNOWN_FACES_DIR, filename)) > cache_mtime:
+                    use_cache = False
+                    break
+                    
+    if use_cache:
+        try:
+            with open(cache_file, 'rb') as f:
+                data = pickle.load(f)
+                known_face_encodings.clear()
+                known_face_names.clear()
+                known_face_encodings.extend(data['encodings'])
+                known_face_names.extend(data['names'])
+            print(f"Loaded {len(known_face_names)} faces from cache.")
+            return
+        except Exception as e:
+            print(f"Failed to load cache: {e}. Rebuilding...")
+
+    known_face_encodings.clear()
+    known_face_names.clear()
 
     for filename in os.listdir(KNOWN_FACES_DIR):
         if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
@@ -64,6 +97,14 @@ def load_known_faces():
                     print(f"Warning: No face found in {filename}")
             except Exception as e:
                 print(f"Error loading {filename}: {e}")
+
+    # Save cache
+    try:
+        with open(cache_file, 'wb') as f:
+            pickle.dump({'encodings': known_face_encodings, 'names': known_face_names}, f)
+        print("Saved encodings to cache.")
+    except Exception as e:
+        print(f"Failed to save cache: {e}")
 
 # Initial Load
 load_known_faces()
@@ -104,7 +145,9 @@ def recognize_face():
         
         if FACE_RECOGNITION_AVAILABLE:
             try:
-                unknown_image = face_recognition.load_image_file(temp_filename)
+                # Process directly from memory
+                image_stream = io.BytesIO(request.data)
+                unknown_image = face_recognition.load_image_file(image_stream)
                 face_locations = face_recognition.face_locations(unknown_image)
                 face_encodings = face_recognition.face_encodings(unknown_image, face_locations)
 
@@ -129,12 +172,17 @@ def recognize_face():
         if matched_name != "Unknown" and matched_name != "Recognition Disabled (Missing Lib)":
             try:
                 print(f"Logging attendance for {matched_name}...")
-                response = requests.post(
-                    LARAVEL_API_URL, 
-                    json={"profile_id": matched_name},
-                    headers={"X-API-KEY": API_KEY}
-                )
-                print(f"Laravel Response: {response.status_code} - {response.text}")
+                
+                req_data = json.dumps({"profile_id": matched_name}).encode('utf-8')
+                req_headers = {
+                    "Content-Type": "application/json",
+                    "X-API-KEY": API_KEY
+                }
+                
+                req = urllib.request.Request(LARAVEL_API_URL, data=req_data, headers=req_headers, method='POST')
+                with urllib.request.urlopen(req) as response:
+                    res_body = response.read().decode('utf-8')
+                    print(f"Laravel Response: {response.status} - {res_body}")
             except Exception as e:
                 print(f"Failed to contact Laravel: {e}")
 

@@ -172,51 +172,7 @@ class AttendanceController extends Controller
     {
         $settings = Setting::first();
 
-        // Auto-seed: If no attendance records exist for TODAY, generate them.
-        $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
-        $hasToday = Attendance::where('date', $today)->exists();
-
-        if (!$hasToday) {
-            $profiles = Profile::where('status', '!=', 'Terminated')->get();
-            $insertData = [];
-            foreach ($profiles as $emp) {
-                if (rand(1, 100) <= 15) {
-                    $status = rand(0, 1) ? 'Absent' : 'On Leave';
-                    $insertData[] = [
-                        'id' => $emp->id . '-' . $today,
-                        'profile_id' => $emp->id,
-                        'date' => $today,
-                        'check_in' => null,
-                        'check_out' => null,
-                        'status' => $status,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    continue;
-                }
-
-                $isLate = rand(1, 100) <= 20;
-                $status = $isLate ? 'Late' : 'Present';
-                $hour = $isLate ? 9 : 8;
-                $minute = $isLate ? rand(15, 45) : rand(45, 59);
-                $checkIn = sprintf("%02d:%02d", $hour, $minute);
-                $checkOut = rand(0, 1) ? '17:' . rand(0, 30) : null;
-
-                $insertData[] = [
-                    'id' => $emp->id . '-' . $today,
-                    'profile_id' => $emp->id,
-                    'date' => $today,
-                    'check_in' => $checkIn,
-                    'check_out' => $checkOut,
-                    'status' => $status,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-            if (!empty($insertData)) {
-                Attendance::insert($insertData);
-            }
-        }
+        // Auto-seed: Removed to allow real ESP32 data to populate the attendance table.
 
         // Performance Optimization: 
         // 1. Only fetch active profiles with necessary fields
@@ -603,11 +559,11 @@ class AttendanceController extends Controller
                         'email' => $validated['email'],
                         'role' => strtolower($validated['role']),
                     ];
-                    
+
                     if (!empty($validated['password'])) {
                         $updateData['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
                     }
-                    
+
                     $profile->user->update($updateData);
 
                     // Sync Spatie Role
@@ -1096,9 +1052,30 @@ class AttendanceController extends Controller
         } else {
             // Check In
             $status = 'Present';
-            // Simple logic: Late if after 9:00 AM
-            if ($now->hour >= 9 && $now->minute > 0) {
-                $status = 'Late';
+
+            // Dynamic Late Calculation based on Settings
+            $settings = Setting::first();
+            if ($settings && $settings->weekly_schedule) {
+                $dayOfWeek = $now->format('l'); // e.g. "Monday"
+                $schedule = is_string($settings->weekly_schedule) ? json_decode($settings->weekly_schedule, true) : $settings->weekly_schedule;
+
+                $todaySchedule = collect($schedule)->firstWhere('day', $dayOfWeek);
+
+                if ($todaySchedule && !empty($todaySchedule['isActive']) && !empty($todaySchedule['start'])) {
+                    // Start time is like "08:00"
+                    $startTimeParts = explode(':', $todaySchedule['start']);
+                    $startHour = (int)$startTimeParts[0];
+                    $startMinute = (int)$startTimeParts[1];
+
+                    $threshold = $settings->late_threshold_minutes ?? 0;
+
+                    // Create Carbon instance for the threshold time today
+                    $lateTime = $now->copy()->setTime($startHour, $startMinute)->addMinutes($threshold);
+
+                    if ($now->greaterThan($lateTime)) {
+                        $status = 'Late';
+                    }
+                }
             }
 
             $attendance = Attendance::create([
@@ -1149,8 +1126,8 @@ class AttendanceController extends Controller
                 file_get_contents($file->getRealPath()),
                 $file->getClientOriginalName()
             )->post($microserviceUrl . '/register_face', [
-                        'profile_id' => $profileId,
-                    ]);
+                'profile_id' => $profileId,
+            ]);
 
             if ($response->successful()) {
                 return ['success' => true, 'message' => 'Face registered successfully.'];

@@ -1,16 +1,9 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "esp_camera.h"
-
-// ==========================================
-// 1. WIFI & SERVER CONFIGURATION
-// ==========================================
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-
-// REPLACE with your Python Service IP (Local Windows IP)
-// Example: "http://192.168.100.26:5000/recognize"
-const char* serverUrl = "http://192.168.100.26:5000/recognize"; 
+#include "soc/soc.h"           // Disable brownout problems
+#include "soc/rtc_cntl_reg.h"  // Disable brownout problems
+#include "Config.h"
 
 // ==========================================
 // 2. CAMERA PINS (AI THINKER MODEL)
@@ -33,8 +26,14 @@ const char* serverUrl = "http://192.168.100.26:5000/recognize";
 #define PCLK_GPIO_NUM     22
 
 void setup() {
+  // Disable brownout detector
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+  
   Serial.begin(115200);
   
+  // Setup trigger pin
+  pinMode(TRIGGER_PIN, INPUT_PULLDOWN);
+
   // Connect WiFi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -84,6 +83,16 @@ void setup() {
 }
 
 void loop() {
+  // Wait for hardware trigger (e.g. PIR sensor detects motion)
+  if (digitalRead(TRIGGER_PIN) == LOW) {
+    delay(100);
+    return;
+  }
+  
+  Serial.println("Trigger detected! Capturing photo...");
+  // Optional short delay to let subject settle in frame
+  delay(500);
+
   // Capture Photo
   camera_fb_t * fb = esp_camera_fb_get();
   if(!fb) {
@@ -97,6 +106,7 @@ void loop() {
     HTTPClient http;
     http.begin(serverUrl);
     http.addHeader("Content-Type", "image/jpeg");
+    http.setTimeout(10000); // 10 seconds timeout
     
     int httpResponseCode = http.POST(fb->buf, fb->len);
     
@@ -111,6 +121,6 @@ void loop() {
   
   esp_camera_fb_return(fb);
   
-  // Wait 5 seconds before next capture
-  delay(5000);
+  // Wait a bit before allowing the next capture to avoid spamming
+  delay(3000);
 }
