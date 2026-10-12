@@ -147,6 +147,60 @@ sequenceDiagram
     end
 ```
 
+### 3.3 Flowchart Perhitungan Keterlambatan Dinamis (Dynamic Late Threshold)
+
+Logika penentuan status kehadiran di `AttendanceController::storeAttendanceApi`:
+
+```mermaid
+flowchart TD
+    Start([Request Presensi Masuk: profile_id]) --> CheckExisting{Apakah data presensi hari ini sudah ada?}
+    CheckExisting -->|Sudah Ada| CheckOut[Rekam Jam Check-Out dan Update Status]
+    CheckOut --> ReturnSuccess([Return Respons JSON: Check-Out])
+
+    CheckExisting -->|Belum Ada| DefaultStatus[Inisialisasi Status: Present]
+    DefaultStatus --> FetchSettings[Ambil Setting: weekly_schedule & late_threshold_minutes]
+    FetchSettings --> CheckSchedule{Apakah hari ini jadwal kerja aktif?}
+    
+    CheckSchedule -->|Tidak Aktif / Jadwal Kosong| SavePresent[Simpan sebagai Present]
+    CheckSchedule -->|Aktif| CalcThreshold[Hitung Ambang Batas: Jam Mulai + late_threshold_minutes]
+    
+    CalcThreshold --> CheckLate{Apakah Waktu Sekarang > Ambang Batas?}
+    CheckLate -->|Ya| SetLate[Ubah Status: Late / Terlambat]
+    CheckLate -->|Tidak| KeepPresent[Pertahankan Status: Present]
+
+    SetLate --> CreateAttendance[Buat Baris Baru di tabel attendances]
+    KeepPresent --> CreateAttendance
+    CreateAttendance --> ReturnCheckIn([Return Respons JSON: Check-In])
+```
+
+### 3.4 Flowchart Eksekusi Firmware Perangkat Keras (ESP32-CAM)
+
+Logika operasional firmware `esp32-cam/CaptureAndUpload.ino`:
+
+```mermaid
+flowchart TD
+    Boot([Power On / Boot ESP32-CAM]) --> DisableBrownout[Nonaktifkan Detektor Brownout RTC]
+    DisableBrownout --> InitPins[Inisialisasi GPIO 13 sebagai INPUT_PULLDOWN]
+    InitPins --> ConnectWiFi[Hubungkan ke Jaringan WiFi]
+    ConnectWiFi --> InitCam[Inisialisasi Sensor Kamera OV2640]
+    InitCam --> StandbyLoop[Loop Standby: Menunggu Sinyal Trigger]
+    
+    StandbyLoop --> ReadTrigger{GPIO 13 == HIGH?}
+    ReadTrigger -->|Tidak (LOW)| DelayIdle[Delay 100ms] --> StandbyLoop
+    
+    ReadTrigger -->|Ya (HIGH)| Debounce[Delay 500ms Settle Frame]
+    Debounce --> CaptureFrame[Ambil Frame Citra: esp_camera_fb_get]
+    CaptureFrame --> CheckFB{Frame Buffer Valid?}
+    
+    CheckFB -->|Gagal| ReturnFB[Lepas Buffer] --> StandbyLoop
+    CheckFB -->|Berhasil| HTTPPost[HTTP POST Binary JPEG ke Nginx /recognize]
+    
+    HTTPPost --> ParseResp[Baca Status Respons HTTP Server]
+    ParseResp --> ReturnFBSuccess[Lepas Buffer: esp_camera_fb_return]
+    ReturnFBSuccess --> Cooldown[Delay 3000ms Anti-Spam]
+    Cooldown --> StandbyLoop
+```
+
 ---
 
 ## 4. Diagram Use Case & Analisis Pengguna
@@ -567,46 +621,65 @@ docker compose -f docker-compose.prod.yml exec app php artisan db:seed --force
 
 ## 9. Galeri Antarmuka Sistem (Showcase)
 
-Berikut adalah dokumentasi visual antarmuka sistem SmartAttend yang diambil langsung dari lingkungan operasional:
+Berikut adalah dokumentasi visual antarmuka sistem SmartAttend yang diambil langsung dari lingkungan operasional menggunakan akun Administrator (`admin@smart.com`), serta sampel profil pengguna Staf/Guru dan Siswa:
 
-### 9.1 Autentikasi & Registrasi
+### 9.1 Alur Autentikasi Pengguna
 
-| Gerbang Masuk Terpadu (Login Gateway) | Pendaftaran Akun & Pengukur Sandi |
+| Gerbang Masuk Terpadu (Login Gateway) | Pendaftaran Akun Baru & Pengukur Sandi |
 | :---: | :---: |
 | ![Login Gateway](screenshots/01_login.png) | ![Pendaftaran Akun](screenshots/02_register.png) |
-| *Mendukung autentikasi kartu fisik RFID dan akun kata sandi dengan deteksi tema.* | *Dilengkapi indikator kekuatan kata sandi zxcvbn dan pemilihan peran.* |
+| *Mendukung autentikasi kartu RFID dan surel/kata sandi dengan deteksi tema otomatis.* | *Dilengkapi indikator kekuatan kata sandi zxcvbn dan pemilihan hierarki peran.* |
 
 ---
 
-### 9.2 Dasbor Operasional
+### 9.2 Dasbor Operasional Administrator (`admin@smart.com`)
 
-| Dasbor Studio Akademik (Academic Studio) | Direktori Staf & Pendaftaran Biometrik |
+| Dasbor Studio Akademik (Academic Studio) | Dasbor Pusat Kendali (Command Center) |
 | :---: | :---: |
-| ![Dasbor Akademik](screenshots/03_dashboard_academic.png) | ![Profil Staf](screenshots/04_profiles_staff.png) |
-| *Visualisasi fluktuasi mingguan, status kesehatan terminal, dan ringkasan eksekutif.* | *Manajemen data pengajar, foto rujukan biometrik, dan sinkronisasi hak akses.* |
+| ![Dasbor Akademik](screenshots/03_dashboard_academic.png) | ![Dasbor Command Center](screenshots/04_dashboard_command_center.png) |
+| *Visualisasi fluktuasi mingguan, status kesehatan terminal IoT, dan ringkasan eksekutif.* | *Varian operasional dengan log kehadiran real-time dan metrik telemetri.* |
 
 ---
 
-### 9.3 Manajemen Siswa & Analitik Laporan
+### 9.3 Manajemen Direktori & Detail Profil (Staf & Siswa)
 
-| Direktori Siswa & Kelas | Laporan Kehadiran & Asisten Analitik AI |
+| Direktori Staf & Pengajar (`/profiles`) | Dossier Detail Profil Staf (Modal View) |
 | :---: | :---: |
-| ![Direktori Siswa](screenshots/05_students.png) | ![Laporan Kehadiran](screenshots/06_reports_analytics.png) |
-| *Pencarian cepat, penugasan rombel kelas, dan evaluasi status kehadiran harian.* | *Analisis tren kumulatif, indeks ketepatan waktu, dan integrasi Google Gemini AI.* |
+| ![Direktori Staf](screenshots/05_profiles_staff.png) | ![Detail Profil Staf](screenshots/06_profile_staff_detail.png) |
+| *Daftar tenaga pendidik dan staf institusi dengan status sinkronisasi biometrik.* | *Tampilan dossier profil staf lengkap (NIP, Departemen, Kontak, Ringkasan AI).* |
+
+| Direktori Siswa & Rombel (`/students`) | Dossier Detail Profil Siswa (Modal View) |
+| :---: | :---: |
+| ![Direktori Siswa](screenshots/07_students.png) | ![Detail Profil Siswa](screenshots/08_profile_student_detail.png) |
+| *Manajemen data siswa, rombongan belajar (kelas), usia, dan status kehadiran.* | *Dossier profil siswa (Dian Prameswari - NIS: STU-0001, Kelas 10 RPL 1, Usia 16).* |
 
 ---
 
-### 9.4 Operasional & Pengaturan Institusi
+### 9.4 Laporan Kehadiran, Permohonan, & Pengumuman
 
-| Manajemen Pengajuan Izin / Cuti | Warta & Papan Pengumuman Institusi |
+| Laporan Kehadiran & Asisten Gemini AI | Manajemen Permohonan Izin / Cuti |
 | :---: | :---: |
-| ![Permohonan Izin](screenshots/07_requests.png) | ![Warta Pengumuman](screenshots/08_announcements.png) |
-| *Alur persetujuan surat sakit, cuti, atau izin dengan pelacakan status transparan.* | *Pusat pengumuman dengan tanda prioritas (Urgent, High, Normal) untuk seluruh pengguna.* |
+| ![Laporan Kehadiran](screenshots/09_reports_analytics.png) | ![Permohonan Izin](screenshots/10_requests.png) |
+| *Analitik kumulatif kehadiran dan asisten analitik naratif Google Gemini AI.* | *Pelacakan dan persetujuan surat izin sakit, cuti, atau dinas luar.* |
 
-| Konfigurasi Jam Kerja & Toleransi | Pengaturan Profil Pengguna Mandiri |
+| Warta & Papan Pengumuman Institusi | Konfigurasi Kebijakan & Jam Kerja |
 | :---: | :---: |
-| ![Pengaturan Institusi](screenshots/09_settings.png) | ![Profil Pengguna](screenshots/10_my_profile.png) |
-| *Pengaturan ambang batas keterlambatan harian dan jadwal aktif mingguan.* | *Informasi akun personal dan mekanisme pembaruan kata sandi berkeamanan tinggi.* |
+| ![Warta Pengumuman](screenshots/11_announcements.png) | ![Pengaturan Institusi](screenshots/12_settings.png) |
+| *Pusat pengumuman dengan label urgensi (Urgent, High, Normal) untuk seluruh pengguna.* | *Konfigurasi jadwal kerja harian, toleransi menit keterlambatan, dan bahasa.* |
+
+---
+
+### 9.5 Perspektif Halaman Profil Pengguna Mandiri (`/profile`)
+
+| Profil Pribadi Administrator (`admin@smart.com`) | Profil Pribadi Staf / Guru (Dr. Ali Utomo, S.Pd.) |
+| :---: | :---: |
+| ![Profil Pribadi Admin](screenshots/13_my_profile_admin.png) | ![Profil Pribadi Staf](screenshots/14_staff_personal_profile.png) |
+| *Tampilan profil mandiri dan pengaturan kredensial bagi peran Administrator.* | *Tampilan profil tenaga pendidik dengan navigasi khusus guru (Permintaan, Siswa).* |
+
+| Dasbor Siswa (Agus Purwandari) | Profil Pribadi Siswa (Agus Purwandari - STU-0012) |
+| :---: | :---: |
+| ![Dasbor Siswa](screenshots/15_student_dashboard.png) | ![Profil Pribadi Siswa](screenshots/16_student_personal_profile.png) |
+| *Dasbor siswa dengan pembatasan hak akses Spatie RBAC (hanya Dasbor, Pengumuman, Profil).* | *Profil siswa mandiri: Kelas 11 DKV 2, riwayat permohonan, dan status aktif.* |
 
 ---
 
