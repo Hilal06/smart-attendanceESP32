@@ -316,11 +316,30 @@ smart-attendanceESP32/
 │   │   └── constants.ts         # Bilingual (ID/EN) strings and dictionary
 │   └── views/app.blade.php      # Main HTML entrypoint with theme injection
 ├── storage/app/public/           # Persistent storage (avatars, attachments)
+├── documentation/                # Dedicated technical guides & manuals
+│   ├── DEPLOYMENT.md             # Production Docker deployment & server setup
+│   ├── SETUP_LOCAL.md            # Local development environment setup
+│   ├── SETUP_ESP32.md            # ESP32-CAM wiring, flashing & hardware trigger
+│   ├── RBAC_IMPLEMENTATION_GUIDE.md # Spatie RBAC & permission matrix
+│   ├── FUTURE_MQTT_GUIDE.md      # MQTT architecture & IoT scaling guide
+│   └── ROADMAP.md                # Project development roadmap
 ├── docker-compose.yml           # Local development multi-container orchestration
 ├── docker-compose.prod.yml      # Production multi-container orchestration
-├── DEPLOYMENT.md                 # Production deployment & server setup guide
 └── tailwind.config.js           # Tailwind CSS configuration with dynamic palettes
 ```
+
+---
+
+## 📚 Documentation & Guides
+
+Detailed technical guides and manuals are organized inside the **[`documentation/`](documentation/)** directory:
+
+- 📖 **[Production Deployment Guide](documentation/DEPLOYMENT.md)** — Step-by-step production deployment using Docker Compose, Nginx reverse proxy, and MariaDB.
+- 💻 **[Local Development Setup](documentation/SETUP_LOCAL.md)** — Manual local setup for PHP 8.2+, Node.js, and Python microservice.
+- 📷 **[ESP32-CAM Setup & Hardware Wiring](documentation/SETUP_ESP32.md)** — Flashing firmware, hardware trigger wiring, and brownout mitigation.
+- 🔐 **[RBAC Implementation Guide](documentation/RBAC_IMPLEMENTATION_GUIDE.md)** — Multi-tier roles, permissions, and security hierarchy.
+- 📡 **[Future MQTT Architecture](documentation/FUTURE_MQTT_GUIDE.md)** — Migration plan for enterprise IoT scale using MQTT broker.
+- 🗺️ **[Project Roadmap](documentation/ROADMAP.md)** — Milestones and future roadmap.
 
 ---
 
