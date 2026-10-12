@@ -52,118 +52,138 @@ class AttendanceController extends Controller
 
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
-                    return $query->where('role', $request->role);
-                })
-            ],
-            'password' => [
-                'required',
-                'string',
-                'confirmed',
-                \Illuminate\Validation\Rules\Password::min(8)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-            ],
-            'role' => 'required|in:student,teacher',
-            'department' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'institutional_id' => 'nullable|string|max:20',
-            'class' => 'nullable|string|max:100',
-            'age' => 'nullable|integer|min:0|max:150',
-        ]);
-
-        $user = null;
-        $profileId = (string) rand(100000, 999999);
-
-        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, &$user, $profileId) {
-            $user = \App\Models\User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
-                'role' => $validated['role'],
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
+                        return $query->where('role', $request->role);
+                    })
+                ],
+                'password' => [
+                    'required',
+                    'string',
+                    'confirmed',
+                    \Illuminate\Validation\Rules\Password::min(8)
+                        ->letters()
+                        ->mixedCase()
+                        ->numbers()
+                        ->symbols()
+                ],
+                'role' => 'required|in:student,teacher',
+                'department' => 'nullable|string|max:255',
+                'phone_number' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'institutional_id' => 'nullable|string|max:20',
+                'class' => 'nullable|string|max:100',
+                'age' => 'nullable|integer|min:0|max:150',
             ]);
 
-            // Assign Spatie Role
-            $user->assignRole(strtolower($validated['role']));
+            $user = null;
+            $profileId = (string) rand(100000, 999999);
 
-            \App\Models\Profile::create([
-                'id' => $profileId,
-                'user_id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => ucfirst($user->role),
-                'department' => $validated['department'] ?? 'General',
-                'phone_number' => $validated['phone_number'] ?? null,
-                'address' => $validated['address'] ?? null,
-                'student_id' => $user->role === 'student' ? ($validated['institutional_id'] ?? null) : null,
-                'teacher_id' => $user->role === 'teacher' ? ($validated['institutional_id'] ?? null) : null,
-                'join_date' => now()->format('Y-m-d'),
-                'status' => 'Active',
-                'class' => $user->role === 'student' ? ($validated['class'] ?? null) : null,
-                'age' => $validated['age'] ?? null,
-            ]);
-        });
+            \Illuminate\Support\Facades\DB::transaction(function () use ($validated, &$user, $profileId) {
+                $user = \App\Models\User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+                    'role' => $validated['role'],
+                ]);
 
-        if ($user) {
-            \Illuminate\Support\Facades\Auth::login($user);
-            $request->session()->regenerate();
-            session(['userRole' => $user->role, 'userId' => $profileId]);
+                // Assign Spatie Role
+                $user->assignRole(strtolower($validated['role']));
 
-            return redirect()->route('dashboard');
+                \App\Models\Profile::create([
+                    'id' => $profileId,
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => ucfirst($user->role),
+                    'department' => $validated['department'] ?? 'General',
+                    'phone_number' => $validated['phone_number'] ?? null,
+                    'address' => $validated['address'] ?? null,
+                    'student_id' => $user->role === 'student' ? ($validated['institutional_id'] ?? null) : null,
+                    'teacher_id' => $user->role === 'teacher' ? ($validated['institutional_id'] ?? null) : null,
+                    'join_date' => now()->format('Y-m-d'),
+                    'status' => 'Active',
+                    'class' => $user->role === 'student' ? ($validated['class'] ?? null) : null,
+                    'age' => $validated['age'] ?? null,
+                ]);
+            });
+
+            if ($user) {
+                \Illuminate\Support\Facades\Auth::login($user);
+                $request->session()->regenerate();
+                session(['userRole' => $user->role, 'userId' => $profileId]);
+
+                return redirect()->route('dashboard');
+            }
+
+            return back()->withErrors(['message' => 'Pendaftaran akun gagal.']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error during registration: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Terjadi kesalahan saat pendaftaran: ' . $e->getMessage()]);
         }
-
-        return back()->withErrors(['message' => 'Registration failed.']);
     }
 
     public function authenticate(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-            'role' => ['required', 'string'],
-        ]);
+        try {
+            $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
 
-        if (\Illuminate\Support\Facades\Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            $user = \Illuminate\Support\Facades\Auth::user();
+            $credentials = $request->only('email', 'password');
 
-            // Map legacy user (user ID 1) or 'super_admin' to 'admin'
-            $frontendRole = $user->role;
-            if ($user->id === 1 || $user->role === 'super_admin') {
-                $frontendRole = 'admin';
+            if (\Illuminate\Support\Facades\Auth::attempt($credentials)) {
+                $request->session()->regenerate();
+                $user = \Illuminate\Support\Facades\Auth::user();
+
+                // Map legacy user (user ID 1) or 'super_admin' to 'admin'
+                $frontendRole = $user->role;
+                if ($user->id === 1 || $user->role === 'super_admin') {
+                    $frontendRole = 'admin';
+                }
+
+                $profile = \App\Models\Profile::where('user_id', $user->id)->first();
+                // Fallback to legacy behavior if no profile record is linked
+                $userId = $profile ? $profile->id : 'admin';
+
+                session(['userRole' => $frontendRole, 'userId' => $userId]);
+
+                return to_route('dashboard');
             }
 
-            $profile = \App\Models\Profile::where('user_id', $user->id)->first();
-            // Fallback to legacy behavior if no profile record is linked
-            $userId = $profile ? $profile->id : 'admin';
-
-            session(['userRole' => $frontendRole, 'userId' => $userId]);
-
-            return to_route('dashboard');
+            return back()->withErrors([
+                'email' => 'Kredensial yang dimasukkan tidak cocok dengan catatan kami.',
+            ])->onlyInput('email');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error during authentication: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['email' => 'Terjadi kesalahan sistem saat proses masuk: ' . $e->getMessage()])->onlyInput('email');
         }
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
     {
-        \Illuminate\Support\Facades\Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        session()->forget(['userRole', 'userId']);
-        return redirect()->route('login');
+        try {
+            \Illuminate\Support\Facades\Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            session()->forget(['userRole', 'userId']);
+            return redirect()->route('login');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error during logout: ' . $e->getMessage());
+            return redirect()->route('login');
+        }
     }
 
     // --- App Methods ---
@@ -321,173 +341,186 @@ class AttendanceController extends Controller
 
     public function updateSettings(Request $request)
     {
-        if (session('userRole') !== 'admin') {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            if (session('userRole') !== 'admin') {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
 
-        $data = $request->all();
-        // Map camelCase to snake_case
-        $updateData = [];
-        if (isset($data['companyName']))
-            $updateData['company_name'] = $data['companyName'];
-        if (isset($data['lateThresholdMinutes']))
-            $updateData['late_threshold_minutes'] = $data['lateThresholdMinutes'];
-        if (isset($data['weeklySchedule']))
-            $updateData['weekly_schedule'] = $data['weeklySchedule'];
-        if (isset($data['language']))
-            $updateData['language'] = $data['language'];
+            $data = $request->all();
+            // Map camelCase to snake_case
+            $updateData = [];
+            if (isset($data['companyName']))
+                $updateData['company_name'] = $data['companyName'];
+            if (isset($data['lateThresholdMinutes']))
+                $updateData['late_threshold_minutes'] = $data['lateThresholdMinutes'];
+            if (isset($data['weeklySchedule']))
+                $updateData['weekly_schedule'] = $data['weeklySchedule'];
+            if (isset($data['language']))
+                $updateData['language'] = $data['language'];
 
-        if (array_key_exists('companyLogo', $data)) {
-            $logoData = $data['companyLogo'];
+            if (array_key_exists('companyLogo', $data)) {
+                $logoData = $data['companyLogo'];
 
-            if (empty($logoData)) {
-                $updateData['company_logo'] = null;
-            } else {
-                // If it's a base64 string (from FileReader)
-                if (preg_match('/^data:image\/(\w+);base64,/', $logoData, $type)) {
-                    $logoData = substr($logoData, strpos($logoData, ',') + 1);
-                    $type = strtolower($type[1]); // jpg, png, gif
-
-                    if (in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
-                        $logoData = base64_decode($logoData);
-                        if ($logoData !== false) {
-                            $filename = 'company_logo_' . time() . '.' . $type;
-                            Storage::disk('public')->put('logos/' . $filename, $logoData);
-                            $updateData['company_logo'] = Storage::url('logos/' . $filename);
-                        }
-                    }
+                if (empty($logoData)) {
+                    $updateData['company_logo'] = null;
                 } else {
-                    // It might be already a URL
-                    $updateData['company_logo'] = $logoData;
+                    // If it's a base64 string (from FileReader)
+                    if (preg_match('/^data:image\/(\w+);base64,/', $logoData, $type)) {
+                        $logoData = substr($logoData, strpos($logoData, ',') + 1);
+                        $type = strtolower($type[1]); // jpg, png, gif
+
+                        if (in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+                            $logoData = base64_decode($logoData);
+                            if ($logoData !== false) {
+                                $filename = 'company_logo_' . time() . '.' . $type;
+                                Storage::disk('public')->put('logos/' . $filename, $logoData);
+                                $updateData['company_logo'] = Storage::url('logos/' . $filename);
+                            }
+                        }
+                    } else {
+                        // It might be already a URL
+                        $updateData['company_logo'] = $logoData;
+                    }
                 }
             }
-        }
 
-        $settings = Setting::first();
-        if ($settings) {
-            $settings->update($updateData);
-        } else {
-            Setting::create($updateData);
+            $settings = Setting::first();
+            if ($settings) {
+                $settings->update($updateData);
+            } else {
+                Setting::create($updateData);
+            }
+            return back()->with('message', 'Pengaturan berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating settings: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal memperbarui pengaturan: ' . $e->getMessage()]);
         }
-        return back()->with('message', 'Settings updated successfully');
     }
 
     public function storeProfile(Request $request)
     {
-        $userRole = session('userRole');
-        if (!in_array($userRole, ['admin', 'teacher'])) {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            $userRole = session('userRole');
+            if (!in_array($userRole, ['admin', 'teacher'])) {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
 
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'role' => 'required|string',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
-                    return $query->where('role', $request->role);
-                })
-            ],
-            'department' => 'nullable|string|max:255',
-            'joinDate' => 'nullable|date',
-            'phoneNumber' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'status' => 'nullable|string',
-            'student_id' => 'nullable|string|max:20',
-            'teacher_id' => 'nullable|string|max:20',
-            'class' => 'nullable|string|max:100',
-            'age' => 'nullable|integer|min:0|max:150',
-            'avatar' => 'nullable', // Allow either image upload or string URL backwards
-            'face_data' => 'nullable', // Allow empty or file
-            'password' => 'nullable|string|min:8|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            \Illuminate\Support\Facades\Log::error('Store Profile Validation Failed:', $validator->errors()->toArray());
-            return back()->withErrors($validator)->withInput();
-        }
-        $validated = $validator->validated();
-
-
-        if ($userRole === 'teacher' && strtolower($validated['role']) !== 'student') {
-            return back()->withErrors(['message' => 'Teachers can only manage student profiles.']);
-        }
-
-        $data = $request->all();
-        if (isset($validated['joinDate']))
-            $data['join_date'] = $validated['joinDate'];
-        if (isset($validated['phoneNumber']))
-            $data['phone_number'] = $validated['phoneNumber'];
-
-        if (strtolower($validated['role']) !== 'student') {
-            $data['class'] = null; // Ensure class is only for students
-        }
-
-        if (empty($data['id'])) {
-            $data['id'] = (string) rand(100000, 999999);
-        }
-
-        unset($data['password']);
-        unset($data['password_confirmation']);
-
-        \Illuminate\Support\Facades\DB::transaction(function () use (&$data, $validated, $request) {
-            $user = \App\Models\User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => \Illuminate\Support\Facades\Hash::make(!empty($validated['password']) ? $validated['password'] : 'password123'),
-                'role' => strtolower($validated['role']),
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'role' => 'required|string',
+                'email' => [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    \Illuminate\Validation\Rule::unique('users')->where(function ($query) use ($request) {
+                        return $query->where('role', $request->role);
+                    })
+                ],
+                'department' => 'nullable|string|max:255',
+                'joinDate' => 'nullable|date',
+                'phoneNumber' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'status' => 'nullable|string',
+                'student_id' => 'nullable|string|max:20',
+                'teacher_id' => 'nullable|string|max:20',
+                'class' => 'nullable|string|max:100',
+                'age' => 'nullable|integer|min:0|max:150',
+                'avatar' => 'nullable', // Allow either image upload or string URL backwards
+                'face_data' => 'nullable', // Allow empty or file
+                'password' => 'nullable|string|min:8|confirmed',
             ]);
 
-            // Assign Spatie Role
-            $user->assignRole(strtolower($validated['role']));
+            if ($validator->fails()) {
+                \Illuminate\Support\Facades\Log::error('Store Profile Validation Failed:', $validator->errors()->toArray());
+                return back()->withErrors($validator)->withInput();
+            }
+            $validated = $validator->validated();
 
-            $data['user_id'] = $user->id;
-
-            if ($request->hasFile('avatar')) {
-                $file = $request->file('avatar');
-                $filename = $data['id'] . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('avatars', $filename, 'public');
-                $data['avatar'] = \Illuminate\Support\Facades\Storage::url($path);
+            if ($userRole === 'teacher' && strtolower($validated['role']) !== 'student') {
+                return back()->withErrors(['message' => 'Teachers can only manage student profiles.']);
             }
 
-            Profile::create($data);
-        });
+            $data = $request->all();
+            if (isset($validated['joinDate']))
+                $data['join_date'] = $validated['joinDate'];
+            if (isset($validated['phoneNumber']))
+                $data['phone_number'] = $validated['phoneNumber'];
 
-        $faceRegistrationMessage = null;
-        // Handle Face Data Upload outside DB transaction since it calls external API
-        if ($request->hasFile('face_data')) {
-            $registrationResult = $this->registerFaceData($data['id'], $request->file('face_data'));
-            if (!$registrationResult['success']) {
-                $faceRegistrationMessage = $registrationResult['message'];
+            if (strtolower($validated['role']) !== 'student') {
+                $data['class'] = null; // Ensure class is only for students
             }
-        }
 
-        $msg = 'Profile created successfully';
-        if (empty($validated['password'])) {
-            $msg .= ' with default password "password123".';
-        } else {
-            $msg .= '.';
-        }
+            if (empty($data['id'])) {
+                $data['id'] = (string) rand(100000, 999999);
+            }
 
-        if ($faceRegistrationMessage) {
-            $msg .= ' However, face registration failed: ' . $faceRegistrationMessage;
-        }
+            unset($data['password']);
+            unset($data['password_confirmation']);
 
-        return back()->with('message', $msg);
+            \Illuminate\Support\Facades\DB::transaction(function () use (&$data, $validated, $request) {
+                $user = \App\Models\User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => \Illuminate\Support\Facades\Hash::make(!empty($validated['password']) ? $validated['password'] : 'password123'),
+                    'role' => strtolower($validated['role']),
+                ]);
+
+                // Assign Spatie Role
+                $user->assignRole(strtolower($validated['role']));
+
+                $data['user_id'] = $user->id;
+
+                if ($request->hasFile('avatar')) {
+                    $file = $request->file('avatar');
+                    $filename = $data['id'] . '.' . $file->getClientOriginalExtension();
+                    $path = $file->storeAs('avatars', $filename, 'public');
+                    $data['avatar'] = \Illuminate\Support\Facades\Storage::url($path);
+                }
+
+                Profile::create($data);
+            });
+
+            $faceRegistrationMessage = null;
+            // Handle Face Data Upload outside DB transaction since it calls external API
+            if ($request->hasFile('face_data')) {
+                $registrationResult = $this->registerFaceData($data['id'], $request->file('face_data'));
+                if (!$registrationResult['success']) {
+                    $faceRegistrationMessage = $registrationResult['message'];
+                }
+            }
+
+            $msg = 'Profil berhasil ditambahkan';
+            if (empty($validated['password'])) {
+                $msg .= ' dengan kata sandi bawaan "password123".';
+            } else {
+                $msg .= '.';
+            }
+
+            if ($faceRegistrationMessage) {
+                $msg .= ' Catatan: registrasi wajah gagal: ' . $faceRegistrationMessage;
+            }
+
+            return back()->with('message', $msg);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error storing profile: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal menyimpan profil: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function updateProfile(Request $request, $id)
     {
-        $userRole = session('userRole');
-        if (!in_array($userRole, ['admin', 'teacher'])) {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            $userRole = session('userRole');
+            if (!in_array($userRole, ['admin', 'teacher'])) {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
 
-        $profile = Profile::with('user')->find($id);
-        if ($profile) {
+            $profile = Profile::with('user')->find($id);
+            if (!$profile) {
+                return back()->withErrors(['message' => 'Profil tidak ditemukan.']);
+            }
+
             if ($userRole === 'teacher' && strtolower($profile->role) !== 'student') {
                 return back()->withErrors(['message' => 'Teachers can only manage student profiles.']);
             }
@@ -533,7 +566,6 @@ class AttendanceController extends Controller
                 return back()->withErrors($validator)->withInput();
             }
             $validated = $validator->validated();
-
 
             if ($userRole === 'teacher' && strtolower($validated['role']) !== 'student') {
                 return back()->withErrors(['message' => 'Teachers cannot change a student into another role.']);
@@ -592,47 +624,59 @@ class AttendanceController extends Controller
                 }
             }
 
-            $msg = 'Profile updated successfully.';
+            $msg = 'Profil berhasil diperbarui.';
             if ($faceRegistrationMessage) {
-                $msg .= ' However, face registration failed: ' . $faceRegistrationMessage;
+                $msg .= ' Namun registrasi wajah gagal: ' . $faceRegistrationMessage;
             }
 
             return back()->with('message', $msg);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating profile: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal memperbarui profil: ' . $e->getMessage()])->withInput();
         }
     }
 
     public function togglePasswordPermission($id)
     {
-        $userRole = session('userRole');
-        if (!in_array($userRole, ['admin', 'teacher'])) {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
+        try {
+            $userRole = session('userRole');
+            if (!in_array($userRole, ['admin', 'teacher'])) {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
+
+            $profile = Profile::with('user')->find($id);
+
+            if (!$profile || !$profile->user) {
+                return back()->withErrors(['message' => 'Profil atau akun pengguna tidak ditemukan.']);
+            }
+
+            if ($userRole === 'teacher' && strtolower($profile->role) !== 'student') {
+                return back()->withErrors(['message' => 'Teachers can only manage student permissions.']);
+            }
+
+            $profile->user->can_change_password = !$profile->user->can_change_password;
+            $profile->user->save();
+
+            return back()->with('message', 'Izin kata sandi berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error toggling password permission: ' . $e->getMessage());
+            return back()->withErrors(['message' => 'Gagal mengubah izin kata sandi: ' . $e->getMessage()]);
         }
-
-        $profile = Profile::with('user')->find($id);
-
-        if (!$profile || !$profile->user) {
-            return back()->withErrors(['message' => 'Profile or associated user not found.']);
-        }
-
-        if ($userRole === 'teacher' && strtolower($profile->role) !== 'student') {
-            return back()->withErrors(['message' => 'Teachers can only manage student permissions.']);
-        }
-
-        $profile->user->can_change_password = !$profile->user->can_change_password;
-        $profile->user->save();
-
-        return back()->with('message', 'Password permission updated successfully.');
     }
 
     public function deleteProfile($id)
     {
-        $userRole = session('userRole');
-        if (!in_array($userRole, ['admin', 'teacher'])) {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            $userRole = session('userRole');
+            if (!in_array($userRole, ['admin', 'teacher'])) {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
 
-        $profile = Profile::find($id);
-        if ($profile) {
+            $profile = Profile::find($id);
+            if (!$profile) {
+                return back()->withErrors(['message' => 'Profil tidak ditemukan.']);
+            }
+
             if ($userRole === 'teacher' && strtolower($profile->role) !== 'student') {
                 return back()->withErrors(['message' => 'Teachers can only delete student profiles.']);
             }
@@ -650,9 +694,12 @@ class AttendanceController extends Controller
                     \App\Models\User::destroy($userId);
                 }
             });
-        }
 
-        return back()->with('message', 'Profile deleted successfully.');
+            return back()->with('message', 'Profil berhasil dihapus.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error deleting profile: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal menghapus profil: ' . $e->getMessage()]);
+        }
     }
 
     public function reports()
@@ -729,38 +776,45 @@ class AttendanceController extends Controller
 
     public function updateAdmin(Request $request)
     {
-        if (session('userRole') !== 'admin') {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
+        try {
+            if (session('userRole') !== 'admin') {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
+
+            $user = \Illuminate\Support\Facades\Auth::user();
+
+            if (!$user) {
+                return back()->withErrors(['message' => 'User not found.']);
+            }
+
+            $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
+                'current_password' => ['required', 'string'],
+                'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            ]);
+
+            if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Kata sandi saat ini tidak sesuai.']);
+            }
+
+            /** @var \App\Models\User $user */
+            $user->name = $request->name;
+            $user->email = $request->email;
+
+            if ($request->filled('new_password')) {
+                $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+            }
+
+            $user->save();
+
+            return back()->with('message', 'Kredensial admin berhasil diperbarui.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating admin: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal memperbarui kredensial: ' . $e->getMessage()]);
         }
-
-        $user = \Illuminate\Support\Facades\Auth::user();
-
-        if (!$user) {
-            return back()->withErrors(['message' => 'User not found.']);
-        }
-
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
-            'current_password' => ['required', 'string'],
-            'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
-        ]);
-
-        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'The provided password does not match your current password.']);
-        }
-
-        /** @var \App\Models\User $user */
-        $user->name = $request->name;
-        $user->email = $request->email;
-
-        if ($request->filled('new_password')) {
-            $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
-        }
-
-        $user->save();
-
-        return back()->with('message', 'Admin credentials updated successfully.');
     }
 
     public function announcements()
@@ -775,52 +829,79 @@ class AttendanceController extends Controller
 
     public function storeAnnouncement(Request $request)
     {
-        if (session('userRole') !== 'admin') {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            if (session('userRole') !== 'admin') {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'priority' => 'required|string|max:50',
-            'date' => 'required|date',
-        ]);
-
-        $data = $validated;
-        if (!isset($data['id'])) {
-            $data['id'] = (string) time();
-        }
-        Announcement::create($data);
-        return back();
-    }
-
-    public function updateAnnouncement(Request $request, $id)
-    {
-        if (session('userRole') !== 'admin') {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
-
-        $announcement = Announcement::find($id);
-        if ($announcement) {
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'content' => 'required|string',
                 'priority' => 'required|string|max:50',
                 'date' => 'required|date',
             ]);
-            $announcement->update($validated);
+
+            $data = $validated;
+            if (!isset($data['id'])) {
+                $data['id'] = (string) time();
+            }
+            Announcement::create($data);
+            return back()->with('message', 'Pengumuman berhasil dipublikasikan.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error storing announcement: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal membuat pengumuman: ' . $e->getMessage()])->withInput();
         }
-        return back();
+    }
+
+    public function updateAnnouncement(Request $request, $id)
+    {
+        try {
+            if (session('userRole') !== 'admin') {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
+
+            $announcement = Announcement::find($id);
+            if (!$announcement) {
+                return back()->withErrors(['message' => 'Pengumuman tidak ditemukan.']);
+            }
+
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'priority' => 'required|string|max:50',
+                'date' => 'required|date',
+            ]);
+
+            $announcement->update($validated);
+            return back()->with('message', 'Pengumuman berhasil diperbarui.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating announcement: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal memperbarui pengumuman: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function deleteAnnouncement($id)
     {
-        if (session('userRole') !== 'admin') {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            if (session('userRole') !== 'admin') {
+                return back()->withErrors(['message' => 'Unauthorized action.']);
+            }
 
-        Announcement::destroy($id);
-        return back();
+            $announcement = Announcement::find($id);
+            if (!$announcement) {
+                return back()->withErrors(['message' => 'Pengumuman tidak ditemukan.']);
+            }
+
+            $announcement->delete();
+            return back()->with('message', 'Pengumuman berhasil dihapus.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error deleting announcement: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal menghapus pengumuman: ' . $e->getMessage()]);
+        }
     }
 
     public function requests()
@@ -877,56 +958,79 @@ class AttendanceController extends Controller
 
     public function storeRequest(Request $request)
     {
-        $validated = $request->validate([
-            'profileId' => 'required|string|exists:profiles,id',
-            'description' => 'required|string',
-            'date' => 'required|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'profileId' => 'required|string|exists:profiles,id',
+                'description' => 'required|string',
+                'date' => 'required|date',
+            ]);
 
-        $data = $validated;
-        $data['id'] = (string) time();
-        $data['profile_id'] = $data['profileId'];
-        $data['date'] = Carbon::parse($data['date'])->setTimezone('Asia/Jakarta');
-        $data['status'] = 'Pending';
+            $data = $validated;
+            $data['id'] = (string) time();
+            $data['profile_id'] = $data['profileId'];
+            $data['date'] = Carbon::parse($data['date'])->setTimezone('Asia/Jakarta');
+            $data['status'] = 'Pending';
 
-        ProfileRequest::create($data);
-        return back();
+            ProfileRequest::create($data);
+            return back()->with('message', 'Permohonan berhasil diajukan.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error storing request: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal mengajukan permohonan: ' . $e->getMessage()]);
+        }
     }
 
     public function updateRequest(Request $request, $id)
     {
-        if (!in_array(session('userRole'), ['admin', 'teacher'])) {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            if (!in_array(session('userRole'), ['admin', 'teacher'])) {
+                return back()->withErrors(['message' => 'Aksi tidak diizinkan.']);
+            }
 
-        $req = ProfileRequest::with('profile')->find($id);
-        if ($req) {
+            $req = ProfileRequest::with('profile')->find($id);
+            if (!$req) {
+                return back()->withErrors(['message' => 'Permohonan tidak ditemukan.']);
+            }
+
             if (session('userRole') === 'teacher' && strtolower($req->profile->role) !== 'student') {
-                return back()->withErrors(['message' => 'Teachers can only manage student requests.']);
+                return back()->withErrors(['message' => 'Guru hanya dapat mengelola permohonan siswa.']);
             }
             $validated = $request->validate([
                 'status' => 'required|string|in:Pending,Approved,Rejected',
             ]);
             // Frontend sends status updates
             $req->update($validated);
+            return back()->with('message', 'Status permohonan berhasil diperbarui.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating request: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal memperbarui permohonan: ' . $e->getMessage()]);
         }
-        return back();
     }
 
     public function deleteRequest($id)
     {
-        if (!in_array(session('userRole'), ['admin', 'teacher'])) {
-            return back()->withErrors(['message' => 'Unauthorized action.']);
-        }
+        try {
+            if (!in_array(session('userRole'), ['admin', 'teacher'])) {
+                return back()->withErrors(['message' => 'Aksi tidak diizinkan.']);
+            }
 
-        $req = ProfileRequest::with('profile')->find($id);
-        if ($req) {
+            $req = ProfileRequest::with('profile')->find($id);
+            if (!$req) {
+                return back()->withErrors(['message' => 'Permohonan tidak ditemukan.']);
+            }
+
             if (session('userRole') === 'teacher' && strtolower($req->profile->role) !== 'student') {
-                return back()->withErrors(['message' => 'Teachers can only delete student requests.']);
+                return back()->withErrors(['message' => 'Guru hanya dapat menghapus permohonan siswa.']);
             }
             $req->delete();
+            return back()->with('message', 'Permohonan berhasil dihapus.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error deleting request: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal menghapus permohonan: ' . $e->getMessage()]);
         }
-        return back();
     }
 
     public function profile()
@@ -981,118 +1085,139 @@ class AttendanceController extends Controller
 
     public function updateProfilePassword(Request $request)
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
+        try {
+            $user = \Illuminate\Support\Facades\Auth::user();
 
-        if (!$user) {
-            return back()->withErrors(['message' => 'User not found.']);
+            if (!$user) {
+                return back()->withErrors(['message' => 'Pengguna tidak ditemukan.']);
+            }
+
+            $request->validate([
+                'current_password' => ['required', 'string'],
+                'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+            ]);
+
+            if (strtolower($user->role) === 'student' && !$user->can_change_password) {
+                return back()->withErrors(['message' => 'Anda tidak memiliki izin untuk mengubah kata sandi.']);
+            }
+
+            if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Kata sandi saat ini tidak cocok.']);
+            }
+
+            /** @var \App\Models\User $user */
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+
+            if (strtolower($user->role) === 'student') {
+                $user->can_change_password = false;
+            }
+
+            $user->save();
+
+            return back()->with('message', 'Kata sandi berhasil diperbarui.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating profile password: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['message' => 'Gagal memperbarui kata sandi: ' . $e->getMessage()]);
         }
-
-        $request->validate([
-            'current_password' => ['required', 'string'],
-            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-
-        if (strtolower($user->role) === 'student' && !$user->can_change_password) {
-            return back()->withErrors(['message' => 'You do not have permission to change your password.']);
-        }
-
-        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'The provided password does not match your current password.']);
-        }
-
-        /** @var \App\Models\User $user */
-        $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
-
-        if (strtolower($user->role) === 'student') {
-            $user->can_change_password = false;
-        }
-
-        $user->save();
-
-        return back()->with('message', 'Password updated successfully.');
     }
 
     // --- API Methods for ESP32 ---
 
     public function storeAttendanceApi(Request $request)
     {
-        // Simple API Key Validation
-        $expectedKey = config('services.python_service.api_key', env('API_KEY', '1234567890'));
-        $providedKey = $request->header('X-API-KEY');
+        try {
+            // Simple API Key Validation
+            $expectedKey = config('services.python_service.api_key', env('API_KEY', '1234567890'));
+            $providedKey = $request->header('X-API-KEY');
 
-        if ($providedKey !== $expectedKey) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized. Invalid API Key.'], 401);
-        }
-
-        $request->validate([
-            'profile_id' => 'required|exists:profiles,id',
-        ]);
-
-        $profileId = $request->input('profile_id');
-        $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
-        $now = now()->setTimezone('Asia/Jakarta');
-        $timeString = $now->format('H:i');
-
-        $attendanceId = $profileId . '-' . $today;
-        $attendance = Attendance::find($attendanceId);
-
-        if ($attendance) {
-            // Already checked in? Check out.
-            $attendance->update([
-                'check_out' => $timeString,
-                'status' => 'Present', // Or keep existing status? safe to say Present if they checked out
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-                'type' => 'check_out',
-                'message' => 'Goodbye! Checked out at ' . $timeString,
-                'data' => $attendance
-            ]);
-        } else {
-            // Check In
-            $status = 'Present';
-
-            // Dynamic Late Calculation based on Settings
-            $settings = Setting::first();
-            if ($settings && $settings->weekly_schedule) {
-                $dayOfWeek = $now->format('l'); // e.g. "Monday"
-                $schedule = is_string($settings->weekly_schedule) ? json_decode($settings->weekly_schedule, true) : $settings->weekly_schedule;
-
-                $todaySchedule = collect($schedule)->firstWhere('day', $dayOfWeek);
-
-                if ($todaySchedule && !empty($todaySchedule['isActive']) && !empty($todaySchedule['start'])) {
-                    // Start time is like "08:00"
-                    $startTimeParts = explode(':', $todaySchedule['start']);
-                    $startHour = (int)$startTimeParts[0];
-                    $startMinute = (int)$startTimeParts[1];
-
-                    $threshold = $settings->late_threshold_minutes ?? 0;
-
-                    // Create Carbon instance for the threshold time today
-                    $lateTime = $now->copy()->setTime($startHour, $startMinute)->addMinutes($threshold);
-
-                    if ($now->greaterThan($lateTime)) {
-                        $status = 'Late';
-                    }
-                }
+            if ($providedKey !== $expectedKey) {
+                return response()->json(['status' => 'error', 'message' => 'Tidak sah. Kunci API tidak valid.'], 401);
             }
 
-            $attendance = Attendance::create([
-                'id' => $attendanceId,
-                'profile_id' => $profileId,
-                'date' => $today,
-                'check_in' => $timeString,
-                'check_out' => null,
-                'status' => $status
+            $request->validate([
+                'profile_id' => 'required|exists:profiles,id',
             ]);
 
+            $profileId = $request->input('profile_id');
+            $today = now()->setTimezone('Asia/Jakarta')->format('Y-m-d');
+            $now = now()->setTimezone('Asia/Jakarta');
+            $timeString = $now->format('H:i');
+
+            $attendanceId = $profileId . '-' . $today;
+            $attendance = Attendance::find($attendanceId);
+
+            if ($attendance) {
+                // Already checked in? Check out.
+                $attendance->update([
+                    'check_out' => $timeString,
+                    'status' => 'Present', // Or keep existing status? safe to say Present if they checked out
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'type' => 'check_out',
+                    'message' => 'Sampai jumpa! Check-out tercatat pada ' . $timeString,
+                    'data' => $attendance
+                ]);
+            } else {
+                // Check In
+                $status = 'Present';
+
+                // Dynamic Late Calculation based on Settings
+                $settings = Setting::first();
+                if ($settings && $settings->weekly_schedule) {
+                    $dayOfWeek = $now->format('l'); // e.g. "Monday"
+                    $schedule = is_string($settings->weekly_schedule) ? json_decode($settings->weekly_schedule, true) : $settings->weekly_schedule;
+
+                    $todaySchedule = collect($schedule)->firstWhere('day', $dayOfWeek);
+
+                    if ($todaySchedule && !empty($todaySchedule['isActive']) && !empty($todaySchedule['start'])) {
+                        // Start time is like "08:00"
+                        $startTimeParts = explode(':', $todaySchedule['start']);
+                        $startHour = (int)$startTimeParts[0];
+                        $startMinute = (int)$startTimeParts[1];
+
+                        $threshold = $settings->late_threshold_minutes ?? 0;
+
+                        // Create Carbon instance for the threshold time today
+                        $lateTime = $now->copy()->setTime($startHour, $startMinute)->addMinutes($threshold);
+
+                        if ($now->greaterThan($lateTime)) {
+                            $status = 'Late';
+                        }
+                    }
+                }
+
+                $attendance = Attendance::create([
+                    'id' => $attendanceId,
+                    'profile_id' => $profileId,
+                    'date' => $today,
+                    'check_in' => $timeString,
+                    'check_out' => null,
+                    'status' => $status
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'type' => 'check_in',
+                    'message' => 'Selamat datang! Check-in tercatat pada ' . $timeString,
+                    'data' => $attendance
+                ]);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'status' => 'success',
-                'type' => 'check_in',
-                'message' => 'Welcome! Checked in at ' . $timeString,
-                'data' => $attendance
-            ]);
+                'status' => 'error',
+                'message' => 'Data tidak valid: ' . implode(', ', array_map(fn($err) => implode(', ', $err), $e->errors())),
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error storing attendance via API: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mencatat presensi: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -1103,16 +1228,26 @@ class AttendanceController extends Controller
             $response = \Illuminate\Support\Facades\Http::timeout(3)->get($microserviceUrl . '/health');
 
             if ($response->successful()) {
-                return response()->json($response->json());
+                $data = $response->json();
+                $faceRecAvailable = !empty($data['face_rec_available']);
+                $isOnline = ($data['status'] ?? '') === 'online' && $faceRecAvailable;
+
+                return response()->json([
+                    'status' => $isOnline ? 'online' : 'offline',
+                    'face_rec_available' => $faceRecAvailable,
+                    'loaded_faces_count' => $data['loaded_faces_count'] ?? 0,
+                    'message' => $isOnline ? 'Layanan pengenalan wajah aktif.' : 'Mesin pengenalan wajah offline atau tidak tersedia.'
+                ]);
             }
-        } catch (\Exception $e) {
-            // Silently catch the exception to return offline status
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Layanan pengenalan wajah tidak dapat diakses: ' . $e->getMessage());
         }
 
         return response()->json([
             'status' => 'offline',
             'face_rec_available' => false,
-            'loaded_faces_count' => 0
+            'loaded_faces_count' => 0,
+            'message' => 'Layanan pengenalan wajah offline atau terputus.'
         ]);
     }
 

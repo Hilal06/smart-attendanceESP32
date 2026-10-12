@@ -49,6 +49,19 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
     setCurrentPage(1);
   }, [searchTerm, priorityFilter]);
 
+  // Accessible Escape key listener for dialogs
+  React.useEffect(() => {
+    if (!isModalOpen && !isDeleteConfirmOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsModalOpen(false);
+        setIsDeleteConfirmOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen, isDeleteConfirmOpen]);
+
   const validateField = (name: string, value: string) => {
     let error = '';
     if (name === 'title' && !value.trim()) error = `${t.language === 'id' ? 'Judul' : 'Title'} ${t.errorRequired}`;
@@ -121,7 +134,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
               placeholder={t.language === 'id' ? 'Cari pengumuman...' : 'Search announcements...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-colors"
             />
           </div>
           <div className="relative">
@@ -129,7 +142,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="pl-9 pr-8 py-2 w-full sm:w-auto rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors appearance-none"
+              className="pl-9 pr-8 py-2 w-full sm:w-auto rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-colors appearance-none"
             >
               <option value="All">{t.language === 'id' ? 'Semua Prioritas' : 'All Priorities'}</option>
               <option value="Normal">{t.priorityNormal}</option>
@@ -138,7 +151,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
             </select>
           </div>
           {isAdmin && (
-            <button onClick={handleOpenAdd} className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors whitespace-nowrap">
+            <button onClick={handleOpenAdd} className="flex items-center justify-center rounded-lg bg-theme-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-theme-primary-hover transition-colors whitespace-nowrap">
               <Plus className="mr-2 h-4 w-4" />
               {t.newAnnouncement}
             </button>
@@ -150,8 +163,8 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
       <div className="grid gap-6">
         {filteredAnnouncements.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm p-12 text-center shadow-sm border border-dashed border-slate-200 dark:border-slate-700 transition-colors">
-            <div className="rounded-full bg-white dark:bg-slate-800 p-4 mb-4 transition-colors shadow-sm ring-4 ring-slate-50 dark:ring-slate-900/50 animate-bounce">
-              <Megaphone className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+            <div className="rounded-2xl bg-slate-100 dark:bg-slate-800 p-4 mb-4 transition-colors text-slate-400 dark:text-slate-500 shadow-xs">
+              <Megaphone className="h-8 w-8" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
               {searchTerm || priorityFilter !== 'All'
@@ -166,31 +179,42 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
           </div>
         ) : (
           paginatedAnnouncements.map((announcement) => (
-            <div key={announcement.id} className={`group relative overflow-hidden rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md p-6 shadow-sm border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${announcement.priority === 'Urgent' ? 'border-rose-200/50 dark:border-rose-900/30 bg-rose-50/40 dark:bg-rose-900/10 hover:border-rose-300 dark:hover:border-rose-500/30' : announcement.priority === 'High' ? 'border-amber-200/50 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-900/10 hover:border-amber-300 dark:hover:border-amber-500/30' : 'border-white/20 dark:border-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-500/30'}`}>
-              {announcement.priority === 'Urgent' && (<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)]"></div>)}
-              {announcement.priority === 'High' && (<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.6)]"></div>)}
-              {announcement.priority === 'Normal' && (<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.6)] opacity-0 group-hover:opacity-100 transition-opacity"></div>)}
-              <div className="flex items-start justify-between">
-                <div className="flex-1 pr-10">
-                  <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getPriorityColor(announcement.priority).includes('rose') ? (announcement.priority === 'Urgent' ? 'bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200 dark:shadow-none' : 'bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-800/50') : announcement.priority === 'High' ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-800/50' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-800/50'}`}>
-                      {announcement.priority === 'Urgent' && <AlertTriangle className="mr-1.5 h-3 w-3" />}
+            <div key={announcement.id} className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-xs border transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 ${
+              announcement.priority === 'Urgent'
+                ? 'border-rose-300/70 dark:border-rose-900/50 bg-rose-50/20 dark:bg-rose-950/10'
+                : announcement.priority === 'High'
+                ? 'border-amber-300/70 dark:border-amber-900/50 bg-amber-50/20 dark:bg-amber-950/10'
+                : 'border-slate-200 dark:border-slate-800'
+            }`}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
+                    <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${
+                      announcement.priority === 'Urgent'
+                        ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60'
+                        : announcement.priority === 'High'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
+                        : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                    }`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${
+                        announcement.priority === 'Urgent' ? 'bg-rose-500' : announcement.priority === 'High' ? 'bg-amber-500' : 'bg-emerald-500'
+                      }`} />
                       {getPriorityLabel(announcement.priority)}
                     </span>
-                    <div className="flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">
-                      <Calendar className="mr-1.5 h-4 w-4 text-slate-400" />
+                    <div className="flex items-center text-xs font-medium text-slate-500 dark:text-slate-400">
+                      <Calendar className="mr-1.5 h-3.5 w-3.5 text-slate-400" />
                       {new Date(announcement.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' })}
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{announcement.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{announcement.content}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">{announcement.title}</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{announcement.content}</p>
                 </div>
                 {isAdmin && (
-                  <div className="flex space-x-1 ml-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-1 border border-slate-100 dark:border-slate-700/50">
-                    <button onClick={() => handleOpenEdit(announcement)} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-600 hover:shadow-sm rounded-md transition-all" title={t.editAnnouncement}>
+                  <div className="flex items-center gap-1 shrink-0 p-1 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                    <button onClick={() => handleOpenEdit(announcement)} className="p-1.5 text-slate-500 hover:text-theme-primary hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all" title={t.editAnnouncement}>
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleOpenDelete(announcement.id)} className="p-2 text-slate-500 hover:text-rose-600 hover:bg-white dark:hover:bg-slate-600 hover:shadow-sm rounded-md transition-all" title={t.delete}>
+                    <button onClick={() => handleOpenDelete(announcement.id)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all" title={t.delete}>
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -266,56 +290,154 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
       )}
 
       {/* Add/Edit Modal */}
-
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
-          <div className="w-full max-w-2xl rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 transition-colors">
-
-            {/* Sticky Header */}
-            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-5 shrink-0 bg-white/50 dark:bg-slate-900/50 rounded-t-2xl z-10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-all duration-300"
+          onClick={() => setIsModalOpen(false)}
+        >
+                    <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="announcement-modal-title"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-200 transition-colors overflow-hidden"
+          >
+            {/* Header: Executive Precision Console */}
+            <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 px-6 py-5 shrink-0 bg-slate-50/80 dark:bg-slate-900/90 backdrop-blur-xs rounded-t-2xl z-10 transition-colors">
+              <div className="flex items-center gap-3.5">
+                <div className="p-2.5 bg-theme-primary-light border border-theme-primary/20 rounded-xl text-theme-primary">
                   {isEditMode ? <Edit className="h-5 w-5" /> : <Megaphone className="h-5 w-5" />}
                 </div>
-                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">{isEditMode ? t.editAnnouncement : t.newAnnouncement}</h3>
+                <div>
+                  <h3 id="announcement-modal-title" className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                    {isEditMode ? t.editAnnouncement : t.newAnnouncement}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t.language === 'id' ? 'Siarkan pengumuman atau instruksi resmi ke sivitas' : 'Official institutional broadcast bulletin'}
+                  </p>
+                </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700" disabled={isProcessing}>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                aria-label={t.language === 'id' ? 'Tutup dialog' : 'Close dialog'}
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-all focus:outline-hidden focus-visible:ring-2 focus-visible:ring-theme-primary"
+                disabled={isProcessing}
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Scrollable Form Body */}
+            {/* Form Body with Segmented Priority Selector */}
             <form id="announcement-form" onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Judul' : 'Title'} <span className="text-rose-500">*</span></label>
-                <input required type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} disabled={isProcessing} className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-all ${errors.title ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} />
-                {errors.title && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.title}</p>}
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                  {t.language === 'id' ? 'Judul Pengumuman' : 'Announcement Title'} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  disabled={isProcessing}
+                  placeholder={t.language === 'id' ? 'Contoh: Libur Nasional & Jadwal Pengganti' : 'e.g., Campus Maintenance Advisory'}
+                  className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all ${
+                    errors.title
+                      ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20'
+                  }`}
+                />
+                {errors.title && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1">
+                    <AlertCircle className="h-3.5 w-3.5" /> {errors.title}
+                  </p>
+                )}
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.priority}</label>
-                  <select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })} disabled={isProcessing} className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-colors appearance-none">
-                    <option value="Normal">{t.priorityNormal}</option>
-                    <option value="High">{t.priorityHigh}</option>
-                    <option value="Urgent">{t.priorityUrgent}</option>
-                  </select>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                    {t.priority}
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    {(['Normal', 'High', 'Urgent'] as const).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        disabled={isProcessing}
+                        onClick={() => setFormData({ ...formData, priority: p })}
+                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                          formData.priority === p
+                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-semibold'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${
+                          p === 'Normal' ? 'bg-emerald-500' : p === 'High' ? 'bg-amber-500' : 'bg-rose-500'
+                        }`} />
+                        <span>{p === 'Normal' ? t.priorityNormal : p === 'High' ? t.priorityHigh : t.priorityUrgent}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.date}</label>
-                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} disabled={isProcessing} className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-colors [color-scheme:light] dark:[color-scheme:dark]" />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                    {t.date}
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      disabled={isProcessing}
+                      className="block w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 pl-9 pr-3.5 py-2 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                    />
+                  </div>
                 </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Konten' : 'Content'} <span className="text-rose-500">*</span></label>
-                <textarea required rows={6} value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} disabled={isProcessing} className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-all ${errors.content ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`} />
-                {errors.content && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.content}</p>}
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                  {t.language === 'id' ? 'Isi Pengumuman' : 'Announcement Content'} <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={5}
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  disabled={isProcessing}
+                  placeholder={t.language === 'id' ? 'Tuliskan detail pengumuman secara lengkap...' : 'Write the complete announcement details...'}
+                  className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all resize-y ${
+                    errors.content
+                      ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20'
+                  }`}
+                />
+                {errors.content && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1">
+                    <AlertCircle className="h-3.5 w-3.5" /> {errors.content}
+                  </p>
+                )}
               </div>
             </form>
 
-            {/* Sticky Footer */}
-            <div className="border-t border-slate-200/50 dark:border-slate-800/50 p-6 shrink-0 bg-white/50 dark:bg-slate-900/50 rounded-b-xl z-10 flex justify-end space-x-3 transition-colors">
-              <button type="button" onClick={() => setIsModalOpen(false)} disabled={isProcessing} className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors">{t.cancel}</button>
-              <button type="submit" form="announcement-form" disabled={isProcessing} className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] transition-all">
+            {/* Footer */}
+            <div className="border-t border-slate-200/80 dark:border-slate-800/80 px-6 py-4 shrink-0 bg-slate-50/80 dark:bg-slate-900/90 rounded-b-2xl z-10 flex justify-end items-center gap-3 transition-colors">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                disabled={isProcessing}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors shadow-2xs"
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="submit"
+                form="announcement-form"
+                disabled={isProcessing}
+                className="flex items-center justify-center rounded-xl btn-theme-primary px-5 py-2 text-xs font-semibold shadow-xs disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] transition-all"
+              >
                 {isProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -331,18 +453,41 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, use
       )}
 
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-all duration-300">
-          <div className="w-full max-w-sm rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-300 overflow-hidden text-center transition-colors">
-            <div className="bg-rose-500/10 dark:bg-rose-500/20 px-6 py-8">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-500/30 ring-4 ring-rose-50 dark:ring-rose-500/10 mb-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs transition-all duration-300"
+          onClick={() => setIsDeleteConfirmOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="announcement-delete-title"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden text-center transition-colors"
+          >
+            <div className="bg-rose-50 dark:bg-rose-950/30 px-6 py-8">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/40 mb-4">
                 <AlertCircle className="h-7 w-7 text-rose-600 dark:text-rose-400" />
               </div>
-              <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-600 to-rose-400">{t.confirmDeletion}</h3>
-              <p className="mt-2 text-sm text-rose-600/80 dark:text-rose-400/80 font-medium">{t.actionUndone}</p>
+              <h3 id="announcement-delete-title" className="text-xl font-bold text-slate-900 dark:text-white">
+                {t.confirmDeletion}
+              </h3>
+              <p className="mt-2 text-sm text-rose-600 dark:text-rose-400 font-medium">{t.actionUndone}</p>
             </div>
-            <div className="grid grid-cols-2 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
-              <button onClick={() => setIsDeleteConfirmOpen(false)} className="px-4 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none">{t.cancel}</button>
-              <button onClick={handleDelete} className="px-4 py-4 border-l border-slate-100 dark:border-slate-800/50 text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-900/30 focus:outline-none transition-colors">{t.delete}</button>
+            <div className="grid grid-cols-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
+              <button
+                type="button"
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className="px-4 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-hidden"
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="px-4 py-3.5 border-l border-slate-200 dark:border-slate-800 text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 focus:outline-hidden transition-colors"
+              >
+                {t.delete}
+              </button>
             </div>
           </div>
         </div>

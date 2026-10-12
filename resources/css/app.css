@@ -1,2 +1,177 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
+
+/* Custom Clean Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.5);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.8);
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-pulse-slow,
+  .animate-gradient-shift {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Design Tokens: Non-AI Slop Theme Color Palettes
+   ========================================================================== */
+:root, [data-color-theme="emerald"] {
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --color-primary-light: #ecfdf5;
+  --color-primary-dark-light: rgba(6, 78, 59, 0.35);
+  --color-primary-text: #065f46;
+  --color-primary-text-dark: #6ee7b7;
+  --color-accent: #10b981;
+}
+
+[data-color-theme="amber"] {
+  --color-primary: #d97706;
+  --color-primary-hover: #b45309;
+  --color-primary-light: #fffbeb;
+  --color-primary-dark-light: rgba(120, 53, 15, 0.3);
+  --color-primary-text: #92400e;
+  --color-primary-text-dark: #fcd34d;
+  --color-accent: #f59e0b;
+}
+
+[data-color-theme="nordic"] {
+  --color-primary: #0e7490;
+  --color-primary-hover: #155e75;
+  --color-primary-light: #ecfeff;
+  --color-primary-dark-light: rgba(22, 78, 99, 0.35);
+  --color-primary-text: #164e63;
+  --color-primary-text-dark: #67e8f9;
+  --color-accent: #ea580c;
+}
+
+[data-color-theme="crimson"] {
+  --color-primary: #be123c;
+  --color-primary-hover: #9f1239;
+  --color-primary-light: #fff1f2;
+  --color-primary-dark-light: rgba(136, 19, 55, 0.3);
+  --color-primary-text: #881337;
+  --color-primary-text-dark: #fda4af;
+  --color-accent: #e11d48;
+}
+
+[data-color-theme="cobalt"] {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #eff6ff;
+  --color-primary-dark-light: rgba(30, 58, 138, 0.3);
+  --color-primary-text: #1e40af;
+  --color-primary-text-dark: #93c5fd;
+  --color-accent: #84cc16;
+}
+
+/* Theme Semantic Utilities */
+.btn-theme-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transition: all 0.15s ease-in-out;
+}
+.btn-theme-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+.btn-theme-primary:active {
+  background-color: var(--color-primary-hover);
+}
+.bg-theme-primary {
+  background-color: var(--color-primary);
+}
+.hover\:bg-theme-primary-hover:hover {
+  background-color: var(--color-primary-hover);
+}
+.active\:bg-theme-primary-hover:active {
+  background-color: var(--color-primary-hover);
+}
+.text-theme-primary {
+  color: var(--color-primary);
+}
+.dark .text-theme-primary {
+  color: var(--color-primary-text-dark);
+}
+.hover\:text-theme-primary:hover {
+  color: var(--color-primary);
+}
+.dark .hover\:text-theme-primary:hover {
+  color: var(--color-primary-text-dark);
+}
+.group:hover .group-hover\:text-theme-primary {
+  color: var(--color-primary);
+}
+.dark .group:hover .group-hover\:text-theme-primary {
+  color: var(--color-primary-text-dark);
+}
+.bg-theme-primary-light {
+  background-color: var(--color-primary-light);
+}
+.dark .bg-theme-primary-light {
+  background-color: var(--color-primary-dark-light);
+}
+.text-theme-primary-text {
+  color: var(--color-primary-text);
+}
+.dark .text-theme-primary-text {
+  color: var(--color-primary-text-dark);
+}
+.border-theme-primary {
+  border-color: var(--color-primary);
+}
+.hover\:border-theme-primary:hover {
+  border-color: var(--color-primary);
+}
+.border-l-theme-primary {
+  border-left-color: var(--color-primary);
+}
+.ring-theme-primary {
+  --tw-ring-color: var(--color-primary);
+}
+.focus\:ring-theme-primary:focus {
+  --tw-ring-color: var(--color-primary);
+}
+.focus-visible\:ring-theme-primary:focus-visible {
+  --tw-ring-color: var(--color-primary);
+}
+.focus\:border-theme-primary:focus {
+  border-color: var(--color-primary);
+}
+.accent-theme-primary {
+  accent-color: var(--color-primary);
+}
+
+/* NProgress Dynamic Theme Binding */
+#nprogress .bar {
+  background: var(--color-primary) !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--color-primary), 0 0 5px var(--color-primary) !important;
+}
+#nprogress .spinner-icon {
+  border-top-color: var(--color-primary) !important;
+  border-left-color: var(--color-primary) !important;
+}

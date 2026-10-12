@@ -16,6 +16,26 @@ export default {
                 ring: "hsl(var(--ring))",
                 background: "hsl(var(--background))",
                 foreground: "hsl(var(--foreground))",
+                primary: {
+                    DEFAULT: "var(--color-primary)",
+                    hover: "var(--color-primary-hover)",
+                    light: "var(--color-primary-light)",
+                    text: "var(--color-primary-text)",
+                    accent: "var(--color-accent)",
+                },
+                indigo: {
+                    50: "var(--color-primary-light)",
+                    100: "var(--color-primary-light)",
+                    200: "var(--color-primary-light)",
+                    300: "var(--color-accent)",
+                    400: "var(--color-primary-text-dark)",
+                    500: "var(--color-primary)",
+                    600: "var(--color-primary)",
+                    700: "var(--color-primary-hover)",
+                    800: "var(--color-primary-hover)",
+                    900: "var(--color-primary-text)",
+                    950: "var(--color-primary-dark-light)",
+                }
             },
             keyframes: {
                 'pulse-slow': {

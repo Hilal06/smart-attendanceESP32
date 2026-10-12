@@ -54,3 +54,18 @@ docker-compose.override.yml
 # OS
 .DS_Store
 Thumbs.db
+
+# AI Agents, Tools & MCP
+.agents/
+.impeccable/
+.mcp.json
+.geminiignore
+.ignore
+AGENTS.md
+GEMINI.md
+PRODUCT.md
+DESIGN.md
+scripts/headroom-service.sh
+
+
+

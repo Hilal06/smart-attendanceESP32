@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Profile, ProfileStatus, AttendanceRecord } from '../types';
 import { router, usePage } from '@inertiajs/react';
 import { generateProfilePerformanceSummary } from '../services/geminiService';
-import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter, Loader2, AlertTriangle, Upload, Camera, ChevronRight, ChevronLeft, CheckCircle2, User, LayoutGrid, List, ArrowUpDown, Lock, Unlock } from 'lucide-react';
+import { Plus, Search, Mail, Briefcase, MoreVertical, X, Phone, MapPin, AlertCircle, Edit, Trash2, Calendar, Filter, Loader2, AlertTriangle, Upload, Camera, ChevronRight, ChevronLeft, CheckCircle2, User, LayoutGrid, List, ArrowUpDown, Lock, Unlock, GraduationCap, Users, Building2, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProfileListProps {
@@ -226,6 +226,21 @@ export const ProfileList: React.FC<ProfileListProps> = ({
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, viewMode]);
+
+  // Accessible Escape key listener for dialogs and active menus
+  useEffect(() => {
+    if (!viewProfile && !isFormModalOpen && !isDeleteConfirmOpen && !activeMenuId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setViewProfile(null);
+        setIsFormModalOpen(false);
+        setIsDeleteConfirmOpen(false);
+        setActiveMenuId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewProfile, isFormModalOpen, isDeleteConfirmOpen, activeMenuId]);
 
   const validateField = (name: string, value: string) => {
     let error = '';
@@ -495,77 +510,103 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
   const SortIcon = ({ column }: { column: keyof Profile }) => {
     if (sortConfig?.key !== column) return <ArrowUpDown className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-50" />;
-    return <ArrowUpDown className={`h-4 w-4 text-indigo-600 ${sortConfig.direction === 'asc' ? '' : 'rotate-180'}`} />;
+    return <ArrowUpDown className={`h-4 w-4 text-theme-primary ${sortConfig.direction === 'asc' ? '' : 'rotate-180'}`} />;
   };
+
+  const totalCount = profiles.length;
+  const activeCount = profiles.filter(p => p.status === ProfileStatus.ACTIVE).length;
+  const onLeaveCount = profiles.filter(p => p.status === ProfileStatus.ON_LEAVE).length;
+  const terminatedCount = profiles.filter(p => p.status === ProfileStatus.TERMINATED).length;
+  const uniqueDepartments = Array.from(new Set(profiles.map(p => p.department).filter(Boolean)));
+  const deptCount = uniqueDepartments.length;
 
   return (
     <div className="space-y-6 relative">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {pageType === 'students' ? t.students : t.profiles}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400">
-            {pageType === 'students' ? t.manageStudents : t.manageTeam}
-          </p>
-        </div>
-        <button
-          onClick={openAddModal}
-          className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          disabled={isProcessing}
-        >
-          {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-          {pageType === 'students' ? t.addStudent : t.addProfile}
-        </button>
-      </div>
-
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div className="relative flex-1">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-          </div>
-          <input
-            type="text"
-            placeholder={pageType === 'students' ? t.searchStudents : t.searchProfiles}
-            className="block w-full rounded-lg border border-white/20 dark:border-slate-700/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md py-2 pl-10 pr-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-48">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Filter className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+        <div className="space-y-4">
+          {/* Top Bar with Inline Quick Stats */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                {pageType === 'students' ? 'Workspace Siswa' : 'Workspace Tim'}
+              </h2>
+              <p className="text-xs text-slate-500">Panel data split interaktif dengan filter instan</p>
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="block w-full appearance-none rounded-lg border border-white/20 dark:border-slate-700/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md py-2 pl-10 pr-8 text-sm text-slate-700 dark:text-slate-200 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
-            >
-              <option value="All">{t.allStatus}</option>
-              <option value={ProfileStatus.ACTIVE}>{t.active}</option>
-              <option value={ProfileStatus.ON_LEAVE}>{t.onLeave}</option>
-              <option value={ProfileStatus.TERMINATED}>{t.terminated}</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Total: {totalCount}</span>
+              <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400">{activeCount} Aktif</span>
+              <button
+                onClick={openAddModal}
+                className="flex items-center gap-1.5 rounded-lg bg-theme-primary hover:bg-theme-primary-hover text-white font-semibold text-xs py-1.5 px-3 shadow-2xs transition-all"
+                disabled={isProcessing}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {pageType === 'students' ? t.addStudent : t.addProfile}
+              </button>
+            </div>
           </div>
-          <div className="flex rounded-lg border border-white/20 dark:border-slate-700/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md p-1 shadow-sm transition-colors duration-200">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`rounded-md p-1.5 transition-all ${viewMode === 'grid' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300'}`}
-              title="Grid View"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`rounded-md p-1.5 transition-all ${viewMode === 'list' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300'}`}
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-            </button>
+
+          {/* Quick Status Chips & Progress Strip */}
+          <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-3 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
+              {[
+                { label: 'Semua', val: 'All', count: totalCount },
+                { label: 'Aktif', val: ProfileStatus.ACTIVE, count: activeCount },
+                { label: 'Izin/Cuti', val: ProfileStatus.ON_LEAVE, count: onLeaveCount },
+                { label: 'Nonaktif', val: ProfileStatus.TERMINATED, count: terminatedCount }
+              ].map(item => (
+                <button
+                  key={item.val}
+                  type="button"
+                  onClick={() => setStatusFilter(item.val)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === item.val ? 'bg-theme-primary text-white shadow-2xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                >
+                  {item.label} <span className="opacity-75">({item.count})</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="w-full md:w-56 space-y-1">
+              <div className="flex justify-between text-[11px] text-slate-500 font-semibold">
+                <span>Keaktifan</span>
+                <span className="text-emerald-600">{Math.round((activeCount / (totalCount || 1)) * 100)}%</span>
+              </div>
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.round((activeCount / (totalCount || 1)) * 100)}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Toolbar */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Cari siswa..."
+                className="w-full rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-9.5 pr-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`rounded-md p-1.5 transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-theme-primary shadow-2xs font-semibold' : 'text-slate-400'}`}
+                title="Grid View"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`rounded-md p-1.5 transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-theme-primary shadow-2xs font-semibold' : 'text-slate-400'}`}
+                title="Table View"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
       {viewMode === 'grid' && (
         <div className="flex justify-end">
@@ -591,12 +632,12 @@ export const ProfileList: React.FC<ProfileListProps> = ({
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {paginatedProfiles.map((profile) => (
-            <div key={profile.id} className="group relative rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-md hover:bg-white/95 dark:hover:bg-slate-900/95 hover:border-indigo-200/50 dark:hover:border-indigo-900/50 transition-all duration-300">
+            <div key={profile.id} className="group relative rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-md hover:bg-white/95 dark:hover:bg-slate-900/95 hover:border-theme-primary/40 transition-all duration-300">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-4 min-w-0">
                   <AvatarWithSkeleton src={profile.avatar} alt={profile.name} className="h-12 w-12 rounded-full" />
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{profile.name}</h3>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white transition-colors truncate">{profile.name}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{profile.role}</p>
                   </div>
                 </div>
@@ -604,8 +645,9 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                 <div className="relative">
                   <Tooltip text={t.language === 'id' ? 'Aksi' : 'Actions'}>
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === profile.id ? null : profile.id); }}
-                      className="rounded-full p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                      className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-hidden transition-colors"
                       aria-label="Toggle Menu"
                     >
                       <MoreVertical className="h-5 w-5" />
@@ -616,33 +658,36 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                       <div className="py-1">
                         {pageType === 'students' && (
                           <button
+                            type="button"
                             onClick={() => { setActiveMenuId(null); handleTogglePassword(profile.id); }}
-                            className="flex w-full items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                            className="flex w-full items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-theme-primary transition-colors group"
                             title={profile.canChangePassword ? 'Revoke Password Change Permission' : 'Grant Password Change Permission'}
                           >
                             {profile.canChangePassword ? (
                               <Unlock className="mr-2 h-4 w-4 text-emerald-500 group-hover:text-emerald-600" />
                             ) : (
-                              <Lock className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400" />
+                              <Lock className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-theme-primary" />
                             )}
                             {profile.canChangePassword ? (t.language === 'id' ? 'Kunci Ubah Sandi' : 'Lock Password Reset') : (t.language === 'id' ? 'Buka Ubah Sandi' : 'Allow Password Reset')}
                           </button>
                         )}
                         <button
+                          type="button"
                           onClick={() => openEditModal(profile)}
-                          className="flex w-full items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                          className="flex w-full items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-theme-primary transition-colors group"
                         >
-                          <Edit className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400" />
+                          <Edit className="mr-2 h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-theme-primary" />
                           {t.language === 'id' ? 'Ubah' : 'Edit'}
-                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-indigo-400 dark:text-indigo-500">Ctrl+E</div>
+                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-theme-primary">Ctrl+E</div>
                         </button>
                         <button
+                          type="button"
                           onClick={() => confirmDelete(profile.id)}
-                          className="flex w-full items-center px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/40 transition-colors group"
+                          className="flex w-full items-center px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors group"
                         >
-                          <Trash2 className="mr-2 h-4 w-4 text-rose-400 dark:text-rose-500 group-hover:text-rose-500 dark:group-hover:text-rose-400" />
+                          <Trash2 className="mr-2 h-4 w-4 text-rose-500 group-hover:text-rose-600 dark:group-hover:text-rose-300" />
                           {t.language === 'id' ? 'Hapus' : 'Delete'}
-                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-rose-300 dark:text-rose-600">Del</div>
+                          <div className="ml-auto hidden group-hover:block text-[8px] uppercase font-bold text-rose-400 dark:text-rose-500">Del</div>
                         </button>
                       </div>
                     </div>
@@ -670,7 +715,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
               <div className="mt-4 flex justify-end">
                 <Tooltip text={t.viewProfile} position="left">
-                  <button onClick={() => setViewProfile(profile)} className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center transition-colors">
+                  <button onClick={() => setViewProfile(profile)} className="text-xs font-medium text-theme-primary hover:opacity-80 flex items-center transition-colors">
                     {t.viewProfile} <span className="ml-1"><ChevronRight className="h-3 w-3" /></span>
                   </button>
                 </Tooltip>
@@ -695,144 +740,179 @@ export const ProfileList: React.FC<ProfileListProps> = ({
           )}
         </div>
       ) : (
-        <div className="rounded-xl border border-white/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm overflow-hidden transition-colors duration-300">
-          <div className="overflow-x-auto">
-            <table className="min-w-full lg:min-w-full max-w-full divide-y divide-slate-200/50 dark:divide-slate-800/50">
-              <thead className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md transition-colors duration-300 sticky top-0 z-20 shadow-sm border-b border-white/20 dark:border-slate-800 flex flex-col">
-                <tr className="grid grid-cols-[2.5fr_1.2fr_1.2fr_120px_140px] items-center w-full px-6 border border-transparent">
-                  <th
-                    scope="col"
-                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                    onClick={() => handleSort('name')}
-                  >
-                    <div className="flex items-center gap-2">
-                      {t.profile}
-                      <SortIcon column="name" />
-                    </div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                    onClick={() => handleSort('role')}
-                  >
-                    <div className="flex items-center gap-2">
-                      {t.position}
-                      <SortIcon column="role" />
-                    </div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                    onClick={() => handleSort('department')}
-                  >
-                    <div className="flex items-center gap-2">
-                      {t.department}
-                      <SortIcon column="department" />
-                    </div>
-                  </th>
-                  <th
-                    scope="col"
-                    className="group py-3 text-left hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                    onClick={() => handleSort('status')}
-                  >
-                    <div className="flex items-center gap-2">
-                      {t.language === 'id' ? 'Status' : 'Status'}
-                      <SortIcon column="status" />
-                    </div>
-                  </th>
-                  <th scope="col" className="py-3 text-right hidden sm:block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    {t.language === 'id' ? 'Aksi' : 'Actions'}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-transparent flex flex-col gap-2 mt-2 transition-colors duration-300 pb-1">
+        <div className="space-y-3">
+              {/* Header sort bar */}
+              <div className="hidden sm:grid grid-cols-[2.5fr_1.3fr_1.3fr_130px_140px] items-center px-6 py-2.5 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100/70 dark:bg-slate-800/40 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
+                <div
+                  className="cursor-pointer hover:text-theme-primary transition-colors flex items-center gap-1.5"
+                  onClick={() => handleSort('name')}
+                >
+                  {t.profile} <SortIcon column="name" />
+                </div>
+                <div
+                  className="cursor-pointer hover:text-theme-primary transition-colors flex items-center gap-1.5"
+                  onClick={() => handleSort('role')}
+                >
+                  {t.position} <SortIcon column="role" />
+                </div>
+                <div
+                  className="cursor-pointer hover:text-theme-primary transition-colors flex items-center gap-1.5"
+                  onClick={() => handleSort('department')}
+                >
+                  {t.department} <SortIcon column="department" />
+                </div>
+                <div
+                  className="cursor-pointer hover:text-theme-primary transition-colors flex items-center gap-1.5"
+                  onClick={() => handleSort('status')}
+                >
+                  {t.language === 'id' ? 'Status' : 'Status'} <SortIcon column="status" />
+                </div>
+                <div className="text-right">
+                  {t.language === 'id' ? 'Aksi' : 'Actions'}
+                </div>
+              </div>
+
+              {/* Rows */}
+              <div className="flex flex-col gap-2.5">
                 {paginatedProfiles.length > 0 ? (
                   paginatedProfiles.map((profile) => (
-                    <tr key={profile.id} className="relative overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-transparent rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 grid grid-cols-[2.5fr_1.2fr_1.2fr_120px_140px] items-center w-full group px-6">
-                      <td className="py-4 whitespace-nowrap z-10 min-w-0">
-                        <div className="flex items-center gap-4 min-w-0">
-                          <AvatarWithSkeleton src={profile.avatar} alt={profile.name} className="h-10 w-10 rounded-full ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all duration-300" />
-                          <div className="min-w-0">
-                            <div className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{profile.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">{profile.email}</div>
+                    <div
+                      key={profile.id}
+                      className="group relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:border-theme-primary/40 hover:-translate-y-0.5 transition-all duration-200 p-4 sm:px-6 sm:py-3.5 grid grid-cols-1 sm:grid-cols-[2.5fr_1.3fr_1.3fr_130px_140px] items-center gap-4"
+                    >
+                      {/* Identity */}
+                      <div className="flex items-center gap-4 min-w-0">
+                        <AvatarWithSkeleton
+                          src={profile.avatar}
+                          alt={profile.name}
+                          className="h-11 w-11 rounded-xl ring-2 ring-slate-100 dark:ring-slate-800 shadow-xs flex-shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-theme-primary transition-colors truncate">
+                              {profile.name}
+                            </span>
+                            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-theme-primary-light text-theme-primary-text border border-theme-primary/30">
+                              {profile.id}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate mt-1">
+                            <Mail className="h-3 w-3 text-slate-400 flex-shrink-0" />
+                            <span className="truncate">{profile.email}</span>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-4 whitespace-nowrap z-10">
-                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-300">{profile.role}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-500 font-mono">ID: {profile.id}</div>
-                      </td>
-                      <td className="py-4 whitespace-nowrap z-10">
-                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{profile.department}</div>
-                      </td>
-                      <td className="py-4 whitespace-nowrap z-10">
-                        <span className={`inline-flex items-center justify-center min-w-[80px] rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider border ${profile.status === ProfileStatus.ACTIVE ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400 shadow-[0_0_15px_-3px_rgba(16,185,129,0.1)]' :
-                          profile.status === ProfileStatus.ON_LEAVE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400 shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)]' :
-                            'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400 shadow-[0_0_15px_-3px_rgba(244,63,94,0.1)]'
-                          }`}>
+                      </div>
+
+                      {/* Role & Class */}
+                      <div className="min-w-0">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                          {profile.role}
+                        </span>
+                        {profile.class && (
+                          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1 font-medium">
+                            <GraduationCap className="h-3.5 w-3.5 text-theme-primary" />
+                            <span>{profile.class}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Department & Join */}
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                          <span className="truncate">{profile.department}</span>
+                        </div>
+                        {profile.joinDate && (
+                          <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{profile.joinDate}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Status with luminous dot */}
+                      <div>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border shadow-xs ${
+                            profile.status === ProfileStatus.ACTIVE
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/40 dark:text-emerald-400'
+                              : profile.status === ProfileStatus.ON_LEAVE
+                              ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/40 dark:text-amber-400'
+                              : 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/40 dark:text-rose-400'
+                          }`}
+                        >
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              profile.status === ProfileStatus.ACTIVE
+                                ? 'bg-emerald-500 animate-pulse'
+                                : profile.status === ProfileStatus.ON_LEAVE
+                                ? 'bg-amber-500'
+                                : 'bg-rose-500'
+                            }`}
+                          />
                           {getStatusLabel(profile.status)}
                         </span>
-                      </td>
-                      <td className="py-4 whitespace-nowrap text-right text-sm font-medium z-10">
-                        <div className="flex items-center justify-end gap-3">
-                          {pageType === 'students' && (
-                            <button
-                              onClick={() => handleTogglePassword(profile.id)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition-colors"
-                              title={profile.canChangePassword ? (t.language === 'id' ? 'Kunci Ubah Sandi' : 'Lock Password Reset') : (t.language === 'id' ? 'Buka Ubah Sandi' : 'Allow Password Reset')}
-                            >
-                              {profile.canChangePassword ? <Unlock className="h-4 w-4 text-emerald-500" /> : <Lock className="h-4 w-4" />}
-                            </button>
-                          )}
+                      </div>
+
+                      {/* Action Dock */}
+                      <div className="flex items-center justify-end gap-1.5">
+                        {pageType === 'students' && (
                           <button
-                            onClick={() => setViewProfile(profile)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition-colors"
-                            title={t.viewProfile}
+                            type="button"
+                            onClick={() => handleTogglePassword(profile.id)}
+                            aria-label={profile.canChangePassword ? (t.language === 'id' ? 'Kunci Ubah Sandi' : 'Lock Password Reset') : (t.language === 'id' ? 'Buka Ubah Sandi' : 'Allow Password Reset')}
+                            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition-colors shadow-2xs"
+                            title={profile.canChangePassword ? (t.language === 'id' ? 'Kunci Ubah Sandi' : 'Lock Password Reset') : (t.language === 'id' ? 'Buka Ubah Sandi' : 'Allow Password Reset')}
                           >
-                            <User className="h-4 w-4" />
+                            {profile.canChangePassword ? <Unlock className="h-4 w-4 text-emerald-500" /> : <Lock className="h-4 w-4" />}
                           </button>
-                          <button
-                            onClick={() => openEditModal(profile)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition-colors"
-                            title={t.editProfile}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => confirmDelete(profile.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/40 dark:hover:text-rose-400 transition-colors"
-                            title={t.delete}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                      {/* Professional Hover accent background */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 dark:from-indigo-900/10 transition-opacity duration-300 pointer-events-none"></div>
-                    </tr>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setViewProfile(profile)}
+                          aria-label={t.viewProfile || 'View Profile'}
+                          className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition-colors shadow-2xs"
+                          title={t.viewProfile}
+                        >
+                          <User className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(profile)}
+                          aria-label={t.editProfile || 'Edit Profile'}
+                          className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition-colors shadow-2xs"
+                          title={t.editProfile}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => confirmDelete(profile.id)}
+                          aria-label={t.delete || 'Delete Profile'}
+                          className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl bg-rose-50/60 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/60 border border-rose-200/60 dark:border-rose-900/40 transition-colors shadow-2xs"
+                          title={t.delete}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                        <div className="bg-slate-50 dark:bg-slate-900/80 p-4 rounded-full mb-4 inline-block shadow-sm">
-                          <Search className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-                        </div>
-                        <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-                          {t.language === 'id' ? 'Karyawan Tidak Ditemukan' : 'No Profiles Found'}
-                        </h4>
-                        <p className="text-sm max-w-sm mx-auto">
-                          {searchTerm
-                            ? (t.language === 'id' ? 'Tidak ada karyawan yang cocok dengan pencarian Anda.' : 'No profiles match your search criteria.')
-                            : (t.language === 'id' ? 'Tidak ada karyawan yang cocok dengan filter yang dipilih.' : 'No profiles match the selected filters.')}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-12 text-center shadow-xs">
+                    <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-3 inline-block">
+                      <Search className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+                      {t.language === 'id' ? 'Data Tidak Ditemukan' : 'No Profiles Found'}
+                    </h4>
+                    <p className="text-sm max-w-sm mx-auto text-slate-500 dark:text-slate-400">
+                      {searchTerm
+                        ? (t.language === 'id' ? 'Tidak ada data yang cocok dengan kriteria pencarian.' : 'No profiles match your search criteria.')
+                        : (t.language === 'id' ? 'Tidak ada data yang cocok dengan filter yang dipilih.' : 'No profiles match the selected filters.')}
+                    </p>
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
+              </div>
         </div>
       )}
 
@@ -882,21 +962,26 @@ export const ProfileList: React.FC<ProfileListProps> = ({
       {viewProfile && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-md transition-all duration-300">
           <div className="flex min-h-full p-4 sm:p-6">
-            <div className="m-auto w-full max-w-lg rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300 transition-colors">
-              <div className="relative h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 dark:from-indigo-600 dark:via-purple-700 dark:to-indigo-800">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="view-profile-name"
+              className="m-auto w-full max-w-lg rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-slate-200/80 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-300 transition-colors"
+            >
+              <div className="relative h-28 bg-slate-800 dark:bg-slate-950 border-b border-slate-700/50">
                 <button
                   onClick={() => {
                     setViewProfile(null);
                     setAiSummary(null);
                   }}
-                  className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all backdrop-blur-sm"
-                  aria-label="Close"
+                  className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-white/40"
+                  aria-label={t.language === 'id' ? 'Tutup detail profil' : 'Close profile view'}
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <div className="px-8 pb-8 relative">
-                <div className="absolute -top-16 left-8 flex items-end gap-4">
+                <div className="absolute -top-14 left-8 flex items-end gap-4">
                   <div className="rounded-full p-1.5 bg-white dark:bg-slate-900 shadow-lg transition-colors duration-200">
                     <img src={viewProfile.avatar} alt={viewProfile.name} className="h-28 w-28 rounded-full object-cover border-2 border-slate-100 dark:border-slate-800" />
                   </div>
@@ -905,14 +990,14 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                       viewProfile.status === ProfileStatus.ON_LEAVE ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400' :
                         'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800/30 dark:text-rose-400'
                       }`}>
-                      {getStatusLabel(viewProfile.status)}
+                    {getStatusLabel(viewProfile.status)}
                     </span>
                   </div>
                 </div>
 
                 <div className="pt-20 sm:flex sm:justify-between sm:items-start">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">{viewProfile.name}</h2>
+                    <h2 id="view-profile-name" className="text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">{viewProfile.name}</h2>
                     <p className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2 mt-1">
                       {viewProfile.role} <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span> {viewProfile.department}
                     </p>
@@ -920,29 +1005,26 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                   <button
                     onClick={() => handleGenerateAISummary(viewProfile)}
                     disabled={isGeneratingSummary}
-                    className="mt-4 sm:mt-0 flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all w-full sm:w-auto overflow-hidden relative group"
+                    className="mt-4 sm:mt-0 flex shrink-0 items-center justify-center gap-2 rounded-xl bg-theme-primary hover:bg-theme-primary-hover px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all w-full sm:w-auto"
                   >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                    <span className="relative z-10 flex items-center gap-2">
-                      {isGeneratingSummary ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>✨</span>}
-                      {isGeneratingSummary ? (t.language === 'id' ? 'Menghasilkan...' : 'Generating...') : 'AI Summary'}
-                    </span>
+                    {isGeneratingSummary ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>✨</span>}
+                    {isGeneratingSummary ? (t.language === 'id' ? 'Menghasilkan...' : 'Generating...') : 'AI Summary'}
                   </button>
                 </div>
 
                 {/* AI Summary Display */}
                 {(isGeneratingSummary || aiSummary || generateError) && (
-                  <div className="mt-6 rounded-xl border border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-900/10 p-5 backdrop-blur-sm shadow-sm transition-all duration-300 animate-in slide-in-from-top-4">
+                  <div className="mt-6 rounded-xl border border-theme-primary/30 bg-theme-primary-light p-5 backdrop-blur-sm shadow-sm transition-all duration-300 animate-in slide-in-from-top-4">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-lg">✨</span>
-                      <h3 className="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">{t.language === 'id' ? 'Ringkasan Kinerja AI' : 'AI Performance Summary'}</h3>
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-widest">{t.language === 'id' ? 'Ringkasan Kinerja AI' : 'AI Performance Summary'}</h3>
                     </div>
 
                     {isGeneratingSummary && (
                       <div className="space-y-3 animate-pulse">
-                        <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-3/4"></div>
-                        <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-full"></div>
-                        <div className="h-4 bg-indigo-200/50 dark:bg-indigo-700/50 rounded w-5/6"></div>
+                        <div className="h-4 bg-theme-primary/20 rounded w-3/4"></div>
+                        <div className="h-4 bg-theme-primary/20 rounded w-full"></div>
+                        <div className="h-4 bg-theme-primary/20 rounded w-5/6"></div>
                       </div>
                     )}
 
@@ -955,7 +1037,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
                     {aiSummary && !isGeneratingSummary && !generateError && (
                       <div
-                        className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed prose-p:mb-2 prose-strong:text-indigo-700 dark:prose-strong:text-indigo-300"
+                        className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed prose-p:mb-2 prose-strong:text-theme-primary"
                         dangerouslySetInnerHTML={{ __html: aiSummary }}
                       />
                     )}
@@ -1008,21 +1090,21 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
                   <div className="rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden flex flex-col">
                     <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
-                      <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Mail className="h-5 w-5" /></div>
+                      <div className="p-2 bg-theme-primary-light text-theme-primary-text rounded-lg shrink-0"><Mail className="h-5 w-5" /></div>
                       <div className="overflow-hidden">
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.emailAddress}</p>
                         <p className="text-sm font-medium text-slate-900 dark:text-slate-200 truncate mt-0.5">{viewProfile.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800/50">
-                      <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><Phone className="h-5 w-5" /></div>
+                      <div className="p-2 bg-theme-primary-light text-theme-primary-text rounded-lg shrink-0"><Phone className="h-5 w-5" /></div>
                       <div>
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.phoneNumber}</p>
                         <p className="text-sm font-medium text-slate-900 dark:text-slate-200 mt-0.5">{viewProfile.phoneNumber || '-'}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 p-4 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                      <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0"><MapPin className="h-5 w-5" /></div>
+                      <div className="p-2 bg-theme-primary-light text-theme-primary-text rounded-lg shrink-0"><MapPin className="h-5 w-5" /></div>
                       <div>
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.address}</p>
                         <p className="text-sm font-medium text-slate-900 dark:text-slate-200 leading-relaxed mt-0.5 max-w-[300px]">{viewProfile.address || '-'}</p>
@@ -1038,254 +1120,197 @@ export const ProfileList: React.FC<ProfileListProps> = ({
 
       {isFormModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-all duration-300">
-          <div className={`w-full max-w-2xl rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-white/20 dark:border-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 transition-colors backdrop-blur-xl ${shakeModal ? 'animate-shake' : ''}`}>
-
-            {/* Sticky Header */}
-            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-5 shrink-0 bg-white/50 dark:bg-slate-900/50 rounded-t-2xl z-10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
-                  {isEditMode ? <Edit className="h-5 w-5" /> : <User className="h-5 w-5" />}
-                </div>
-                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-form-title"
+            className={`w-full max-w-2xl rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-xl max-h-[90vh] flex flex-col ${shakeModal ? 'animate-shake' : ''}`}
+          >
+            {/* Header with compact status */}
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 shrink-0 bg-white dark:bg-slate-900 rounded-t-xl">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-theme-primary" />
+                <h3 id="profile-form-title" className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {isEditMode
                     ? (pageType === 'students' ? t.editStudent : t.editProfile)
                     : (pageType === 'students' ? t.newStudent : t.newProfile)}
                 </h3>
               </div>
-              <button onClick={() => setIsFormModalOpen(false)} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700" disabled={isProcessing}>
-                <X className="h-5 w-5" />
+              <button
+                onClick={() => setIsFormModalOpen(false)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                disabled={isProcessing}
+                aria-label={t.cancel || 'Tutup'}
+              >
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Scrollable Form Body */}
-            <form id="profile-form" onSubmit={handleFormSubmit} className="p-6 overflow-y-auto flex-1">
-              {/* Robust Global Error Banner */}
-              {Object.keys(externalErrors).length > 0 && (
-                <div className="mb-6 rounded-lg bg-rose-50 dark:bg-rose-900/20 p-4 flex items-start gap-3 border border-rose-200 dark:border-rose-800/50 animate-in fade-in slide-in-from-top-2">
-                  <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
-                  <div>
-                    <div className="text-sm text-rose-800 dark:text-rose-400 font-bold">{t.language === 'id' ? 'Terjadi Kesalahan' : 'Action Failed'}</div>
-                    <div className="text-xs text-rose-700 dark:text-rose-300 mt-0.5">
-                      {externalErrors['message'] || (t.language === 'id' ? 'Harap periksa kembali detail yang dimasukkan.' : 'Please review the entered details.')}
+            {/* Form Body */}
+            <form id="profile-form" onSubmit={handleFormSubmit} className="p-5 overflow-y-auto flex-1 space-y-5 text-xs">
+                  {/* Inline Compact Biometric Strip */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 shrink-0 border border-slate-300 dark:border-slate-600 flex items-center justify-center">
+                        {formData.avatar ? (
+                          <img src={formData.avatar} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                          <User className="h-5 w-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">{t.language === 'id' ? 'Foto Profil' : 'Profile Photo'}</div>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-[11px] font-medium text-theme-primary hover:underline"
+                        >
+                          {formData.avatar ? (t.language === 'id' ? 'Ubah File' : 'Change') : (t.language === 'id' ? 'Pilih Berkas' : 'Select File')}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
+
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 shrink-0 border border-slate-300 dark:border-slate-600 flex items-center justify-center">
+                        {faceDataPreview ? (
+                          <img src={faceDataPreview} alt="Face Data" className="h-full w-full object-cover" />
+                        ) : (
+                          <Camera className="h-5 w-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                          <span>{t.language === 'id' ? 'Data Wajah (AI)' : 'Face Biometrics'}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded ${faceDataPreview ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                            {faceDataPreview ? 'Ready' : 'Pending'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => faceDataInputRef.current?.click()}
+                          className="text-[11px] font-medium text-theme-primary hover:underline"
+                        >
+                          {faceDataPreview ? (t.language === 'id' ? 'Ubah Template' : 'Change') : (t.language === 'id' ? 'Rekam Wajah' : 'Enroll')}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="flex flex-col items-center">
-                  <div className="relative group">
-                    <div className={`h-24 w-24 rounded-full overflow-hidden border-2 bg-slate-50 dark:bg-slate-800 flex items-center justify-center transition-colors ${formData.avatar ? 'border-indigo-100 dark:border-indigo-800' : 'border-slate-200 dark:border-slate-700'}`}>
-                      {formData.avatar ? (
-                        <img src={formData.avatar} alt="Avatar" className="h-full w-full object-cover" />
-                      ) : (
-                        <Camera className="h-8 w-8 text-slate-300 dark:text-slate-500" />
-                      )}
+                  {/* Fields Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">ID Profil <span className="text-rose-500">*</span></label>
+                      <input
+                        required
+                        type="text"
+                        name="id"
+                        value={formData.id}
+                        onChange={handleInputChange}
+                        disabled={isEditMode || isProcessing}
+                        className={`w-full rounded-md border px-3 py-1.5 font-mono ${errors.id ? 'border-rose-500' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary'} ${isEditMode ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed' : ''}`}
+                      />
                     </div>
-                    <Tooltip text={t.uploadPhoto} position="right">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-0 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
-                        aria-label={t.uploadPhoto}
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.allStatus} <span className="text-rose-500">*</span></label>
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
                       >
-                        <Upload className="h-3.5 w-3.5" />
-                      </button>
-                    </Tooltip>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium text-center">{t.uploadPhoto}<br /><span className="opacity-75">({t.language === 'id' ? 'Profil' : 'Profile'})</span></p>
-                </div>
-
-                <div className="flex flex-col items-center justify-center">
-                  <div className="relative group">
-                    <div className={`h-24 w-24 rounded-xl overflow-hidden border-2 bg-slate-50 dark:bg-slate-800 flex items-center justify-center transition-colors ${faceDataPreview ? 'border-emerald-100 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-700 border-dashed'}`}>
-                      {faceDataPreview ? (
-                        <img src={faceDataPreview} alt="Face Data Preview" className="h-full w-full object-cover" />
-                      ) : (
-                        <User className="h-8 w-8 text-slate-300 dark:text-slate-500" />
-                      )}
+                        <option value={ProfileStatus.ACTIVE}>{t.active}</option>
+                        <option value={ProfileStatus.ON_LEAVE}>{t.onLeave}</option>
+                        <option value={ProfileStatus.TERMINATED}>{t.terminated}</option>
+                      </select>
                     </div>
-                    <Tooltip text={t.language === 'id' ? 'Unggah Data Wajah' : 'Upload Face Data'} position="right">
-                      <button
-                        type="button"
-                        onClick={() => faceDataInputRef.current?.click()}
-                        className="absolute -bottom-2 -right-2 p-1.5 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-colors"
-                        aria-label="Upload Face Data"
-                      >
-                        <Camera className="h-3.5 w-3.5" />
-                      </button>
-                    </Tooltip>
-                    <input
-                      type="file"
-                      ref={faceDataInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFaceDataUpload}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium text-center">{t.language === 'id' ? 'Data Wajah' : 'Face Data'}<br /><span className="opacity-75">({t.language === 'id' ? 'Pengenalan AI' : 'AI Recognition'})</span></p>
-                </div>
-              </div>
-
-              {/* Section 1: Basic Information */}
-              <div className="mb-6">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  {t.language === 'id' ? 'Informasi Dasar' : 'Basic Information'}
-                </h4>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">ID <span className="text-rose-500">*</span></label>
-                    <input
-                      required
-                      type="text"
-                      name="id"
-                      value={formData.id}
-                      onChange={handleInputChange}
-                      disabled={isEditMode || isProcessing}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.id ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${isEditMode ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed' : ''}`}
-                    />
-                    {errors.id ? (
-                      <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.id}</p>
-                    ) : (
-                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{t.language === 'id' ? 'ID Unik untuk profil (Tidak dapat diubah)' : 'Unique ID for the profile (Immutable)'}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.allStatus} <span className="text-rose-500">*</span></label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                    >
-                      <option value={ProfileStatus.ACTIVE}>{t.active}</option>
-                      <option value={ProfileStatus.ON_LEAVE}>{t.onLeave}</option>
-                      <option value={ProfileStatus.TERMINATED}>{t.terminated}</option>
-                    </select>
-                    {statusWarning && <div className="mt-2 text-xs font-medium text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg border border-amber-100 dark:border-amber-800/50 flex gap-2"><AlertCircle className="h-3 w-3 shrink-0" /> {statusWarning}</div>}
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.fullName} <span className="text-rose-500">*</span></label>
-                    <input
-                      required
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.name ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                    />
-                    {errors.name && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.name}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.position} <span className="text-rose-500">*</span></label>
-                    <input
-                      required
-                      type="text"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      disabled={isProcessing || pageType === 'students'}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.role ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'} ${(isProcessing || pageType === 'students') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    />
-                    {errors.role ? (
-                      <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.role}</p>
-                    ) : (
-                      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{t.language === 'id' ? 'Contoh: admin, teacher, student' : 'E.g., admin, teacher, student'}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.department} <span className="text-rose-500">*</span></label>
-                    <input
-                      required
-                      type="text"
-                      name="department"
-                      value={formData.department}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.department ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                    />
-                    {errors.department && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.department}</p>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 2: Contact Information */}
-              <div className="mb-6">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  {t.language === 'id' ? 'Informasi Kontak' : 'Contact Information'}
-                </h4>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.emailAddress} <span className="text-rose-500">*</span></label>
-                    <input
-                      required
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.email ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                    />
-                    {errors.email && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.email}</p>}
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.address}</label>
-                    <textarea
-                      name="address"
-                      value={formData.address || ''}
-                      onChange={handleInputChange as any}
-                      disabled={isProcessing}
-                      rows={2}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.address ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                    />
-                    {errors.address && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.address}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.phoneNumber}</label>
-                    <input
-                      type="text"
-                      name="phoneNumber"
-                      value={formData.phoneNumber || ''}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.phoneNumber ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                    />
-                    {errors.phoneNumber && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.phoneNumber}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t.joinDate} <span className="text-rose-500">*</span></label>
-                    <input
-                      required
-                      type="date"
-                      name="joinDate"
-                      value={formData.joinDate}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Additional Data */}
-              {(formData.role.toLowerCase() === 'student' || formData.role.toLowerCase() === 'teacher') && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
-                    {t.language === 'id' ? 'Info Tambahan' : 'Additional Info'}
-                  </h4>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.fullName} <span className="text-rose-500">*</span></label>
+                      <input
+                        required
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.position} <span className="text-rose-500">*</span></label>
+                      <input
+                        required
+                        type="text"
+                        name="role"
+                        value={formData.role}
+                        onChange={handleInputChange}
+                        disabled={isProcessing || pageType === 'students'}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary disabled:opacity-60"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.department} <span className="text-rose-500">*</span></label>
+                      <input
+                        required
+                        type="text"
+                        name="department"
+                        value={formData.department}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.emailAddress} <span className="text-rose-500">*</span></label>
+                      <input
+                        required
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.address}</label>
+                      <textarea
+                        name="address"
+                        value={formData.address || ''}
+                        onChange={handleInputChange as any}
+                        disabled={isProcessing}
+                        rows={2}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.phoneNumber}</label>
+                      <input
+                        type="text"
+                        name="phoneNumber"
+                        value={formData.phoneNumber || ''}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">{t.joinDate} <span className="text-rose-500">*</span></label>
+                      <input
+                        required
+                        type="date"
+                        name="joinDate"
+                        value={formData.joinDate}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
                     {formData.role.toLowerCase() === 'student' && (
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Class</label>
+                        <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Kelas</label>
                         <input
                           type="text"
                           name="class"
@@ -1294,116 +1319,103 @@ export const ProfileList: React.FC<ProfileListProps> = ({
                             const val = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '');
                             setFormData(prev => ({ ...prev, class: val }));
                           }}
-                          maxLength={20}
                           disabled={isProcessing}
-                          placeholder={t.language === 'id' ? 'MIsal: 10 IPA 1' : 'E.g., 10th Grade'}
-                          className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                          className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
                         />
                       </div>
                     )}
-                    <div className={formData.role.toLowerCase() === 'student' ? '' : 'md:col-span-2'}>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Age</label>
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Usia</label>
                       <input
                         type="number"
                         name="age"
                         value={formData.age}
                         onChange={handleInputChange}
                         disabled={isProcessing}
-                        min="0"
-                        max="150"
-                        className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        {t.language === 'id' ? 'Kata Sandi' : 'Password'} {isEditMode ? '' : <span className="text-rose-500">*</span>}
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={formData.password || ''}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        {t.language === 'id' ? 'Konfirmasi Sandi' : 'Confirm Password'} {isEditMode ? '' : <span className="text-rose-500">*</span>}
+                      </label>
+                      <input
+                        type="password"
+                        name="password_confirmation"
+                        value={formData.password_confirmation || ''}
+                        onChange={handleInputChange}
+                        disabled={isProcessing}
+                        className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
                       />
                     </div>
                   </div>
-                </div>
-              )}
+                </form>
 
-              {/* Section 4: Authentication */}
-              <div className="mb-2">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  {t.language === 'id' ? 'Autentikasi' : 'Authentication'}
-                </h4>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {t.language === 'id' ? 'Kata Sandi' : 'Password'} {isEditMode ? <span className="text-slate-400 font-normal text-xs ml-1">(Kosongkan jika tidak diubah)</span> : <span className="text-rose-500">*</span>}
-                    </label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password || ''}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      placeholder={isEditMode ? (t.language === 'id' ? 'Biarkan kosong untuk profil ini' : 'Leave blank to keep current password') : ''}
-                      className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${errors.password ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                    />
-                    {errors.password && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {errors.password}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {t.language === 'id' ? 'Konfirmasi Sandi' : 'Confirm Password'} {isEditMode ? '' : <span className="text-rose-500">*</span>}
-                    </label>
-                    <input
-                      type="password"
-                      name="password_confirmation"
-                      value={formData.password_confirmation || ''}
-                      onChange={handleInputChange}
-                      disabled={isProcessing}
-                      className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                    />
-                  </div>
+                {/* Footer */}
+                <div className="border-t border-slate-200 dark:border-slate-800 px-5 py-3 shrink-0 bg-slate-50 dark:bg-slate-900 rounded-b-xl flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsFormModalOpen(false)}
+                    className="rounded-md border border-slate-300 dark:border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    disabled={isProcessing}
+                  >
+                    {t.cancel}
+                  </button>
+                  <button
+                    type="submit"
+                    form="profile-form"
+                    className="rounded-md bg-theme-primary px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-theme-primary-hover disabled:opacity-50 min-w-[100px] flex items-center justify-center"
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        {t.language === 'id' ? 'Memproses...' : 'Processing...'}
+                      </>
+                    ) : (
+                      isEditMode
+                        ? (pageType === 'students' ? t.updateStudent : t.updateProfile)
+                        : (pageType === 'students' ? t.saveStudent : t.saveProfile)
+                    )}
+                  </button>
                 </div>
               </div>
-
-            </form>
-
-            {/* Sticky Footer */}
-            <div className="border-t border-slate-100 dark:border-slate-800 p-6 shrink-0 bg-white dark:bg-slate-900 rounded-b-xl z-10 flex justify-end space-x-3 transition-colors">
-              <button
-                type="button"
-                onClick={() => setIsFormModalOpen(false)}
-                className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
-                disabled={isProcessing}
-              >
-                {t.cancel}
-              </button>
-              <button
-                type="submit"
-                form="profile-form"
-                className="flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] transition-all"
-                disabled={isProcessing}
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t.language === 'id' ? 'Memproses...' : 'Processing...'}
-                  </>
-                ) : (
-                  isEditMode
-                    ? (pageType === 'students' ? t.updateStudent : t.updateProfile)
-                    : (pageType === 'students' ? t.saveStudent : t.saveProfile)
-                )}
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
       {/* Save Confirmation Modal with Robust Handling */}
       {isSaveConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-4 transition-all duration-300">
-          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-800 p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200 transition-colors backdrop-blur-xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-save-title"
+            className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200 transition-colors backdrop-blur-xl"
+          >
             <div className="text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 mb-6 shadow-inner ring-4 ring-indigo-50/50 dark:ring-indigo-500/5">
-                <AlertCircle className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-theme-primary-light mb-6 shadow-inner ring-4 ring-theme-primary/10">
+                <AlertCircle className="h-8 w-8 text-theme-primary" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.confirmSave}</h3>
+              <h3 id="confirm-save-title" className="text-xl font-bold text-slate-900 dark:text-white">{t.confirmSave}</h3>
               <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-[280px] mx-auto">{t.areYouSureSave}</p>
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleConfirmSave}
-                className="flex items-center justify-center w-full bg-indigo-600 text-white rounded-md px-4 py-2 font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
+                className="flex items-center justify-center w-full bg-theme-primary text-white rounded-md px-4 py-2 font-bold hover:bg-theme-primary-hover disabled:opacity-50 transition-all shadow-sm"
                 disabled={isProcessing}
               >
                 {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1424,9 +1436,14 @@ export const ProfileList: React.FC<ProfileListProps> = ({
       {/* Delete Confirmation Modal with Robust Error Display */}
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-4 transition-all duration-300">
-          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-800 p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200 transition-colors backdrop-blur-xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-delete-title"
+            className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200 transition-colors backdrop-blur-xl"
+          >
             {externalErrors['delete'] && (
-              <div className="mb-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 p-4 border border-rose-200/50 dark:border-rose-500/20 text-sm text-rose-800 dark:text-rose-400 font-bold flex items-center gap-3 shadow-inner">
+              <div role="alert" className="mb-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 p-4 border border-rose-200/50 dark:border-rose-500/20 text-sm text-rose-800 dark:text-rose-400 font-bold flex items-center gap-3 shadow-inner">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
                 {externalErrors['delete']}
               </div>
@@ -1435,7 +1452,7 @@ export const ProfileList: React.FC<ProfileListProps> = ({
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-500/10 mb-6 shadow-inner ring-4 ring-rose-50/50 dark:ring-rose-500/5">
                 <Trash2 className="h-8 w-8 text-rose-600 dark:text-rose-400" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.confirmDeletion}</h3>
+              <h3 id="confirm-delete-title" className="text-xl font-bold text-slate-900 dark:text-white">{t.confirmDeletion}</h3>
               <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-[280px] mx-auto">{t.actionUndone}</p>
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">

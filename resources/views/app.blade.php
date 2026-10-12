@@ -13,6 +13,8 @@
         } else if (localStorage.getItem('vite-ui-theme') === 'light') {
             document.documentElement.classList.remove('dark');
         }
+        const savedColorTheme = localStorage.getItem('smartattend-color-theme') || 'emerald';
+        document.documentElement.setAttribute('data-color-theme', savedColorTheme);
     </script>
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])

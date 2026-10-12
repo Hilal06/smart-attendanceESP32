@@ -22,6 +22,19 @@ export const Profile: React.FC<ProfileProps> = ({ profile, requests = [], onRequ
   const [isProcessing, setIsProcessing] = useState(false);
   const ITEMS_PER_PAGE = 3;
 
+  // Accessible Escape key listener for dialogs
+  React.useEffect(() => {
+    if (!isRequestModalOpen && !isPasswordModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsRequestModalOpen(false);
+        setIsPasswordModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRequestModalOpen, isPasswordModalOpen]);
+
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors duration-200">
@@ -81,360 +94,258 @@ export const Profile: React.FC<ProfileProps> = ({ profile, requests = [], onRequ
   }, [searchTerm]);
 
   return (
-    <div className="max-w-4xl space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{t.profile}</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">{t.language === 'id' ? 'Lihat informasi pribadi dan pekerjaan Anda.' : 'View your personal and employment information.'}</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          {!(profile.role.toLowerCase() === 'student' && !profile.canChangePassword) && (
-            <button onClick={() => setIsPasswordModalOpen(true)} className="flex items-center rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-5 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 hover:-translate-y-0.5 transition-all">
-              <Lock className="mr-2 h-4 w-4" />{t.language === 'id' ? 'Ubah Sandi' : 'Change Password'}
-            </button>
-          )}
-          <button onClick={() => setIsRequestModalOpen(true)} className="flex items-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <Send className="mr-2 h-4 w-4" />{t.requestUpdate}
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 dark:border-slate-800 overflow-hidden transition-all duration-300 hover:shadow-md group">
-            <div className="h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 dark:from-indigo-600 dark:via-purple-700 dark:to-indigo-800 relative overflow-hidden">
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 pointer-events-none"></div>
-            </div>
-            <div className="px-6 pb-8 text-center relative">
-              <div className="-mt-16 flex justify-center mb-4">
-                <div className="rounded-full p-1.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-lg transition-transform duration-300 group-hover:scale-105">
-                  <img src={profile.avatar} alt={profile.name} className="h-28 w-28 rounded-full border-2 border-slate-100 dark:border-slate-800 object-cover shadow-sm transition-colors duration-200" />
+    <div className="profile-bento max-w-6xl mx-auto space-y-6 pb-12">
+          {/* Header with High-Contrast Meta */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <img src={profile.avatar} alt={profile.name} className="h-16 w-16 rounded-2xl border-2 border-slate-100 dark:border-slate-800 object-cover shadow-sm" />
+                <span className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white dark:border-slate-900 ${profile.status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{profile.name}</h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-theme-primary-light text-theme-primary-text border border-theme-primary/20">{profile.role}</span>
                 </div>
-              </div>
-              <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">{profile.name}</h3>
-              <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">{profile.role}</p>
-            </div>
-          </div>
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-800 shadow-sm transition-all duration-300 hover:shadow-md">
-            <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Clock className="h-3 w-3" /> {t.language === 'id' ? 'Statistik Cepat' : 'Quick Stats'}
-            </h4>
-            <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
-              <div className="flex justify-between items-start p-2 gap-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400 shrink-0 mt-0.5">ID</span>
-                <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md text-right break-words">{profile.id}</span>
-              </div>
-              <div className="flex justify-between items-start p-2 gap-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400 shrink-0 mt-0.5">{t.department}</span>
-                <span className="font-bold text-slate-900 dark:text-white text-right break-words">{profile.department}</span>
-              </div>
-              <div className="flex justify-between items-start p-2 gap-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <span className="font-medium text-slate-500 dark:text-slate-400 shrink-0 mt-0.5">{t.joinDate}</span>
-                <span className="font-bold text-slate-900 dark:text-white text-right break-words">{new Date(profile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-white/20 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-            <div className="px-6 py-4 border-b border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 font-bold text-slate-900 dark:text-white flex items-center"><MapPin className="h-4 w-4 mr-2 text-indigo-500" />{t.personalContact}</div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm relative">
-              <div className="flex gap-4 items-start group">
-                <div className="p-3 bg-blue-50/80 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Mail className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.emailAddress}</p><p className="font-medium text-slate-900 dark:text-slate-200">{profile.email}</p></div>
-              </div>
-              <div className="flex gap-4 items-start group">
-                <div className="p-3 bg-emerald-50/80 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Phone className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.phoneNumber}</p><p className="font-medium text-slate-900 dark:text-slate-200">{profile.phoneNumber || '-'}</p></div>
-              </div>
-              <div className="md:col-span-2 flex gap-4 items-start group">
-                <div className="p-3 bg-amber-50/80 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><MapPin className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.address}</p><p className="font-medium leading-relaxed text-slate-900 dark:text-slate-200 max-w-xl">{profile.address || '-'}</p></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-white/20 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-            <div className="px-6 py-4 border-b border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 font-bold text-slate-900 dark:text-white flex items-center">
-              <Briefcase className="h-4 w-4 mr-2 text-indigo-500" />
-              {profile.role.toLowerCase() === 'student' ? 'Student Information' : t.employmentInfo}
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-700 dark:text-slate-300">
-              <div className="flex gap-4 items-start group">
-                <div className="p-3 bg-indigo-50/80 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Briefcase className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.position}</p><p className="font-bold text-slate-900 dark:text-slate-100">{profile.role}</p></div>
-              </div>
-              {profile.role.toLowerCase() === 'student' && profile.class && (
-                <div className="flex gap-4 items-start group">
-                  <div className="p-3 bg-purple-50/80 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Briefcase className="h-5 w-5" /></div>
-                  <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Class</p><p className="font-bold text-slate-900 dark:text-slate-100">{profile.class}</p></div>
-                </div>
-              )}
-              {profile.age && (
-                <div className="flex gap-4 items-start group">
-                  <div className="p-3 bg-orange-50/80 dark:bg-orange-900/30 rounded-xl text-orange-600 dark:text-orange-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><User className="h-5 w-5" /></div>
-                  <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Age</p><p className="font-bold text-slate-900 dark:text-slate-100">{profile.age}</p></div>
-                </div>
-              )}
-              <div className="flex gap-4 items-start group">
-                <div className="p-3 bg-rose-50/80 dark:bg-rose-900/30 rounded-xl text-rose-600 dark:text-rose-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Shield className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.accessRole}</p><p className="font-bold text-slate-900 dark:text-slate-100">{t.standardUser}</p></div>
-              </div>
-              <div className="flex gap-4 items-start group">
-                <div className="p-3 bg-teal-50/80 dark:bg-teal-900/30 rounded-xl text-teal-600 dark:text-teal-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><Calendar className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{t.joinDate}</p><p className="font-bold text-slate-900 dark:text-slate-100">{new Date(profile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p></div>
-              </div>
-              <div className="flex gap-4 items-start group">
-                <div className="p-3 bg-sky-50/80 dark:bg-sky-900/30 rounded-xl text-sky-600 dark:text-sky-400 mt-0.5 group-hover:scale-110 transition-transform duration-300 shadow-sm"><CheckCircle className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Status</p>
-                  <p className={`font-bold inline-flex px-2 py-0.5 rounded-full text-[11px] uppercase tracking-wider ${profile.status === 'Active' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'}`}>
-                    {profile.status === 'Active' ? t.active : t.onLeave}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-sm p-4 border border-amber-200/50 dark:border-amber-800/50 flex gap-3 text-sm text-amber-800 dark:text-amber-400 transition-colors duration-200 shadow-sm"><AlertCircle className="h-5 w-5 shrink-0" /><p>{t.infoPolicy}</p></div>
-        </div>
-      </div>
-
-      {/* Request Logs Table */}
-      {/* Request Logs Table - Upgraded to floating rows */}
-      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-white/20 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300 mt-6 pb-2">
-        <div className="px-6 py-5 border-b border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-300">
-          <div className="font-extrabold flex items-center text-slate-900 dark:text-white text-lg"><FileText className="h-5 w-5 mr-2 text-indigo-500 dark:text-indigo-400" /> {t.language === 'id' ? 'Riwayat Permintaan' : 'Request History'}</div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder={t.language === 'id' ? 'Cari permintaan...' : 'Search requests...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-xl border border-slate-300/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner"
-            />
-          </div>
-        </div>
-
-        {sortedRequests.length > 0 ? (
-          <>
-            <div className="overflow-x-auto p-4">
-              <table className="min-w-full border-separate border-spacing-y-2">
-                <thead className="bg-transparent text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest sticky top-0 z-10">
-                  <tr>
-                    <th className="px-6 py-2 text-left">{t.date}</th>
-                    <th className="px-6 py-2 text-left">{t.requestDetails}</th>
-                    <th className="px-6 py-2 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-transparent transition-colors duration-300">
-                  {paginatedRequests.map((req) => (
-                    <tr key={req.id} className="relative bg-white/60 dark:bg-slate-800/60 shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-300 rounded-l-2xl z-10 relative">
-                        {new Date(req.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', month: 'short', day: 'numeric', year: 'numeric' })}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-200 max-w-md truncate z-10 relative">
-                        {req.description}
-                      </td>
-                      <td className="px-6 py-4 text-right rounded-r-2xl z-10 relative">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider shadow-sm border ${req.status === 'Pending' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-800/30 dark:text-amber-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-800/30 dark:text-emerald-400'}`}>
-                          {req.status === 'Pending' ? <Clock className="mr-1.5 h-3.5 w-3.5" /> : <CheckCircle className="mr-1.5 h-3.5 w-3.5" />}
-                          {req.status === 'Pending' ? t.pending : t.resolved}
-                        </span>
-                      </td>
-                      {/* Professional Hover accent background */}
-                      <td className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 dark:from-indigo-900/10 transition-opacity duration-300 pointer-events-none rounded-2xl w-full h-full block" colSpan={0}></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {totalPages > 1 && (
-              <div className="px-6 py-3 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 transition-colors duration-200">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t.page} <span className="font-medium text-slate-900 dark:text-white">{currentPage}</span> {t.of} <span className="font-medium text-slate-900 dark:text-white">{totalPages}</span>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
+                  <span>ID: <strong className="text-slate-700 dark:text-slate-200">{profile.id}</strong></span>
+                  <span>•</span>
+                  <span>{profile.department}</span>
                 </p>
-                <div className="flex gap-2">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className="p-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className="p-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
-            )}
-          </>
-        ) : (
-          <div className="py-16 flex flex-col items-center justify-center text-center text-slate-500 dark:text-slate-400 text-sm">
-            <div className="bg-slate-50 dark:bg-slate-900/80 p-4 rounded-full mb-4 inline-block shadow-sm">
-              <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
             </div>
-            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-              {searchTerm
-                ? (t.language === 'id' ? 'Permintaan Tidak Ditemukan' : 'No Requests Found')
-                : (t.language === 'id' ? 'Belum Ada Permintaan' : 'No Request History')}
-            </h4>
-            <p className="max-w-sm mx-auto">
-              {searchTerm
-                ? (t.language === 'id' ? 'Tidak ada riwayat permintaan yang cocok dengan kriteria pencarian Anda.' : 'No requests match your search criteria.')
-                : (t.language === 'id' ? 'Anda belum pernah membuat permintaan untuk memperbarui profil Anda.' : 'You have not made any requests to update your profile yet.')}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {isRequestModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-all duration-300">
-          <div className="w-full max-w-lg rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-800 max-h-[90vh] flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 transition-colors backdrop-blur-xl">
-            {/* Sticky Header */}
-            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 px-6 py-5 shrink-0 rounded-t-2xl z-10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
-                  <Send className="h-5 w-5" />
-                </div>
-                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">{t.requestUpdate}</h3>
-              </div>
-              <button
-                onClick={() => setIsRequestModalOpen(false)}
-                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700"
-                disabled={isProcessing || submitted}
-              >
-                <X className="h-5 w-5" />
+            <div className="flex items-center gap-3">
+              {!(profile.role.toLowerCase() === 'student' && !profile.canChangePassword) && (
+                <button onClick={() => setIsPasswordModalOpen(true)} className="flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all">
+                  <Lock className="mr-1.5 h-3.5 w-3.5" />{t.language === 'id' ? 'Ubah Sandi' : 'Change Password'}
+                </button>
+              )}
+              <button type="button" onClick={() => setIsRequestModalOpen(true)} className="flex items-center rounded-xl btn-theme-primary px-5 py-2.5 text-xs font-bold shadow-xs transition-colors">
+                <Send className="mr-1.5 h-3.5 w-3.5" />{t.requestUpdate}
               </button>
             </div>
+          </div>
 
-            {/* Scrollable Form Body */}
-            <form id="request-form" onSubmit={handleSubmitRequest} className="p-8 space-y-4 overflow-y-auto flex-1">
-              {submitted ? (
-                <div className="py-10 text-center animate-in zoom-in duration-300">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/10 mb-6 shadow-inner ring-4 ring-emerald-50/50 dark:ring-emerald-500/5">
-                    <Send className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <h4 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">{t.requestSubmitted}</h4>
-                  <p className="text-slate-500 dark:text-slate-400 max-w-[280px] mx-auto">{t.adminReview}</p>
+          {/* Bento 3-Grid Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bento-card bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-4">
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-emerald-600 dark:text-emerald-400"><Clock className="h-5 w-5" /></div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.joinDate}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{new Date(profile.joinDate).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+              </div>
+            </div>
+            <div className="bento-card bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-blue-600 dark:text-blue-400"><Shield className="h-5 w-5" /></div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.accessRole}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{t.standardUser}</p>
+              </div>
+            </div>
+            <div className="bento-card bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-4">
+              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl text-indigo-600 dark:text-indigo-400"><CheckCircle className="h-5 w-5" /></div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status Presensi</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{profile.status === 'Active' ? t.active : t.onLeave}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Info Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Contact Card */}
+            <div className="bento-card bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <Mail className="h-4 w-4 text-theme-primary" /> {t.personalContact}
+              </h4>
+              <div className="space-y-3.5 text-xs">
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-500 font-medium">{t.emailAddress}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white font-mono">{profile.email}</span>
                 </div>
-              ) : (
-                <>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 font-medium">{t.language === 'id' ? 'Silakan jelaskan informasi apa yang perlu diperbarui. Berikan detail spesifik.' : 'Please describe what information needs to be updated. Be specific.'}</p>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t.changeDescription} <span className="text-rose-500">*</span></label>
-                    <textarea
-                      required
-                      rows={5}
-                      value={requestDescription}
-                      onChange={(e) => setRequestDescription(e.target.value)}
-                      disabled={isProcessing}
-                      className="block w-full rounded-xl border border-slate-300/60 dark:border-slate-700/60 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm p-4 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white dark:focus:bg-slate-900 transition-all resize-none shadow-inner placeholder:text-slate-400/70"
-                      placeholder={t.language === 'id' ? 'Contoh: Saya baru saja pindah rumah, alamat baru saya adalah...' : 'Example: I recently moved, my new address is...'}
-                    />
-                  </div>
-                </>
-              )}
-            </form>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-500 font-medium">{t.phoneNumber}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{profile.phoneNumber || '-'}</span>
+                </div>
+                <div className="flex justify-between items-start py-1">
+                  <span className="text-slate-500 font-medium shrink-0">{t.address}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white text-right max-w-xs">{profile.address || '-'}</span>
+                </div>
+              </div>
+            </div>
 
-            {/* Sticky Footer */}
-            {!submitted && (
-              <div className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 px-6 py-5 shrink-0 rounded-b-2xl z-10 flex justify-end space-x-3 transition-colors">
-                <button type="button" onClick={() => setIsRequestModalOpen(false)} disabled={isProcessing} className="rounded-xl border border-slate-300 dark:border-slate-700 px-5 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm disabled:opacity-50 transition-all">{t.cancel}</button>
-                <button type="submit" form="request-form" disabled={isProcessing || !requestDescription.trim()} className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all">
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t.language === 'id' ? 'Mengirim...' : 'Sending...'}
-                    </>
+            {/* Employment / Student Info */}
+            <div className="bento-card bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <Briefcase className="h-4 w-4 text-theme-primary" /> {profile.role.toLowerCase() === 'student' ? 'Student Information' : t.employmentInfo}
+              </h4>
+              <div className="space-y-3.5 text-xs">
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-500 font-medium">{t.position}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{profile.role}</span>
+                </div>
+                {profile.role.toLowerCase() === 'student' && profile.class && (
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 font-medium">Class</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{profile.class}</span>
+                  </div>
+                )}
+                {profile.age && (
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 font-medium">Age</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{profile.age}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-500 font-medium">{t.department}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{profile.department}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Policy note */}
+          <div className="rounded-xl bg-amber-50/80 dark:bg-amber-900/20 p-4 border border-amber-200/50 dark:border-amber-800/50 flex gap-3 text-xs text-amber-800 dark:text-amber-400">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>{t.infoPolicy}</p>
+          </div>
+
+          {/* Request Logs Table Container */}
+          <div className="requests-table-container bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="font-bold flex items-center text-slate-900 dark:text-white text-base">
+                <FileText className="h-4 w-4 mr-2 text-theme-primary" /> {t.language === 'id' ? 'Riwayat Permintaan' : 'Request History'}
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder={t.language === 'id' ? 'Cari permintaan...' : 'Search requests...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-4 py-1.5 w-full sm:w-56 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-theme-primary"
+                />
+              </div>
+            </div>
+
+            {sortedRequests.length > 0 ? (
+              <>
+                <div className="overflow-x-auto p-4">
+                  <table className="min-w-full border-separate border-spacing-y-2">
+                    <thead className="bg-transparent text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-2 text-left">{t.date}</th>
+                        <th className="px-4 py-2 text-left">{t.requestDetails}</th>
+                        <th className="px-4 py-2 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedRequests.map((req) => (
+                        <tr key={req.id} className="bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                          <td className="px-4 py-3 whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-300 rounded-l-xl">
+                            {new Date(req.date).toLocaleDateString(t.language === 'id' ? 'id-ID' : 'en-US', { timeZone: 'Asia/Jakarta', month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+                          <td className="px-4 py-3 text-xs font-medium text-slate-900 dark:text-slate-200 max-w-md truncate">
+                            {req.description}
+                          </td>
+                          <td className="px-4 py-3 text-right rounded-r-xl">
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${req.status === 'Pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'}`}>
+                              {req.status === 'Pending' ? <Clock className="mr-1 h-3 w-3" /> : <CheckCircle className="mr-1 h-3 w-3" />}
+                              {req.status === 'Pending' ? t.pending : t.resolved}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/30 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 text-xs">
+                    <p className="text-slate-500">
+                      {t.page} <span className="font-medium">{currentPage}</span> {t.of} <span className="font-medium">{totalPages}</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="p-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 disabled:opacity-40">
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="p-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 disabled:opacity-40">
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-8 text-center text-slate-500 text-xs">
+                {t.language === 'id' ? 'Belum ada riwayat permintaan.' : 'No request history found.'}
+              </div>
+            )}
+          </div>
+
+          {/* Shared Modals */}
+          {isRequestModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+              <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">{t.requestUpdate}</h3>
+                  <button onClick={() => setIsRequestModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X className="h-5 w-5" /></button>
+                </div>
+                <form onSubmit={handleSubmitRequest} className="p-6 space-y-4">
+                  {submitted ? (
+                    <div className="py-8 text-center"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 mb-3"><Send className="h-7 w-7 text-emerald-600" /></div><h4 className="text-base font-bold">{t.requestSubmitted}</h4><p className="text-slate-500 text-xs mt-1">{t.adminReview}</p></div>
                   ) : (
                     <>
-                      <Send className="mr-2 h-4 w-4" />
-                      {t.sendRequest}
+                      <p className="text-xs text-slate-600 dark:text-slate-300">{t.language === 'id' ? 'Silakan jelaskan informasi apa yang perlu diperbarui. Berikan detail spesifik.' : 'Please describe what information needs to be updated. Be specific.'}</p>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">{t.changeDescription}</label>
+                        <textarea required rows={4} value={requestDescription} onChange={(e) => setRequestDescription(e.target.value)} className="block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-xs" />
+                      </div>
+                      <div className="flex justify-end gap-3 pt-2">
+                        <button type="button" onClick={() => setIsRequestModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 rounded-lg">{t.cancel}</button>
+                        <button type="submit" disabled={isProcessing} className="rounded-lg btn-theme-primary px-5 py-2 text-xs font-bold disabled:opacity-50">
+                          {isProcessing ? <Loader2 className="animate-spin inline-block mr-1.5 h-3.5 w-3.5" /> : null}
+                          {t.sendRequest}
+                        </button>
+                      </div>
                     </>
                   )}
-                </button>
+                </form>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+          )}
 
-      {/* Change Password Modal */}
-      {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md transition-all duration-300">
-          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-800 flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 transition-colors backdrop-blur-xl">
-            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 px-6 py-5 shrink-0 rounded-t-2xl z-10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
-                  <Lock className="h-5 w-5" />
+          {isPasswordModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+              <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">{t.language === 'id' ? 'Ubah Kata Sandi' : 'Change Password'}</h3>
+                  <button onClick={() => setIsPasswordModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X className="h-5 w-5" /></button>
                 </div>
-                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">{t.language === 'id' ? 'Ubah Kata Sandi' : 'Change Password'}</h3>
+                <form id="password-form-v1" onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">{t.language === 'id' ? 'Kata Sandi Saat Ini' : 'Current Password'}</label>
+                    <input type="password" required value={passwordForm.current_password} onChange={e => setPasswordForm(f => ({ ...f, current_password: e.target.value }))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-xs" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">{t.language === 'id' ? 'Kata Sandi Baru' : 'New Password'}</label>
+                    <input type="password" required value={passwordForm.new_password} onChange={e => setPasswordForm(f => ({ ...f, new_password: e.target.value }))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-xs" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">{t.language === 'id' ? 'Konfirmasi Kata Sandi Baru' : 'Confirm New Password'}</label>
+                    <input type="password" required value={passwordForm.new_password_confirmation} onChange={e => setPasswordForm(f => ({ ...f, new_password_confirmation: e.target.value }))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-xs" />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 rounded-lg">{t.cancel}</button>
+                    <button type="submit" disabled={isProcessing} className="rounded-lg btn-theme-primary px-5 py-2 text-xs font-bold disabled:opacity-50">
+                      {isProcessing ? <Loader2 className="animate-spin inline-block mr-1.5 h-3.5 w-3.5" /> : null}
+                      {t.language === 'id' ? 'Simpan Sandi' : 'Save Password'}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <button
-                onClick={() => setIsPasswordModalOpen(false)}
-                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 transition-all focus:outline-none"
-                disabled={isProcessing}
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
-
-            <form id="password-form" onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Kata Sandi Saat Ini' : 'Current Password'} <span className="text-rose-500">*</span></label>
-                <input
-                  required
-                  type="password"
-                  value={passwordForm.current_password}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
-                  disabled={isProcessing}
-                  className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${externalErrors['current_password'] ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                />
-                {externalErrors['current_password'] && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {externalErrors['current_password']}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Kata Sandi Baru' : 'New Password'} <span className="text-rose-500">*</span></label>
-                <input
-                  required
-                  type="password"
-                  value={passwordForm.new_password}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                  disabled={isProcessing}
-                  className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-white transition-all ${externalErrors['new_password'] ? 'border-rose-500 ring-rose-500/20 ring-4 bg-rose-50/30 dark:bg-rose-900/20' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                />
-                {externalErrors['new_password'] && <p className="mt-1 text-xs text-rose-500 font-medium flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {externalErrors['new_password']}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{t.language === 'id' ? 'Konfirmasi Kata Sandi Baru' : 'Confirm New Password'} <span className="text-rose-500">*</span></label>
-                <input
-                  required
-                  type="password"
-                  value={passwordForm.new_password_confirmation}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password_confirmation: e.target.value })}
-                  disabled={isProcessing}
-                  className="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
-                />
-              </div>
-            </form>
-
-            <div className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 px-6 py-4 shrink-0 rounded-b-2xl z-10 flex justify-end space-x-3">
-              <button type="button" onClick={() => setIsPasswordModalOpen(false)} disabled={isProcessing} className="rounded-xl border border-slate-300 dark:border-slate-700 px-5 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm disabled:opacity-50 transition-all">{t.cancel}</button>
-              <button type="submit" form="password-form" disabled={isProcessing} className="flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-2 text-sm font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all">
-                {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.language === 'id' ? 'Menyimpan...' : 'Saving...'}</> : (t.language === 'id' ? 'Perbarui Sandi' : 'Update Password')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
+          )}
+      </div>
   );
 };

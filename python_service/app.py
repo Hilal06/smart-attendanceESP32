@@ -278,8 +278,9 @@ def reload_faces():
 
 @app.route('/health', methods=['GET'])
 def health_check():
+    status = "online" if FACE_RECOGNITION_AVAILABLE else "offline"
     return jsonify({
-        "status": "online",
+        "status": status,
         "loaded_faces_count": len(known_face_names),
         "face_rec_available": FACE_RECOGNITION_AVAILABLE
     }), 200

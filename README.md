@@ -1,33 +1,44 @@
 # SmartAttend - Enterprise Attendance System
 
-SmartAttend is a sophisticated, enterprise-ready attendance management platform designed for modern organizations. It combines a robust **Laravel 12** backend with a dynamic **React 19 (Inertia.js V2)** frontend, **Dockerized deployment**, and an integrated **Python Face Recognition Service** to streamline HR operations.
+SmartAttend is a sophisticated, enterprise-ready attendance management platform designed for modern educational institutions and organizations. It combines a robust **Laravel 12** backend with a dynamic **React 19 (Inertia.js V2)** frontend, **Tailwind CSS v4**, a dedicated **Python Face Recognition Microservice**, and an end-to-end **Dockerized deployment**.
 
-Designed for seamless integration with **ESP32-CAM** devices for contactless, facial recognition-based attendance.
+Designed for high-speed, contactless biometric attendance via **ESP32-CAM** hardware devices with hardware-triggered capture and dynamic working-schedule calculations.
 
 ---
 
 ## 🌟 Key Features
 
-### 1. Advanced Biometric Attendance
-- **Face Recognition**: Automated attendance via ESP32-CAM and a Python-based recognition engine (Dlib).
-- **Auto-Enrollment**: Uploading employee face data sets up the individual for facial recognition seamlessly.
-- **Real-time Sync**: Hot-reload capability ensures new faces are recognized instantly without server restarts.
+### 1. Advanced Biometric Attendance & AI Vision
+- **Contactless Face Recognition**: Automated biometric attendance using ESP32-CAM and a high-accuracy Python engine (Dlib HOG / OpenCV).
+- **Auto-Enrollment & Validation**: Face uploads are validated in real-time, saved directly to `/python_service/known_faces`, and cached into `.pkl` encodings.
+- **Microservice Health Check**: Real-time status monitoring (`/health`) with live UI indicator and loaded facial encodings count.
+- **Hardware-Triggered ESP32-CAM**: Hardware button / PIR-activated frame capture to eliminate network flooding, featuring brownout protection for voltage stability.
 
-### 2. Comprehensive Workforce Management
-- **Smart Employee Directory**: CRUD operations for managing internal accounts ranging from students/employees to teachers/administrators.
-- **Attendance Tracking**: Real-time status monitoring (`Present`, `Late`, `Absent`, `On Leave`).
-- **Employee Requests**: Seamlessly handle leave and remote work requests directly from the dashboard.
-- **Company Announcements**: Broadcasting system for HR to push important notices to employees with variable priority levels.
+### 2. Multi-Variant Dashboard & Theme Customization
+- **5 Specialized Dashboard Views**:
+  - **Academic Studio**: Geared towards educational analytics, class attendance, and student performance.
+  - **Command Center**: High-density operational overview with real-time logs and system telemetry.
+  - **Nordic Minimal**: Clean, distraction-free typographic layout for rapid scanning.
+  - **Kiosk Monitor**: Large, high-visibility layout ideal for attendance kiosks and wall-mounted tablets.
+  - **Status Workspace**: Task- and request-driven interface for daily administrative actions.
+- **Dynamic Color Themes & Dark Mode**: Instant switching across custom palettes (`Emerald`, `Indigo`, `Amber`, `Rose`) with high-contrast WCAG AA compliance and persistent local storage.
 
-### 3. Intelligent Analytics & Reporting
-- **Performance Dashboards**: Interactive charts for weekly attendance trends built directly into the UI.
-- **Detailed Reports**: Comprehensive, tabular views of attendance history and employee statistics.
-- **AI Analyst Integration**: Generate comprehensive textual attendance analyses via an integrated **Gemini AI service** (Requires API Key).
+### 3. Comprehensive Workforce Management
+- **Smart Directory**: CRUD operations for managing profiles across Admins, Teachers, and Students/Employees.
+- **Dynamic Late Attendance**: Automatic calculation of `Late` vs `Present` status based on day-of-week working hours (`weekly_schedule`) and configurable grace thresholds (`late_threshold_minutes`).
+- **Requests & Permissions**: Streamlined submission and approval workflows for leave, sick days, and remote work.
+- **Announcements**: Organization-wide bulletin board with priority tagging and notifications.
 
-### 4. Customization & Security
-- **Dynamic Settings**: Configure late thresholds, work schedules, API keys, and language preferences.
-- **Bilingual Support**: Toggle between **English** and **Indonesian (Bahasa Indonesia)**.
-- **Role-Based Access Control (RBAC)**: Multi-tiered environment structured using **Spatie Laravel Permission** providing fine-grained access to Admin, Teacher, and Student/Employee capabilities.
+### 4. Intelligent Analytics & AI Insights
+- **Interactive Visualizations**: Attendance trends and weekly analytics powered by **Recharts**.
+- **Gemini AI Attendance Analyst**: Automated textual attendance insights and anomaly summaries powered by **Google GenAI** (`@google/genai`).
+- **Comprehensive Reports**: Filterable tabular logs exportable for audits and administrative reporting.
+
+### 5. Security & Internationalization
+- **Role-Based Access Control (RBAC)**: Multi-tiered permissions structured with **Spatie Laravel Permission** (Admin, Teacher, Student).
+- **Bilingual Interface**: Full localization support for **Indonesian (Bahasa Indonesia)** and **English**.
+- **Secure Reverse Proxy Networking**: Python microservice is sealed behind Nginx with internal token authentication (`X-API-KEY`).
+- **Accessibility & UX**: Micro-interactions, Sonner toast notifications, zxcvbn password strength meter, and full keyboard-accessible dialogs.
 
 ---
 
@@ -35,127 +46,243 @@ Designed for seamless integration with **ESP32-CAM** devices for contactless, fa
 
 | Component | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Backend** | **Laravel** | `12.x` | Core PHP framework, API logic, and backend routing. |
-| **Frontend** | **React** | `19.2` | Modern component-based frontend framework powered by Vite. |
-| **Bridge** | **Inertia.js** | `2.3` | Bridges the Monolith gap allowing React views to be server-driven via Laravel. |
-| **UI Styling** | **Tailwind CSS** | `4.1` | The latest version of the utility-first CSS framework for rapid and modern styling. |
-| **Database** | **MySQL** | `8.0` | Secure and robust persistent relational storage mapping back to Laravel Eloquent models. |
-| **Recognition** | **Python (Flask)** | `3.10` | Face recognition microservice using `face_recognition` and OpenCV. |
-| **AI Insights**| **Google GenAI** | `1.42` | Generative AI integration for textual attendance analytics (`@google/genai`). |
-| **Container** | **Docker** | `27.x` | Containerization and orchestration for automated production-ready delivery. |
+| **Backend** | **Laravel** | `12.x` | Core PHP framework, API logic, Eloquent ORM, and RBAC. |
+| **Frontend** | **React** | `19.2` | Component-based UI with Vite 6 build pipeline. |
+| **Bridge** | **Inertia.js** | `2.3` | Modern monolith adapter connecting Laravel controllers to React views. |
+| **UI Styling** | **Tailwind CSS** | `4.1` | Modern utility-first styling with dynamic color variables and dark mode. |
+| **Notifications** | **Sonner** | `2.0` | Accessible, rich-stack toast notification engine. |
+| **Database** | **MariaDB / MySQL** | `10.6 / 8.0` | Relational storage for profiles, attendances, requests, and schedules. |
+| **Recognition Service** | **Python (Flask)** | `3.10` | Face recognition microservice using `face_recognition`, Dlib, and OpenCV. |
+| **AI Insights** | **Google GenAI** | `1.42` | Generative attendance summaries and performance insights. |
+| **Hardware** | **ESP32-CAM** | - | Low-power IoT camera device with hardware trigger and Wi-Fi streaming. |
+| **Web Server / Proxy** | **Nginx** | `Alpine` | High-performance reverse proxy routing HTTP/HTTPS and internal microservices. |
+| **Containerization** | **Docker** | `27.x+` | Multi-container Docker Compose orchestration with log rotation. |
 
 ---
 
-## 🚀 Installation & Setup
+## 🐳 Docker Architecture & Setup (Recommended)
 
-### Option 1: Docker (Production / Recommended)
+Docker Compose networks the PHP webserver, Nginx proxy, MariaDB database, and Python Face Recognition service into an isolated bridge network (`smart-attendance-network`).
 
-Docker is the recommended way to run SmartAttend as it seamlessly networks the PHP webserver, MySQL database, and the Python Face Recognition service together.
-
-1.  **Clone & Setup Environment**
-    ```bash
-    git clone https://github.com/hilal06/smart-attendanceESP32.git
-    cd smart-attendanceESP32
-    cp .env.example .env
-    ```
-
-2.  **Configure .env Variables**
-    Open `.env` and set:
-    - `APP_ENV=production`
-    - `DB_HOST=smart-attendance-db` (Crucial for Docker bridge networking)
-    - `GEMINI_API_KEY=your_key_here` (If you want AI insights)
-    - `SYSTEM_API_KEY=your_secret_system_key` (For Python -> Laravel communication)
-
-3.  **Run Containers**
-    This builds out Nginx, PHP-FPM, MySQL, and the Python microservice all at once.
-    ```bash
-    docker compose -f docker-compose.prod.yml up -d --build
-    ```
-
-4.  **Initialize Application**
-    Generate keys, link storage for avatars, and run database migrations/seeders.
-    ```bash
-    docker compose -f docker-compose.prod.yml exec app php artisan key:generate
-    docker compose -f docker-compose.prod.yml exec app php artisan storage:link
-    docker compose -f docker-compose.prod.yml exec app php artisan migrate:fresh --seed
-    ```
-
-    Visit `http://localhost` (or your server domain) to access the application. Default login uses the credentials automatically generated by the Database Seeder (see console output).
-
-### Option 2: Manual Setup (Local Development)
-
-**Prerequisites**: PHP 8.2+, Node.js 20+, MySQL, Python 3.10+ (with Visual C++ Build Tools on Windows).
-
-1.  **Clone & Configure Environment**
-    ```bash
-    git clone https://github.com/hilal06/smart-attendanceESP32.git
-    cd smart-attendanceESP32
-    cp .env.example .env
-    ```
-
-2.  **Configure Database & Keys in `.env`**
-    Update `.env` with your local MySQL credentials (`DB_HOST=127.0.0.1`), and set `GEMINI_API_KEY` and `SYSTEM_API_KEY`.
-
-3.  **Install & Setup Backend**
-    ```bash
-    composer run setup
-    # This composer script automatically runs:
-    # composer install, key:generate, migrate --force, npm install, and npm run build.
-    ```
-    *Alternatively, run `composer install` and `npm install` manually.*
-
-4.  **Start Services**
-    ```bash
-    # Terminal 1 - Backend & Frontend (Local Dev Server)
-    composer run dev 
-    
-    # Terminal 2 - Face Recognition (Python Microservice)
-    cd python_service
-    python -m venv venv
-    source venv/bin/activate # (Or venv\Scripts\activate on Windows)
-    pip install -r requirements.txt
-    python app.py
-    ```
-
----
-
-## 📷 Face Recognition Guide
-
-The system uses a dedicated Python microservice for heavy AI lifting.
-
-1.  **Enrollment**: Upload a photo in the 'face data' upload box when creating or editing a profile on the dashboard. This auto-saves to `/python_service/known_faces` and automatically triggers an encoder reload.
-2.  **ESP32 Action**: The ESP32-CAM captures an image on hardware trigger and POSTs it to the Python service.
-3.  **Matching**: The service uses Dlib HOG layers to compare the captured face with the uploaded datasets.
-4.  **Attendance**: If a match is found (e.g., ID `123456`), the Python service talks directly to the Laravel API securely via the `SYSTEM_API_KEY` to log the attendance.
-
-**Troubleshooting Hot-Reloads**:
-If you manually dump images into the `/known_faces` folder via FTP instead of the UI, they won't be recognized until you trigger an encoding reload:
-`GET http://localhost:5000/reload`
-
----
-
-## 📡 API Documentation & Networking
-
-### ESP32 Capture Endpoint (Python Service)
-
-**Endpoint**: `POST /recognize` (on Port 5000)
-**Body**: Raw multi-part image data (binary blob from the ESP32 camera buffer).
-
-### Internal Attendance Endpoint (Laravel)
-
-This endpoint is strictly for the Python service to talk to Laravel securely. 
-
-**Endpoint**: `POST /api/attendance`
-**Headers**:
-- `Content-Type: application/json`
-- `X-API-KEY: <your_secret_system_key>` (Set inside `.env` via `SYSTEM_API_KEY`)
-
-**Body**:
-```json
-{
-  "profile_id": "123456"
-}
 ```
+                              ┌────────────────────────────────────────┐
+                              │             Nginx Webserver            │
+                              │          (Port 80 / Port 443)          │
+                              └───────┬────────────────────────┬───────┘
+                                      │                        │
+               Requests to /api, /    │                        │ Requests to /recognize,
+               and static frontend    │                        │ /health, /reload
+                                      ▼                        ▼
+                        ┌───────────────────┐    ┌───────────────────────────┐
+                        │   PHP-FPM (App)   │    │  Python Recognition Engine │
+                        │    (Port 9000)    │    │        (Port 5000)        │
+                        └─────────┬─────────┘    └─────────────┬─────────────┘
+                                  │                            │
+                                  │ Eloquent                   │ Attendance Webhook
+                                  ▼ (Internal)                 │ (X-API-KEY Auth)
+                        ┌───────────────────┐                  │
+                        │   MariaDB (db)    │◄─────────────────┘
+                        │    (Port 3306)    │
+                        └───────────────────┘
+```
+
+### 1. Clone & Configure Environment
+
+```bash
+git clone https://github.com/hilal06/smart-attendanceESP32.git
+cd smart-attendanceESP32
+cp .env.example .env
+```
+
+Open `.env` and verify the core variables:
+```ini
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=http://localhost
+
+# Database (Must match the Docker service name 'db')
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=smart_attendance
+DB_USERNAME=smart_user
+DB_PASSWORD=secure_password
+
+# Authentication & API Keys
+API_KEY=your_secure_random_api_key_here
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+### 2. Build and Launch Containers
+
+#### Production Mode:
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+#### Development Mode:
+```bash
+docker compose up -d --build
+```
+
+### 3. Initialize the Application (First-time Run)
+
+Run the following commands to initialize application keys, storage symlinks, and seed initial database accounts:
+
+```bash
+# 1. Generate Laravel application key
+docker compose -f docker-compose.prod.yml exec app php artisan key:generate
+
+# 2. Symlink public storage for avatar and face uploads
+docker compose -f docker-compose.prod.yml exec app php artisan storage:link
+
+# 3. Run database migrations
+docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+
+# 4. Seed initial roles, permissions, and default accounts
+docker compose -f docker-compose.prod.yml exec app php artisan db:seed --force
+```
+
+### 4. Default Seeded Credentials
+
+| Role | Email | Password | Access Level |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@smart.com` | `password123` | Full administrative control, settings, directory, and analytics |
+| **Teacher** | `teacher1@smartattend.com` | `password123` | Attendance reporting, request approvals, announcements |
+| **Student** | `student1@smartattend.com` | `password123` | Personal attendance tracking, requests submission |
+
+*(Additional accounts seeded: `teacher1` through `teacher6`, `student1` through `student20`)*
+
+### 5. Docker Features & Operations
+- **Security Behind Reverse Proxy**: The Python microservice (port 5000) is **not** exposed to the public internet directly. All routes (`/recognize`, `/register_face`, `/reload`, `/health`) are safely proxied through Nginx on port 80/443.
+- **Log Rotation**: All containers use the `json-file` logging driver with `max-size: 10m` and `max-file: 3` to prevent disk saturation.
+- **Volume Persistence**:
+  - `dbdata`: Persistent MariaDB storage.
+  - `./storage`: Uploaded avatars and system files.
+  - `./python_service/known_faces`: Uploaded dataset images for facial encoding.
+  - `./python_service/uploads`: Image capture history for auditing.
+
+---
+
+## 💻 Manual Setup (Local Development without Docker)
+
+**Prerequisites**: PHP 8.2+, Composer 2+, Node.js 20+, MySQL 8.0+, Python 3.10+ (with CMake and Visual C++ Build Tools on Windows).
+
+1. **Clone & Configure**:
+   ```bash
+   git clone https://github.com/hilal06/smart-attendanceESP32.git
+   cd smart-attendanceESP32
+   cp .env.example .env
+   ```
+   Set `DB_HOST=127.0.0.1` and configure local database credentials, `API_KEY`, and `VITE_GEMINI_API_KEY`.
+
+2. **Install Dependencies & Build Assets**:
+   ```bash
+   composer install
+   php artisan key:generate
+   php artisan storage:link
+   php artisan migrate --seed
+   npm install
+   npm run build
+   ```
+
+3. **Start Development Servers**:
+   ```bash
+   # Terminal 1 - Laravel & Vite Frontend
+   composer run dev
+
+   # Terminal 2 - Python Face Recognition Service
+   cd python_service
+   python -m venv venv
+   source venv/bin/activate  # (On Windows: venv\Scripts\activate)
+   pip install -r requirements.txt
+   python app.py
+   ```
+
+---
+
+## 📷 Face Recognition & Hardware Workflow
+
+```
+┌──────────────┐   Hardware Button/PIR   ┌────────────────────────┐
+│  ESP32-CAM   │ ──────────────────────► │ Captures JPEG Buffer   │
+└──────────────┘                         └───────────┬────────────┘
+                                                     │
+                                                     │ HTTP POST /recognize (Multipart/blob)
+                                                     ▼
+                                         ┌────────────────────────┐
+                                         │  Nginx Reverse Proxy   │ (Port 80/443)
+                                         └───────────┬────────────┘
+                                                     │
+                                                     │ Internal Proxy
+                                                     ▼
+                                         ┌────────────────────────┐
+                                         │ Python Microservice    │ (dlib HOG face matching)
+                                         └───────────┬────────────┘
+                                                     │
+                                                     │ If Face Recognized:
+                                                     │ POST /api/attendance
+                                                     │ Header: X-API-KEY: <key>
+                                                     ▼
+                                         ┌────────────────────────┐
+                                         │  Laravel Core Backend  │ (Records Check-in/Check-out)
+                                         └────────────────────────┘
+```
+
+1. **Enrollment**: Upload a portrait photo in the profile creation/edit form. The image is validated for face presence, saved to `/python_service/known_faces`, and re-encoded immediately without server downtime.
+2. **ESP32 Trigger**: The ESP32-CAM script remains in low-power standby until a hardware trigger (button press or sensor) initiates capture.
+3. **Matching**: The Python microservice uses 128D facial feature embeddings to match the capture against enrolled profiles.
+4. **Attendance Logging**: Upon a match, the Python service makes an authorized internal webhook request to Laravel (`POST /api/attendance`) with `X-API-KEY`, recording check-in or check-out alongside dynamic late threshold computation.
+
+---
+
+## 📡 API Reference & Endpoints
+
+### 1. ESP32 Capture Endpoint
+- **URL**: `POST /recognize`
+  - *Docker Production*: `http://<SERVER_IP>/recognize`
+  - *Local Dev*: `http://localhost:5000/recognize`
+- **Body**: Multipart form data with file field `image` or raw binary image data.
+
+### 2. Service Health & Status
+- **URL**: `GET /health`
+  - *Docker Production*: `http://<SERVER_IP>/health`
+  - *Local Dev*: `http://localhost:5000/health`
+- **Response**:
+  ```json
+  {
+    "status": "online",
+    "face_rec_available": true,
+    "loaded_faces_count": 24
+  }
+  ```
+
+### 3. Face Encoding Cache Reload
+- **URL**: `GET /reload`
+  - *Docker Production*: `http://<SERVER_IP>/reload`
+  - *Local Dev*: `http://localhost:5000/reload`
+- **Response**: Triggers an in-memory re-index of all facial images in the `known_faces` directory.
+
+### 4. Internal Attendance Webhook (Laravel)
+- **URL**: `POST /api/attendance`
+- **Headers**:
+  - `Content-Type: application/json`
+  - `X-API-KEY: <API_KEY>` (Configured in `.env`)
+- **Body**:
+  ```json
+  {
+    "profile_id": "123456"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "status": "success",
+    "type": "check_in",
+    "message": "Selamat datang! Check-in tercatat pada 07:45",
+    "data": { ... }
+  }
+  ```
 
 ---
 
@@ -163,22 +290,40 @@ This endpoint is strictly for the Python service to talk to Laravel securely.
 
 ```text
 smart-attendanceESP32/
-├── app/                  # Laravel Core Code (Models, Controllers)
-├── docker/               # Docker Configs (nginx, php)
-├── python_service/       # Python Microservice (Flask, OpenCV)
-│   ├── Dockerfile        # Container build instructions
-│   ├── app.py            # AI processing and routing
-│   └── known_faces/      # Encoded dataset storage
-├── resources/js/         # React Frontend Source
-│   ├── Components/       # Reusable components
-│   ├── Pages/            # Inertia Router Screens
-│   └── constants.ts      # Internationalization (ID/EN) strings
-├── storage/app/public/   # Shared Storage (Contains /avatars linked to public)
-└── docker-compose.prod.yml # Production multi-container orchestration
+├── app/                          # Laravel application core
+│   ├── Http/Controllers/        # Attendance, Profile, and Settings controllers
+│   ├── Http/Middleware/         # ApiKey and RBAC middleware
+│   └── Models/                  # Attendance, Profile, User, Setting models
+├── docker/                       # Docker container configurations
+│   ├── certbot/                 # Let's Encrypt SSL configuration
+│   ├── nginx/                   # Nginx reverse proxy configuration & Dockerfile
+│   │   └── conf.d/app.conf      # Virtual host routing & Python proxy rules
+│   ├── Dockerfile               # Multi-stage PHP 8.3 FPM container build
+│   └── entrypoint.sh            # Production cache & migration entrypoint
+├── python_service/               # Python Face Recognition Microservice
+│   ├── Dockerfile               # Python 3.10 + dlib container build
+│   ├── app.py                   # Flask API, Dlib recognition & Laravel client
+│   ├── known_faces/             # Enrolled facial images
+│   ├── uploads/                 # Capture audit history
+│   └── requirements.txt         # Python dependencies
+├── resources/                    # React Frontend
+│   ├── css/app.css              # Theme CSS tokens, dark mode, animations
+│   ├── js/                      # TypeScript frontend application
+│   │   ├── Components/          # Shared modular components
+│   │   │   └── DashboardVariants/# 5 Specialized Dashboard Styles
+│   │   ├── Layouts/             # AppLayout, navigation, header
+│   │   ├── Pages/               # Inertia page views (Dashboard, Profiles, Reports, Settings)
+│   │   └── constants.ts         # Bilingual (ID/EN) strings and dictionary
+│   └── views/app.blade.php      # Main HTML entrypoint with theme injection
+├── storage/app/public/           # Persistent storage (avatars, attachments)
+├── docker-compose.yml           # Local development multi-container orchestration
+├── docker-compose.prod.yml      # Production multi-container orchestration
+├── DEPLOYMENT.md                 # Production deployment & server setup guide
+└── tailwind.config.js           # Tailwind CSS configuration with dynamic palettes
 ```
 
 ---
 
-## 📝 License
+## 📄 License
 
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced under the [MIT license](https://opensource.org/licenses/MIT).

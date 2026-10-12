@@ -40,7 +40,7 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ formData, t, set
         <div className="max-w-4xl rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-md p-6 shadow-sm border border-white/20 dark:border-slate-700/50 transition-colors duration-300">
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/30 p-2 text-indigo-600 dark:text-indigo-400">
+                    <div className="rounded-lg bg-theme-primary-light p-2 text-theme-primary-text">
                         <Calendar className="h-5 w-5" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.weeklySchedule || 'Weekly Schedule'}</h3>
@@ -75,7 +75,7 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ formData, t, set
                                     <select
                                         value={day.status}
                                         onChange={(e) => handleScheduleChange(index, 'status', e.target.value)}
-                                        className={`block w-full rounded-md border-0 py-1.5 pl-3 pr-8 text-xs font-medium ring-1 ring-inset focus:ring-2 focus:ring-indigo-600 transition-colors ${day.status === 'Work Day' ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 ring-emerald-200 dark:ring-emerald-800/50' :
+                                        className={`block w-full rounded-md border-0 py-1.5 pl-3 pr-8 text-xs font-medium ring-1 ring-inset focus:ring-2 focus:ring-theme-primary transition-colors ${day.status === 'Work Day' ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 ring-emerald-200 dark:ring-emerald-800/50' :
                                             day.status === 'Holiday' ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 ring-amber-200 dark:ring-amber-800/50' :
                                                 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 ring-slate-200 dark:ring-slate-700'
                                             }`}
@@ -91,7 +91,7 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ formData, t, set
                                         value={day.startTime}
                                         onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
                                         disabled={day.status !== 'Work Day'}
-                                        className="block w-24 rounded-md border-0 py-1 px-2 font-mono text-xs text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 transition-colors"
+                                        className="block w-24 rounded-md border-0 py-1 px-2 font-mono text-xs text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-theme-primary disabled:opacity-50 transition-colors"
                                     />
                                     <span className="text-slate-400 dark:text-slate-500">-</span>
                                     <input
@@ -99,7 +99,7 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ formData, t, set
                                         value={day.endTime}
                                         onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
                                         disabled={day.status !== 'Work Day'}
-                                        className="block w-24 rounded-md border-0 py-1 px-2 font-mono text-xs text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 transition-colors"
+                                        className="block w-24 rounded-md border-0 py-1 px-2 font-mono text-xs text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 focus:ring-2 focus:ring-theme-primary disabled:opacity-50 transition-colors"
                                     />
                                 </td>
                             </tr>

@@ -89,7 +89,7 @@ The `db:seed` command creates several default accounts for testing purposes:
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@smartattend.com` | `password123` |
+| **Admin** | `admin@smart.com` | `password123` |
 | **Teacher** | `teacher1@smartattend.com` | `password123` |
 | **Student** | `student1@smartattend.com` | `password123` |
 

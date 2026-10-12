@@ -42,7 +42,7 @@ export const PasswordStrengthInput: React.FC<PasswordStrengthInputProps> = ({
                             ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20 bg-rose-50/30 dark:bg-rose-900/10'
                             : data.password && passwordScore >= 2
                                 ? 'border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-900/10'
-                                : 'border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 focus:border-indigo-500 focus:ring-indigo-500/20'
+                                : 'border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 focus:border-theme-primary focus:ring-theme-primary/20'
                             }`}
                         required
                     />
@@ -102,7 +102,7 @@ export const PasswordStrengthInput: React.FC<PasswordStrengthInputProps> = ({
                             ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20 bg-rose-50/30 dark:bg-rose-900/10'
                             : passwordsMatch === true
                                 ? 'border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-900/10'
-                                : 'border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 focus:border-indigo-500 focus:ring-indigo-500/20'
+                                : 'border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-950/50 focus:border-theme-primary focus:ring-theme-primary/20'
                             }`}
                         required
                     />

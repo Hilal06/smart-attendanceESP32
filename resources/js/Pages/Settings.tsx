@@ -38,14 +38,15 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
 
   const validateField = (name: string, value: any) => {
     let error = '';
+    const isId = settings?.language === 'id' || formData.language === 'id';
     if (name === 'companyName') {
-      if (!value.trim()) error = `${t.companyName} ${t.errorRequired}`;
-      else if (value.trim().length < 2) error = 'Name too short';
+      if (!value.trim()) error = `${t.companyName || (isId ? 'Nama Institusi' : 'Institution Name')} ${t.errorRequired || (isId ? 'harus diisi' : 'is required')}`;
+      else if (value.trim().length < 2) error = isId ? 'Nama terlalu pendek (minimal 2 karakter)' : 'Name too short';
     } else if (name === 'lateThresholdMinutes') {
       const val = parseInt(value);
-      if (isNaN(val)) error = 'Must be a number';
-      else if (val < 0) error = 'Cannot be negative';
-      else if (val > 120) error = 'Max threshold is 120 mins';
+      if (isNaN(val)) error = isId ? 'Harus berupa angka' : 'Must be a number';
+      else if (val < 0) error = isId ? 'Nilai tidak boleh negatif' : 'Cannot be negative';
+      else if (val > 120) error = isId ? 'Batas maksimal 120 menit' : 'Max threshold is 120 mins';
     }
 
     setErrors(prev => {
@@ -130,7 +131,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
           onClick={() => setActiveTab('general')}
           type="button"
           className={`flex items-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'general'
-            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 focus:outline-none'
+            ? 'border-theme-primary text-theme-primary focus:outline-none'
             : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300 focus:outline-none'
             }`}
         >
@@ -141,7 +142,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
           onClick={() => setActiveTab('schedule')}
           type="button"
           className={`flex items-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'schedule'
-            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 focus:outline-none'
+            ? 'border-theme-primary text-theme-primary focus:outline-none'
             : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300 focus:outline-none'
             }`}
         >
@@ -153,7 +154,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
             onClick={() => setActiveTab('security')}
             type="button"
             className={`flex items-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'security'
-              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 focus:outline-none'
+              ? 'border-theme-primary text-theme-primary focus:outline-none'
               : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300 focus:outline-none'
               }`}
           >
@@ -187,7 +188,7 @@ export default function Settings({ settings, userRole, admin }: SettingsProps) {
             <button
               type="submit"
               disabled={isProcessing}
-              className="flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center rounded-lg bg-theme-primary px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-theme-primary-hover focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 transition-colors disabled:opacity-50"
             >
               {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               {t.saveConfiguration}
