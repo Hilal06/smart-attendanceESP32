@@ -25,6 +25,7 @@ services:
       - .env
     volumes:
       - ./storage:/var/www/storage
+      - ./public/build:/var/www/public/build
       - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
     networks:
       - smart-attendance-network
@@ -47,6 +48,7 @@ services:
       - app
     volumes:
       - ./storage:/var/www/storage
+      - ./public/build:/var/www/public/build
     networks:
       - smart-attendance-network
 

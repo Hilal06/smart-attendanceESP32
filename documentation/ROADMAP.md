@@ -1,31 +1,52 @@
-# SmartAttend Roadmap & Future Ideas
+# Roadmap Pengembangan Proyek SmartAttend
 
-Here are the potential features and optimizations we can tackle next to enhance the system:
+Dokumen ini memuat catatan pencapaian teknis (*completed milestones*) serta rencana pengembangan fitur untuk iterasi berikutnya.
 
-## 1. Hardware & Face Recognition Integration (Python Microservice)
-- **Objective:** Ensure the Python microservice and ESP32-CAM reliably communicate with the backend.
-- **Tasks:**
-  - Verify and test `$this->registerFaceData()` inside `AttendanceController`.
-  - Implement robust error handling for API timeouts or recognition failures.
-  - Enhance the microservice to provide clear feedback if a face registration fails (e.g., poor lighting, no face detected).
+---
 
-## 2. AI Insights with Gemini
-- **Objective:** Activate the "Beta" AI Insights feature on the Reports page.
-- **Tasks:**
-  - Finalize the integration of the Gemini API through `geminiService.ts`.
-  - Refine prompting to generate actionable analytics from the raw attendance data (e.g., identifying chronic lateness trends or departmental absenteeism).
-  - Polish the UI components in `Reports.tsx` to display these insights beautifully.
+## 1. Pencapaian yang Telah Selesai (Completed - Versi 1.0)
 
-## 3. Frontend Refactoring & Optimization
-- **Objective:** Maintain a clean, performant, and premium React codebase.
-- **Tasks:**
-  - Break down large files like `Settings.tsx` and `Register.tsx` into smaller, reusable components (e.g., moving forms into their own files).
-  - Optimize complex glassmorphism effects to ensure smooth animations on lower-end devices.
-  - Standardize error handling and toast notifications across all Inertia page transitions.
+* [x] **Arsitektur Pengenalan Wajah Berbasis Microservice**:
+  * Microservice Python terisolasi (Flask + Dlib HOG + OpenCV) dengan komparasi vektor 128D.
+  * Caching encoding wajah ke file `.pkl` dan hot-reload otomatis saat pendaftaran profil baru.
+  * Endpoint kesehatan real-time (`/health`) untuk memantau status engine dan jumlah profil wajah yang aktif.
+* [x] **Integrasi Hardware ESP32-CAM**:
+  * Implementasi pemicu perangkat keras (*hardware trigger* via GPIO 13) menggunakan sensor PIR / tombol fisik guna mencegah pemborosan bandwidth dan saturasi jaringan.
+  * Penonaktifan detektor brownout terprogram untuk mencegah watchdog reset saat konsumsi daya WiFi memuncak.
+* [x] **Keamanan & Reverse Proxy**:
+  * Penempatan container Python di belakang reverse proxy Nginx (port 80/443).
+  * Proteksi pertukaran data internal dengan token autentikasi rahasia (`X-API-KEY`).
+* [x] **Sistem Perhitungan Keterlambatan Dinamis**:
+  * Perhitungan keterlambatan otomatis berdasarkan hari aktif (`weekly_schedule`) dan batas toleransi menit (`late_threshold_minutes`).
+* [x] **Revamp Antarmuka & Multi-Varian Dashboard**:
+  * 5 varian dashboard spesifik peran (*Academic Studio*, *Command Center*, *Nordic Minimal*, *Kiosk Monitor*, *Status Workspace*).
+  * Palet tema dinamis (`data-color-theme`) dengan dukungan mode gelap berkontras tinggi (WCAG AA).
+  * Notifikasi toast modern dengan Sonner, indikator kekuatan sandi zxcvbn, dan dialog yang ramah aksesibilitas.
+* [x] **Analitik AI Generatif (Gemini AI)**:
+  * Integrasi model Google GenAI (`@google/genai`) untuk analisis naratif tren absensi dan anomali kehadiran.
+* [x] **Sistem Otorisasi Multi-Tingkat (RBAC)**:
+  * Implementasi Spatie Laravel Permission untuk peran Admin, Guru, dan Siswa.
 
-## 4. Exporting Data
-- **Objective:** Allow administrators and teachers to easily download attendance records.
-- **Tasks:**
-  - Create a backend endpoint to generate CSV or Excel files from filtered attendance queries.
-  - Add "Export" buttons to the `Reports.tsx` and `Students.tsx` views.
-  - Implement PDF generation for formal individual student/staff attendance report cards.
+---
+
+## 2. Rencana Jangka Menengah (Next Phase - Versi 1.1)
+
+* [ ] **Ekspor Laporan Multiformat**:
+  * Pembuatan endpoint backend untuk mengunduh laporan kehadiran dalam format CSV, Microsoft Excel (.xlsx), dan PDF terformat.
+* [ ] **Manajemen Jadwal Libur Khusus**:
+  * Kalender libur nasional dan cuti bersama terintegrasi ke dalam evaluasi kehadiran harian.
+* [ ] **Sistem Backup Database Terotomatisasi**:
+  * Penambahan container backup terjadwal (cron) untuk mengekspor database MariaDB setiap hari ke direktori `./storage/backups`.
+* [ ] **Pemberitahuan Telegram / WhatsApp Bot**:
+  * Notifikasi instan kepada orang tua / wali siswa saat siswa berhasil check-in atau terlambat.
+
+---
+
+## 3. Rencana Jangka Panjang (Future Vision - Versi 2.0)
+
+* [ ] **Transisi ke Protokol MQTT (Pub/Sub IoT)**:
+  * Penerapan broker Mosquitto untuk komunikasi event-driven berlatensi sangat rendah bagi jaringan multi-perangkat ESP32.
+* [ ] **Aplikasi Mobile Wali Murid / Siswa**:
+  * Aplikasi Android/iOS berbasis Flutter atau React Native untuk pemantauan kehadiran mandiri dan pengajuan izin digital.
+* [ ] **Face Anti-Spoofing / Liveness Detection**:
+  * Deteksi keaktifan biologis (kedipan mata atau analisis tekstur inframerah) untuk mencegah spoofing menggunakan foto cetak atau layar ponsel.

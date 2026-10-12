@@ -317,12 +317,14 @@ smart-attendanceESP32/
 │   └── views/app.blade.php      # Main HTML entrypoint with theme injection
 ├── storage/app/public/           # Persistent storage (avatars, attachments)
 ├── documentation/                # Dedicated technical guides & manuals
+│   ├── DEVELOPER_GUIDE.md        # Comprehensive technical manual (SDLC, diagrams, DB, API)
 │   ├── DEPLOYMENT.md             # Production Docker deployment & server setup
 │   ├── SETUP_LOCAL.md            # Local development environment setup
 │   ├── SETUP_ESP32.md            # ESP32-CAM wiring, flashing & hardware trigger
 │   ├── RBAC_IMPLEMENTATION_GUIDE.md # Spatie RBAC & permission matrix
 │   ├── FUTURE_MQTT_GUIDE.md      # MQTT architecture & IoT scaling guide
-│   └── ROADMAP.md                # Project development roadmap
+│   ├── ROADMAP.md                # Project development roadmap
+│   └── screenshots/              # Application UI showcases & captures
 ├── docker-compose.yml           # Local development multi-container orchestration
 ├── docker-compose.prod.yml      # Production multi-container orchestration
 └── tailwind.config.js           # Tailwind CSS configuration with dynamic palettes
@@ -334,6 +336,7 @@ smart-attendanceESP32/
 
 Detailed technical guides and manuals are organized inside the **[`documentation/`](documentation/)** directory:
 
+- 📘 **[Developer Guide (Comprehensive Technical Manual)](documentation/DEVELOPER_GUIDE.md)** — Full technical documentation covering SDLC, architecture & sequence diagrams, use cases, database ERD & data dictionary, API specifications, and troubleshooting.
 - 📖 **[Production Deployment Guide](documentation/DEPLOYMENT.md)** — Step-by-step production deployment using Docker Compose, Nginx reverse proxy, and MariaDB.
 - 💻 **[Local Development Setup](documentation/SETUP_LOCAL.md)** — Manual local setup for PHP 8.2+, Node.js, and Python microservice.
 - 📷 **[ESP32-CAM Setup & Hardware Wiring](documentation/SETUP_ESP32.md)** — Flashing firmware, hardware trigger wiring, and brownout mitigation.
