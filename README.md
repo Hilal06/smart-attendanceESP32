@@ -119,10 +119,10 @@ graph TD
     end
 
     Browser -->|HTTP / HTTPS Requests| Nginx
-    ESP32 -->|POST /recognize (Hardware Trigger)| Nginx
+    ESP32 -->|POST /recognize - Hardware Trigger| Nginx
 
     Nginx -->|FastCGI Proxy| Laravel
-    Nginx -->|Internal Proxy ^/(recognize|health|reload)| Flask
+    Nginx -->|Proxy: recognize, health, reload| Flask
 
     Laravel -->|SQL Queries| MariaDB
     Flask -->|Internal Webhook POST /api/attendance| Nginx

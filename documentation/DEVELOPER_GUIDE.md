@@ -101,13 +101,13 @@ graph TD
     end
 
     Browser -->|HTTP/HTTPS Request| Nginx
-    ESP32 -->|POST /recognize (Hardware Trigger)| Nginx
+    ESP32 -->|POST /recognize - Hardware Trigger| Nginx
 
     Nginx -->|FastCGI / Port 9000| Laravel
-    Nginx -->|Proxy Pass ^/(recognize|health|reload)| Flask
+    Nginx -->|Proxy: recognize, health, reload| Flask
 
     Laravel -->|SQL Query| MariaDB
-    Flask -->|POST /api/attendance (Header: X-API-KEY)| Nginx
+    Flask -->|POST /api/attendance - Header: X-API-KEY| Nginx
     Flask -->|Baca/Tulis Dataset| FaceStorage
     Laravel -->|Tautkan /storage ke Public| Nginx
 ```
@@ -186,9 +186,9 @@ flowchart TD
     InitCam --> StandbyLoop[Loop Standby: Menunggu Sinyal Trigger]
     
     StandbyLoop --> ReadTrigger{GPIO 13 == HIGH?}
-    ReadTrigger -->|Tidak (LOW)| DelayIdle[Delay 100ms] --> StandbyLoop
+    ReadTrigger -->|Tidak / LOW| DelayIdle[Delay 100ms] --> StandbyLoop
     
-    ReadTrigger -->|Ya (HIGH)| Debounce[Delay 500ms Settle Frame]
+    ReadTrigger -->|Ya / HIGH| Debounce[Delay 500ms Settle Frame]
     Debounce --> CaptureFrame[Ambil Frame Citra: esp_camera_fb_get]
     CaptureFrame --> CheckFB{Frame Buffer Valid?}
     
